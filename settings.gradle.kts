@@ -8,4 +8,4 @@
  */
 
 rootProject.name = "jade2"
-include("app", "list", "utilities")
+include("app", "lib")

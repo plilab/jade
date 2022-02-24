@@ -19,7 +19,7 @@ dependencies {
   implementation("org.ow2.asm:asm-tree:9.2")
   implementation("org.ow2.asm:asm-util:9.2")
 
-    implementation(project(":utilities"))
+    implementation(project(":lib"))
 }
 
 application {

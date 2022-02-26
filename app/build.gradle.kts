@@ -2,6 +2,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 
 plugins {
   // kotlin("jvm") // version "1.5.31"
+  antlr
   id("jade2.kotlin-application-conventions")
   id("org.jetbrains.dokka") version "1.5.31"
   // javadoc-plugin
@@ -9,6 +10,9 @@ plugins {
 }
 
 dependencies {
+  // Grammars
+  antlr("org.antlr:antlr4:4.9.3")
+
   // Command-line argument parsing
   implementation("com.github.ajalt.clikt:clikt:3.4.0")
 
@@ -38,6 +42,10 @@ dependencies {
   implementation("org.ow2.asm:asm-tree:9.2")
   implementation("org.ow2.asm:asm-util:9.2")
 
+  // Testing
+  testImplementation(kotlin("test"))
+
+
   implementation(project(":lib"))
 }
 
@@ -51,4 +59,10 @@ tasks.withType<DokkaTask>().configureEach {
             includes.from("Module.md")
         }
     }
+}
+
+tasks.withType<Test> {
+  this.testLogging {
+      this.showStandardStreams = true
+  }
 }

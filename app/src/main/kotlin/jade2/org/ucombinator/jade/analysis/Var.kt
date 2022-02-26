@@ -23,11 +23,11 @@ data class PhiVar        (override val basicValue: BasicValue, val insn: Insn, v
   // TODO: use private constructor to hide `changed`
   // Note that `changed` has to be in the parameters so that the analysis sees that the value has changed
   private var changedPhiVar: PhiVar? = null
-  fun change(): PhiVar? {
+  fun change(): PhiVar {
     if (this.changedPhiVar === null) {
       this.changedPhiVar = this.copy(changed = true)
       this.changedPhiVar!!.changedPhiVar = this.changedPhiVar
     }
-    return this.changedPhiVar
+    return this.changedPhiVar!!
   }
 }

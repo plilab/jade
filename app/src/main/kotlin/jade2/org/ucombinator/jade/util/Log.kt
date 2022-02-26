@@ -1,5 +1,12 @@
-import mu.KotlinLogging
+package org.ucombinator.jade.util
 
-// interface Log {
-//   private val logger = KotlinLogging.logger {} // TODO: lazy?
-// }
+import mu.KotlinLogging
+import mu.KLogger
+
+interface Log {
+  val logger: KLogger
+}
+
+class Logger : Log {
+  override val logger = KotlinLogging.logger {} // TODO: lazy?
+}

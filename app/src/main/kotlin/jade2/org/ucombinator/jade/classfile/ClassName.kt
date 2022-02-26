@@ -10,8 +10,9 @@ import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.SimpleName
 
 object ClassName {
-  fun className(string: String): Name =
-    string.split('/').fold(null) { qualifier, identifier -> return Name(qualifier, identifier) }!!
+  fun className(string: String): Name {
+    return string.split('/').fold<String, Name?>(null) { qualifier, identifier -> Name(qualifier, identifier) }!!
+  }
 
   fun classNameExpr(string: String): Expression =
     string.split('/').fold(null) {

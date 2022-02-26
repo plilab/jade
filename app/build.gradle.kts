@@ -1,4 +1,6 @@
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
+import org.ucombinator.antlr.AntlrCharVocab
 
 plugins {
   // kotlin("jvm") // version "1.5.31"
@@ -8,6 +10,7 @@ plugins {
   // javadoc-plugin
   // kotlin-as-java-plugin
 }
+// compileKotlin { kotlinOptions { jvmTarget = "1.8" } }
 
 dependencies {
   // Grammars
@@ -25,7 +28,6 @@ dependencies {
 
   // Logging
   implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
-  // TODO: https://muthuraj57.medium.com/logging-in-kotlin-the-right-way-d7a357bb0343
 
   // Vertex and edge graphs
   implementation("org.jgrapht:jgrapht-core:1.5.1")
@@ -50,19 +52,29 @@ dependencies {
 }
 
 application {
-    mainClass.set("jade2.app.AppKt")
+  mainClass.set("jade2.app.AppKt")
+}
+
+tasks.withType<KotlinCompile<*>>() {
+  dependsOn(tasks.generateGrammarSource)
+  dependsOn(tasks.generateTestGrammarSource)
 }
 
 tasks.withType<DokkaTask>().configureEach {
-    dokkaSourceSets {
-        named("main") {
-            includes.from("Module.md")
-        }
+  dokkaSourceSets {
+    named("main") {
+      includes.from("Module.md")
     }
+  }
 }
 
 tasks.withType<Test> {
   this.testLogging {
-      this.showStandardStreams = true
+    this.showStandardStreams = true
   }
+}
+
+tasks.register<AntlrCharVocab>("antlrCharVocab", tasks.generateGrammarSource)
+tasks.generateGrammarSource {
+  dependsOn(tasks.getByName("antlrCharVocab"))
 }

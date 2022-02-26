@@ -81,7 +81,7 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   ): Var =
     ExceptionVar(
       TypedBasicInterpreter
-        .newExceptionValue(tryCatchBlockNode, handlerFrame as Frame<BasicValue>, exceptionType),
+        .newExceptionValue(tryCatchBlockNode, handlerFrame as Frame<BasicValue>, exceptionType), // TODO: wrong cast?
       Insn(method, tryCatchBlockNode.handler)
     )
 

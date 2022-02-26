@@ -4,12 +4,6 @@ import com.github.javaparser.ast.`type`.PrimitiveType
 import kotlin.test.*
 
 object DescriptorTest {
-  object Foo {
-  @Test fun testGetMessage() {
-    assertEquals("Hello      World!", "Hello      World!")
-  }
-}
-
   object `field descriptor` {
     @Test fun `base types`() {
       val types = mapOf(
@@ -40,34 +34,18 @@ object DescriptorTest {
   }
 
   object `method descriptor` {
-//     "Non-void" in {
-//       val (params, result) = Descriptor.methodDescriptor("(ZJ[[Ljava/lang/Object;)[[Ljava/lang/Object;")
-//       assertResult(3) { params.length }
-//       assertResult(PrimitiveType.Primitive.BOOLEAN) { params(0).asPrimitiveType().getType }
-//       assertResult(PrimitiveType.Primitive.LONG) { params(1).asPrimitiveType().getType }
-//       assertResult("java.lang.Object[][]") { params(2).asArrayType().toString }
-//       assertResult("java.lang.Object[][]") { result.asArrayType().toString }
-//     }
-//     "Void" in {
-//       val (params, result) = Descriptor.methodDescriptor("()V")
-//       assert(params.isEmpty)
-//       assert(result.isVoidType)
-//     }
-//   }
+    @Test fun `non-void`() {
+      val (params, result) = Descriptor.methodDescriptor("(ZJ[[Ljava/lang/Object;)[[Ljava/lang/Object;")
+      expect(3) { params.size }
+      expect(PrimitiveType.Primitive.BOOLEAN) { params.get(0).asPrimitiveType().getType() }
+      expect(PrimitiveType.Primitive.LONG) { params.get(1).asPrimitiveType().getType() }
+      expect("java.lang.Object[][]") { params.get(2).asArrayType().toString() }
+      expect("java.lang.Object[][]") { result.asArrayType().toString() }
+    }
+    @Test fun `void`() {
+      val (params, result) = Descriptor.methodDescriptor("()V")
+      assert(params.isEmpty())
+      assert(result.isVoidType())
+    }
   }
-  object `class name` {
-//     "is correct" in {
-//       assertResult("abc.def.Ghi") { Descriptor.className("abc/def/Ghi").toString }
-//     }
-//   }
-//   "classNameType" - {
-//     "is correct on a String" in {
-//       assertResult("abc.def.Ghi") { Descriptor.classNameType("abc/def/Ghi").toString }
-//     }
-//     "is correct on a Name" in {
-//       assertResult("abc.def.Ghi") { Descriptor.classNameType(Descriptor.className("abc/def/Ghi")).toString }
-//     }
-//   }
-  }
-
 }

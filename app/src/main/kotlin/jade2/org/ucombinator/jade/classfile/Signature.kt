@@ -15,8 +15,8 @@ import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureVisitor
 
 // import SignatureLexer
-import SignatureParser
-import SignatureParser.*
+import org.ucombinator.jade.classfile.SignatureParser
+import org.ucombinator.jade.classfile.SignatureParser.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.CommonToken

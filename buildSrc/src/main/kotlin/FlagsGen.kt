@@ -124,7 +124,7 @@ object FlagsGen {
         |""".trimMargin())
 
     for (kind in flagInfos.map { it.kind }.distinct()) {
-      builder.append("sealed interface ${kind}Flag extends Flag\n")
+      builder.append("sealed interface ${kind}Flag: Flag\n")
     }
 
     builder.append(
@@ -133,14 +133,12 @@ object FlagsGen {
         |  fun toModifiers(flags: List<Flag>): NodeList<Modifier> =
         |    NodeList(flags.mapNotNull { it.modifier() })
         |
-        |  private def fromInt[T](mapping: List[(Int, T)]): Int => List[T] = { (int: Int) =>
-        |    {
-        |      val maskedInt = int & 0xffff // Ignore ASM specific flags, which occur above bit 16
-        |      val result = mapping.filter(pair => (pair._1 & maskedInt) != 0)
-        |      val intResult = result.map(_._1).fold(0)(_ | _)
-        |      assert(maskedInt == intResult, "flag parsing error: want 0x${'$'}{"%x".format(int)}, got 0x${'$'}{"%x".format(intResult)}")
-        |      result.map(_._2)
-        |    }
+        |  private fun <T> fromInt(mapping: List<Pair<Int, T>>): (Int) -> List<T> = { int ->
+        |    val maskedInt = int and 0xffff // Ignore ASM specific flags, which occur above bit 16
+        |    val result = mapping.filter { it.first and maskedInt != 0 }
+        |    val intResult = result.fold(0) { x, y -> x or y.first }
+        |    assert(maskedInt == intResult, { "flag parsing error: want 0x${'$'}{"%x".format(int)}, got 0x${'$'}{"%x".format(intResult)}" })
+        |    result.map { it.second }
         |  }
         |
         |  // scalafmt: { maxColumn = 250 }
@@ -149,8 +147,7 @@ object FlagsGen {
 
     for (flagsInfo in uniqueFlagInfos) {
       val keyword = if (flagsInfo.keyword === null) { null } else { "Modifier.Keyword.${flagsInfo.keyword.toUpperCase()}" }
-      val extensions = flagExtensions.getValue(flagsInfo.accName)
-        .joinToString(separator=", ") { "${it}Flag" }
+      val extensions = flagExtensions.getValue(flagsInfo.accName).joinToString(", ") { "${it}Flag" }
 
       builder.append(
         """  object ${flagsInfo.accName}: Flag, ${extensions} {
@@ -167,10 +164,10 @@ object FlagsGen {
 
     for ((kind, flagInfosForKind) in flagInfoGroups) {
       assert(flagInfosForKind.map { it.value } == flagInfosForKind.map { it.value }.distinct())
-      builder.append("  private val ${kind}Mapping = List<Pair<Int, ${kind}Flag>>(\n")
+      builder.append("  private val ${kind}Mapping = listOf<Pair<Int, ${kind}Flag>>(\n")
       for (flagInfo in flagInfosForKind.sortedBy { it.value }) {
         builder.append(
-          "    ( /*0x${"%04x".format(flagInfo.value)}*/ ${flagInfo.accName}.value, ${flagInfo.accName}), // ${flagInfo.description}\n"
+          "    Pair( /*0x${"%04x".format(flagInfo.value)}*/ ${flagInfo.accName}.value(), ${flagInfo.accName}), // ${flagInfo.description}\n"
         )
       }
       builder.append("  )\n")
@@ -179,7 +176,7 @@ object FlagsGen {
 
     for ((kind, flagInfosForKind) in flagInfoGroups) {
       val name = "${kind.substring(0, 1).toLowerCase()}${kind.substring(1)}Flags"
-      builder.append("  val ${name}: Int -> List<${kind}Flag> = fromInt(${kind}Mapping)\n")
+      builder.append("  val ${name}: (Int) -> List<${kind}Flag> = fromInt(${kind}Mapping)\n")
     }
     builder.append("}\n")
 

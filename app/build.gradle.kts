@@ -4,16 +4,15 @@ import org.ucombinator.antlr.AntlrCharVocab
 
 plugins {
   kotlin("jvm") // version "1.5.31"
-  antlr
+  antlr // TODO: set generated/sources
   id("jade2.kotlin-application-conventions")
   id("org.jetbrains.dokka") version "1.5.31"
   // javadoc-plugin
   // kotlin-as-java-plugin
 }
-// compileKotlin { kotlinOptions { jvmTarget = "1.8" } }
 
 dependencies {
-  // Grammars
+  // For parsing signatures
   antlr("org.antlr:antlr4:4.9.3")
 
   // Logging (see also io.github.microutils:kotlin-logging-jvm)
@@ -50,17 +49,17 @@ dependencies {
   // Testing
   testImplementation(kotlin("test"))
 
-
+  // TODO: doc
   implementation(project(":lib"))
 }
 
+// Avoid the warning: 'compileJava' task (current target is 11) and
+// 'compileKotlin' task (current target is 1.8) jvm target compatibility should
+// be set to the same Java version.
+tasks.compileKotlin { kotlinOptions { jvmTarget = "11" } }
+
 application {
   mainClass.set("org.ucombinator.jade.main.MainKt")
-}
-
-tasks.withType<KotlinCompile<*>>() {
-  dependsOn(tasks.generateGrammarSource)
-  dependsOn(tasks.generateTestGrammarSource)
 }
 
 tasks.withType<DokkaTask>().configureEach {
@@ -77,26 +76,31 @@ tasks.withType<Test> {
   }
 }
 
-tasks.register<AntlrCharVocab>("antlrCharVocab", tasks.generateGrammarSource)
+val antlrCharVocab = tasks.register<AntlrCharVocab>("antlrCharVocab", tasks.generateGrammarSource)
 tasks.generateGrammarSource {
-  dependsOn(tasks.getByName("antlrCharVocab"))
+  dependsOn(antlrCharVocab)
 }
 
-tasks.register("genFlags") {
+val flagsGen by tasks.registering {
   doLast {
-      // val streamsValue = streams.value
-      // val sourceFile = flagsSourceFile.value
-      // val flagsCode = FlagsGen.code(IO.read(flagsTableFile.value))
-      val flagsCode = FlagsGen.code(File("/home/adamsmd/r/utah/jade/jade2/app/src/main/kotlin/org/ucombinator/jade/classfile/Flags.txt").readText(Charsets.UTF_8))
-      println(flagsCode)
-      // val scalafmt = org.scalafmt.interfaces.Scalafmt
-        // .create(this.getClass.getClassLoader)
-        // .withReporter(new ScalafmtSbtReporter(streamsValue.log, new java.io.OutputStreamWriter(streamsValue.binary()), true));
-      // if (flagsCode != scalafmt.format(scalafmtConfig.value.toPath(), sourceFile.toPath(), flagsCode)) {
-        // streamsValue.log.warn(f"\nGenerated file isn't formatted properly: ${sourceFile}\n\n")
-      // }
-      // IO.write(sourceFile, flagsCode)
-      // Seq(sourceFile)
+    // TODO: avoid running when unchanged
+    val flagsCode = FlagsGen.code(File(projectDir, "src/main/kotlin/org/ucombinator/jade/classfile/Flags.txt").readText(Charsets.UTF_8))
+    // TODO: use spotless for formatting
+    // val scalafmt = org.scalafmt.interfaces.Scalafmt
+      // .create(this.getClass.getClassLoader)
+      // .withReporter(new ScalafmtSbtReporter(streamsValue.log, new java.io.OutputStreamWriter(streamsValue.binary()), true));
+    // if (flagsCode != scalafmt.format(scalafmtConfig.value.toPath(), sourceFile.toPath(), flagsCode)) {
+      // streamsValue.log.warn(f"\nGenerated file isn't formatted properly: ${sourceFile}\n\n")
+    // }
+    val generatedSrcDir = File(buildDir, "generated/sources/jade/src/main/kotlin")
+    generatedSrcDir.mkdirs()
+    val file = File(generatedSrcDir, "Flags.kt")
+    file.writeText(flagsCode)
   }
 }
 
+tasks.withType<KotlinCompile<*>>() {
+  dependsOn(tasks.generateGrammarSource)
+  dependsOn(tasks.generateTestGrammarSource)
+  dependsOn(flagsGen)
+}

@@ -164,21 +164,33 @@ object Signature {
       else -> tree.typeParameter().map(::convert)
     }
 
+  private fun referenceTypeToClassOrInterfaceType(t: ReferenceType): ClassOrInterfaceType =
+    when (t) {
+      is ClassOrInterfaceType -> t
+      is TypeParameter -> {
+        assert(t.getTypeBound().isEmpty(), { "non-empty type bounds in ${t}" })
+        // TODO: mark this as a type parameter
+        ClassOrInterfaceType(null, t.getName(), null)
+      }
+      else -> Errors.unmatchedType(t)
+    }
+
   fun convert(tree: TypeParameterContext): TypeParameter =
     TypeParameter(
       tree.identifier().text,
       NodeList(
         convert(tree.classBound())
-          .plus(tree.interfaceBound().map(::convert))))
+          .plus(tree.interfaceBound().map(::convert))
+          .map(::referenceTypeToClassOrInterfaceType)))
 
-  fun convert(tree: ClassBoundContext): List<ClassOrInterfaceType> = // NOTE: this list is zero or one element
+  fun convert(tree: ClassBoundContext): List<ReferenceType> = // NOTE: this list is zero or one element
     when (val ref = tree.referenceTypeSignature()) {
       null -> listOf()
-      else -> listOf(convert(ref) as ClassOrInterfaceType)
+      else -> listOf(convert(ref))
     }
 
-  fun convert(tree: InterfaceBoundContext): ClassOrInterfaceType =
-    convert(tree.referenceTypeSignature()) as ClassOrInterfaceType
+  fun convert(tree: InterfaceBoundContext): ReferenceType =
+    convert(tree.referenceTypeSignature())
 
   fun convert(tree: SuperclassSignatureContext): ClassOrInterfaceType =
     convert(tree.classTypeSignature())

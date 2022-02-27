@@ -34,9 +34,6 @@ object Log {
   //   ScalaLogger(LoggerFactory.getLogger(log.underlying.getName + "." + name))
   // }
 
-}
-
-// object Log extends Log {
 //   def getLog(name: String): LogbackLogger = {
 //     val modifiedName =
 //       if (name.isEmpty) { Slf4jLogger.ROOT_LOGGER_NAME }
@@ -72,6 +69,7 @@ object Log {
 //     }
 //   }
 
+}
 
 class RelativeLoggerConverter: ClassicConverter() {
   lateinit var prefix: String

@@ -11,9 +11,9 @@ import org.gradle.api.tasks.TaskProvider
 open class AntlrCharVocab
     @Inject constructor(private val antlr: TaskProvider<AntlrTask>) : DefaultTask() {
 
-    init {
-        antlr.get().dependsOn(this) // TODO: doesn't work for some reason
-    }
+    // init {
+    //     antlr.get().dependsOn(this) // TODO: doesn't work for some reason
+    // }
 
     @TaskAction fun run() {
         val dir = antlr.get().outputDirectory

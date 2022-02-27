@@ -213,70 +213,7 @@ object Signature {
   ////////////////////////////////////////////////////////////////
   // Field signature
 
-  // NOTE: unused
+  // NOTE: This method is unused
   fun convert(tree: FieldSignatureContext): ReferenceType =
     convert(tree.referenceTypeSignature())
 }
-
-
-
-
-
-
-
-
-
-
-// class Foo(api: Int) : SignatureVisitor(api) {
-//   var stack;
-//   var expr;
-
-//   // Visits a signature corresponding to an array type.
-//   override fun visitArrayType(): SignatureVisitor {}
-
-//   // Visits a signature corresponding to a primitive type.
-//   override fun visitBaseType(descriptor: Char): Unit {}
-
-//   // Visits the class bound of the last visited formal type parameter.
-//   override fun visitClassBound(): SignatureVisitor {}
-
-//   // Starts the visit of a signature corresponding to a class or interface type.
-//   override fun visitClassType(name: String): Unit {}
-
-//   // Ends the visit of a signature corresponding to a class or interface type.
-//   override fun visitEnd(): Unit {}
-
-//   // Visits the type of a method exception.
-//   override fun visitExceptionType(): SignatureVisitor {}
-
-//   // Visits a formal type parameter.
-//   override fun visitFormalTypeParameter(name: String): Unit {}
-
-//   // Visits an inner class.
-//   override fun visitInnerClassType(name: String): Unit {}
-
-//   // Visits the type of an interface implemented by the class.
-//   override fun visitInterface(): SignatureVisitor {}
-
-//   // Visits an interface bound of the last visited formal type parameter.
-//   override fun visitInterfaceBound(): SignatureVisitor {}
-
-//   // Visits the type of a method parameter.
-//   override fun visitParameterType(): SignatureVisitor {}
-
-//   // Visits the return type of the method.
-//   override fun visitReturnType(): SignatureVisitor {}
-
-//   // Visits the type of the super class.
-//   override fun visitSuperclass(): SignatureVisitor {}
-
-//   // Visits an unbounded type argument of the last visited class or inner class type.
-//   override fun visitTypeArgument(): Unit {}
-
-//   // Visits a type argument of the last visited class or inner class type.
-//   override fun visitTypeArgument(wildcard: Char): SignatureVisitor {}
-
-//   // Visits a signature corresponding to a type variable.
-//   override fun visitTypeVariable(name: String): Unit {}
-
-// }

@@ -21,7 +21,6 @@ import org.ucombinator.jade.analysis.StaticSingleAssignment
 import org.ucombinator.jade.analysis.Var
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Log
-import org.ucombinator.jade.util.Logger
 
 /*
 Nestings
@@ -66,7 +65,7 @@ data class DecompiledUnsupported(val insn: AbstractInsnNode)                    
 // TODO: literals: float vs double
 // TODO: use `|` patterns
 // TODO: UnaryExpr.Operator.BITWISE_COMPLEMENT: 0: iload_1; 1: iconst_m1; 2: ixor
-object DecompileInsn : Log by Logger() {
+object DecompileInsn {
   fun decompileVar(variable: Var): NameExpr = NameExpr(variable.name)
 
   fun decompileInsn(retVar: Var, insn: DecompiledInsn): Statement =

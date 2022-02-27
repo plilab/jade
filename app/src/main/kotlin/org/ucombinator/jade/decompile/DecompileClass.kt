@@ -21,10 +21,9 @@ import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Log
-import org.ucombinator.jade.util.Logger
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
-object DecompileClass : Log by Logger() {
+object DecompileClass {
 
   fun decompileLiteral(node: Any?): Expression? =
     when (node) {
@@ -32,37 +31,35 @@ object DecompileClass : Log by Logger() {
       null -> null
       is Int -> IntegerLiteralExpr(node.toString())
       is Long -> LongLiteralExpr(node.toString())
-      is Float -> DoubleLiteralExpr(node.toString() + "F") // `JavaParser` uses Doubles for Floats
+      is Float -> DoubleLiteralExpr(node.toString() + "") // `JavaParser` uses Doubles for Floats
       is Double -> DoubleLiteralExpr(node.toString() + "D")
       is String -> StringLiteralExpr(node.toString())
       is org.objectweb.asm.Type -> ClassExpr(Descriptor.fieldDescriptor(node.getDescriptor()))
       else -> throw Exception("unimplemented literal '${node}'")
     }
 
-  // private def typeToName(t: Type): Name = t match {
-  //   case null => null
-  //   case t: ClassOrInterfaceType => new Name(typeToName(t.getScope.orElse(null)), t.getName.getIdentifier)
-  //   case _ => throw new Exception(f"failed to convert type ${t} to a name")
-  // }
+  private fun typeToName(t: Type?): Name? =
+    when (t) {
+      null -> null
+      is ClassOrInterfaceType -> Name(typeToName(t.getScope().orElse(null)), t.getName().getIdentifier())
+      else -> throw Exception("failed to convert type ${t} to a name")
+    }
 
-  // private def decompileAnnotation(node: AnnotationNode): AnnotationExpr = {
-  //   val name = typeToName(Descriptor.fieldDescriptor(node.desc))
-  //   node.values.asScala match {
-  //     case null => new MarkerAnnotationExpr(name)
-  //     case List(v: Object) => new SingleMemberAnnotationExpr(name, decompileLiteral(v))
-  //     case vs =>
-  //       new NormalAnnotationExpr(
-  //         name,
-  //         new NodeList[MemberValuePair](
-  //           (for (List(k, v) <- vs.grouped(2)) yield {
-  //             new MemberValuePair(k.asInstanceOf[String], decompileLiteral(v.asInstanceOf[Object]))
-  //           }).toList.asJava
-  //         )
-  //       )
-  //   }
-  // }
+  private fun decompileAnnotation(node: AnnotationNode): AnnotationExpr {
+    val name = typeToName(Descriptor.fieldDescriptor(node.desc))
+    val vs = node.values
+    return when {
+      vs === null -> MarkerAnnotationExpr(name)
+      vs.size == 1 -> SingleMemberAnnotationExpr(name, decompileLiteral(vs.first()))
+      else ->
+        NormalAnnotationExpr(
+          name,
+          NodeList<MemberValuePair>(
+            (0..vs.size step 2).map { i -> MemberValuePair(vs.get(i) as String, decompileLiteral(vs.get(i + 1))) } ))
+    }
+  }
 
-  // private def decompileAnnotations(nodes: java.util.List[_ <: AnnotationNode]*): NodeList[AnnotationExpr] = {
+  // private fun decompileAnnotations(nodes: java.util.List[_ <: AnnotationNode]*): NodeList[AnnotationExpr] = {
   //   val list = new NodeList[AnnotationExpr]()
   //   for (node <- nodes) {
   //     if (node != null) { list.addAll(node.asScala.map(x => decompileAnnotation(x)).asJava) }
@@ -70,7 +67,7 @@ object DecompileClass : Log by Logger() {
   //   list
   // }
 
-  // private def decompileField(node: FieldNode): FieldDeclaration = {
+  // private fun decompileField(node: FieldNode): FieldDeclaration = {
   //   // attrs (ignore?)
   //   val modifiers = Flags.toModifiers(Flags.fieldFlags(node.access))
   //   val annotations: NodeList[AnnotationExpr] = decompileAnnotations(
@@ -91,7 +88,7 @@ object DecompileClass : Log by Logger() {
   //   new FieldDeclaration(modifiers, annotations, variables)
   // }
 
-  // private def decompileParameter(
+  // private fun decompileParameter(
   //     method: MethodNode,
   //     paramCount: Int,
   //     parameter: ((((Type, Int), ParameterNode), java.util.List[AnnotationNode]), java.util.List[AnnotationNode])
@@ -109,13 +106,13 @@ object DecompileClass : Log by Logger() {
   //   val varArgsAnnotations = new NodeList[AnnotationExpr]() // TODO?
   //   val name: SimpleName =
   //     new SimpleName( // TODO: make consistent with analysis.ParameterVar
-  //       if (node == null) { f"parameter${index + 1}" }
+  //       if (node == null) { "parameter${index + 1}" }
   //       else { node.name }
   //     )
   //   new Parameter(modifiers, annotations, `type`, isVarArgs, varArgsAnnotations, name)
   // }
 
-  // def parameterTypes(desc: List[Type], sig: List[Type], params: List[ParameterNode]): List[Type] = {
+  // fun parameterTypes(desc: List[Type], sig: List[Type], params: List[ParameterNode]): List[Type] = {
   //   (desc, sig, params) match {
   //     case (d :: ds, ss, p :: ps)
   //         if Flags.parameterFlags(p.access).contains(Flags.ACC_SYNTHETIC)
@@ -127,20 +124,20 @@ object DecompileClass : Log by Logger() {
   //     case (_, ss, List()) =>
   //       ss
   //     case _ =>
-  //       throw new Exception(f"failed to construct parameter types: ${desc}, ${sig}, ${params}")
+  //       throw new Exception("failed to construct parameter types: ${desc}, ${sig}, ${params}")
   //   }
   // }
 
-  // def nullToSeq[A](x: java.util.List[A]): Seq[A] = {
+  // fun nullToSeq[A](x: java.util.List[A]): Seq[A] = {
   //   if (x eq null) { Seq() }
   //   else { Seq.from(x.asScala) }
   // }
-  // def nullToSeq[A](x: Array[A]): Seq[A] = {
+  // fun nullToSeq[A](x: Array[A]): Seq[A] = {
   //   if (x eq null) { Seq() }
   //   else { x.toSeq }
   // }
 
-  // def decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration[_ <: BodyDeclaration[_]] = {
+  // fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration[_ <: BodyDeclaration[_]] = {
   //   // attr (ignore?)
   //   // instructions
   //   // tryCatchBlocks
@@ -211,9 +208,9 @@ object DecompileClass : Log by Logger() {
   //   bodyDeclaration
   // }
 
-  // def decompileClass(node: ClassNode): CompilationUnit = {
+  // fun decompileClass(node: ClassNode): CompilationUnit = {
   //   val comment = new BlockComment(
-  //     f"""
+  //     """
   //        |* Source File: ${node.sourceFile}
   //        |* Class-file Format Version: ${node.version}
   //        |* Source Debug Extension: ${node.sourceDebug} // See JSR-45 https://www.jcp.org/en/jsr/detail?id=045

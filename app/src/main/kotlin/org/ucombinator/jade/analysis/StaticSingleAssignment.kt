@@ -8,7 +8,6 @@ import org.ucombinator.jade.asm.TypedBasicInterpreter
 import org.ucombinator.jade.analysis.ControlFlowGraph
 import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Log
-import org.ucombinator.jade.util.Logger
 
 data class StaticSingleAssignment(
     val frames: Array<Frame<Var>>,
@@ -41,7 +40,7 @@ fun staticSingleAssignment(owner: String, method: MethodNode, cfg: ControlFlowGr
 
 // TODO: maybe handle `this` var specially (i.e., no phivar)
 // TODO: extend TypedBasicInterpreter?
-private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.ASM9), Log by Logger() {
+private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.ASM9) {
   // Variables to be put in output
   val insnVars = mutableMapOf<AbstractInsnNode, Pair<Var, List<Var>>>()
   val phiInputs = mutableMapOf<Var, Set<Pair<AbstractInsnNode, Var?>>>()
@@ -176,7 +175,7 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   }
 }
 
-private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpreter) : Analyzer<Var>(interpreter), Log by Logger() {
+private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpreter) : Analyzer<Var>(interpreter) {
 
   override fun init(owner: String, method: MethodNode): Unit {
     // We override this method because it runs near the start of `Analyzer.analyze`

@@ -1,13 +1,14 @@
 package org.ucombinator.jade.main
 
 import mu.KotlinLogging
+import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.*
 import org.ucombinator.jade.util.Log
 import org.ucombinator.jade.util.DynamicCallerConverter
 import ch.qos.logback.classic.Level
-
+import org.ucombinator.jade.main.BuildInformation
 // TODO: analysis to ensure using only the canonical constructor (helps with detecting forward version changes) (as a compiler plugin?)
 // TODO: exit code list
 // TODO: exit codes
@@ -20,41 +21,30 @@ import ch.qos.logback.classic.Level
 // TODO: aliases, description, defaultValueProvider
 // TODO: have build generate documentation
 
-// TODO: java -cp lib/jade/jade.jar picocli.AutoComplete -n jade org.ucombinator.jade.main.Main (see https://picocli.info/autocomplete.html)
-
-
 fun main(args: Array<String>): Unit =
   Jade().subcommands(
-    // classOf[HelpCommand],
+    TestLog(),
     BuildInfo(),
     Decompile(),
     Compile(),
     Diff(),
     Logs(),
+    CompletionCommand(),
     // classOf[ManPageGenerator],
-    // classOf[GenerateCompletion],
   ).main(args)
-// TODO: harmonize sub-command names for `gen-manpage` and `generate-completion`
 
-//   val commandLine: CommandLine = new CommandLine(new Main())
 //   commandLine.setAbbreviatedOptionsAllowed(true)
 //   commandLine.setAbbreviatedSubcommandsAllowed(true)
 //   commandLine.setOverwrittenOptionsAllowed(true)
-//   def main(args: Array[String]): Unit = {
-//     System.exit(commandLine.execute(args: _*))
-//   }
-//   def versionString: String = {
-//     import org.ucombinator.jade.main.BuildInfo._
-//     f"${name} version ${version} (https://github.org/ucombinator/jade)"
-//   }
 
-//   mixinStandardHelpOptions = true,
 //   requiredOptionMarker = '*', // TODO: put in documentation string
 //   showAtFileInUsageHelp = true,
 //   showDefaultValues = true,
 //   showEndOfOptionsDelimiterInUsageHelp = true,
-//   versionProvider = classOf[VersionProvider],
 class Jade: CliktCommand() {
+  init {
+    versionOption(BuildInformation.version, message= { BuildInformation.versionMessage })
+  }
 //   @Option(
 //     names = Array("--log"),
 //     paramLabel = "LEVEL",
@@ -71,8 +61,6 @@ class Jade: CliktCommand() {
 //   )
 //   // TODO: check --help
   val log = listOf<LogSetting>()
-
-  val count: Int by option(help="Number of greetings").int().default(1)
 
   val logCallerDepth: Int by
     option(
@@ -102,15 +90,12 @@ class Jade: CliktCommand() {
 
     if (wait) {
       // TODO: from TTY not stdin/stdout
+      // TODO: TermUi.prompt()
       println("Waiting for user.  Press \"Enter\" to continue.")
       readLine()
     }
   }
 }
-
-// class VersionProvider extends CommandLine.IVersionProvider {
-//   override def getVersion: Array[String] = { Array[String](Main.versionString) }
-// }
 
 data class LogSetting(val name: String, val lvl: Level)
 // class LevelConverter extends ITypeConverter[LogSetting] {
@@ -128,7 +113,7 @@ data class LogSetting(val name: String, val lvl: Level)
 ////////////////
 // Sub-commands
 
-class BuildInfo: CliktCommand(help="Display information about how `jade` was built") {
+class TestLog: CliktCommand() {
   class Bar {
     val logger = Log.logger {} // TODO: lazy?
     fun f() {
@@ -142,29 +127,45 @@ class BuildInfo: CliktCommand(help="Display information about how `jade` was bui
   }
   override fun run() {
     Bar().f()
-    echo("xexecuting")
+    echo("executing")
+  }
+}
 
-    // import org.ucombinator.jade.main.BuildInfo._
-    // println(f"""${Main.versionString}
-    //            |Build tools: Scala ${scalaVersion}, SBT ${sbtVersion}
-    //            |Build time: ${builtAtString} ${builtAtMillis}ms
-    //            |Libraries:""".stripMargin)
-    // for (l <- libraryDependencies.sorted) {
-    //   println("  " + l)
-    // }
-
+class BuildInfo: CliktCommand(help="Display information about how `jade` was built") {
+  // TODO: --long --short
+  override fun run() {
+    with (BuildInformation) {
+      println("""${versionMessage}
+        |Build tools: Kotlin ${kotlinVersion}, Gradle ${gradleVersion}, Java ${javaVersion}
+        |Build time: ${buildTime}
+        |Dependencies:""".trimMargin())
+    }
+    for (d in BuildInformation.dependencies) {
+      println("  ${d.first} (configuration: ${d.second})")
+    }
+    println("Compile-time system properties:")
+    for (l in BuildInformation.systemProperties) {
+      println("  ${l.first}=${l.second}")
+    }
+    println("Runtime system properties:")
+    for (p in System
+        .getProperties()
+        .toList()
+        .sortedBy { it.first.toString() }
+        .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) }) {
+      println("  ${p.first}=${p.second}")
+    }
   }
 }
 
 class Decompile: CliktCommand(help="Display information about how `jade` was built") {
-  // --include-file --exclude-file --include-class --exclude-class
-  // --include-cxt-file --include-cxt-class
+  // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
 
   // @Parameters(paramLabel = "<path>", arity = "1..*", description = Array("Files or directories to decompile"), `type` = Array(classOf[java.nio.file.Path]))
   // var path: java.util.List[java.nio.file.Path] = _
 
   override fun run() {
-    echo("executing")
+    TODO("implemenet decompile")
   }
 }
 
@@ -177,14 +178,18 @@ class Compile: CliktCommand(help="Compile a java file") {
   }
 }
 
+// TODO: commands for decompiling with other decompilers
+
 class Diff: CliktCommand(help="Compare class files") {
   override fun run() {
     TODO("implement diff")
   }
 }
 
+// TODO: rename to loggers?
 class Logs: CliktCommand(help="Lists available logs") {
   override fun run() {
     // Log.listLogs()
+    TODO("implement list-logs")
   }
 }

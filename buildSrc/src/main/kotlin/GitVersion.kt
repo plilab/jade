@@ -1,7 +1,7 @@
 // Based on <https://github.com/ArcticLampyrid/gradle-git-version/>.
 //
 // We copy that source instead of using that plugin because building with it
-// throws an exception.
+// throws an exception that I don't know how to fix.
 
 package org.ucombinator.jade.gradle
 

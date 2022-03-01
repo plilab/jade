@@ -1,1 +1,9 @@
-rootProject.name = "jade2"
+// import ...
+
+// pluginManagement {}
+
+// buildscript {}
+
+// plugins {}
+
+rootProject.name = "Jade"

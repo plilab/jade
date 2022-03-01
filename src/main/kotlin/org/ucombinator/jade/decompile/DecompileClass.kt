@@ -17,7 +17,7 @@ import com.github.javaparser.ast.stmt.BlockStmt
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.*
 import org.ucombinator.jade.classfile.Descriptor
-// import org.ucombinator.jade.classfile.Flags
+import org.ucombinator.jade.classfile.Flags
 import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Log

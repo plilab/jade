@@ -1,11 +1,10 @@
-// import scala.collection.mutable
-// import scala.jdk.CollectionConverters._
+package org.ucombinator.jade.gradle
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
-// Code for generating `Flags.txt` and `Flags.scala`
-object FlagsGen {
+// Code for generating `Flags.txt` and `Flags.kt`
+object GenerateClassfileFlags {
   // def javaSpec(spec: String, version: Int, chapter: Int): String = {
   //   if (version < 9) {
   //     throw new Exception(f"The specified version must be at least 9, but version is ${version}.")

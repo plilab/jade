@@ -245,7 +245,7 @@ tasks.withType<Test> {
 tasks.withType<DokkaTask>().configureEach {
   dokkaSourceSets {
     named("main") {
-      includes.from("Module.md")
+      includes.from("$projectDir/src/Module.md")
     }
   }
 }

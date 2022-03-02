@@ -1,27 +1,14 @@
 package org.ucombinator.jade.classfile
 
-// import scala.jdk.CollectionConverters._
-
 import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.`type`.*
-import com.github.javaparser.ast.expr.AnnotationExpr
 import com.github.javaparser.ast.expr.SimpleName
+import com.github.javaparser.ast.`type`.* // ktlint-disable no-wildcard-imports
+import org.antlr.v4.runtime.CommonToken
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.ListTokenSource
+import org.ucombinator.jade.classfile.SignatureParser.* // ktlint-disable no-wildcard-imports
 import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Fourple
-// import sun.reflect.generics.parser.SignatureParser
-// import sun.reflect.generics.tree._
-
-import org.objectweb.asm.signature.SignatureReader
-import org.objectweb.asm.signature.SignatureVisitor
-
-// import SignatureLexer
-import org.ucombinator.jade.classfile.SignatureParser
-import org.ucombinator.jade.classfile.SignatureParser.*
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.CommonToken
-import org.antlr.v4.runtime.ListTokenSource
-import java.io.ByteArrayInputStream
 
 object Signature {
   fun typeSignature(string: String): Type =
@@ -35,7 +22,6 @@ object Signature {
 
   private fun parser(string: String): SignatureParser =
     SignatureParser(CommonTokenStream(ListTokenSource(string.map { CommonToken(it.code, it.toString()) })))
-    // SignatureParser(CommonTokenStream(SignatureLexer(CharStreams.fromString(string))))
 
   ////////////////////////////////////////////////////////////////
   // TODO

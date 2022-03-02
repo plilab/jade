@@ -2,9 +2,9 @@ package org.ucombinator.jade.main
 
 import mu.KotlinLogging
 import com.github.ajalt.clikt.completion.CompletionCommand
-import com.github.ajalt.clikt.core.*
-import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.*
+import com.github.ajalt.clikt.core.* // ktlint-disable no-wildcard-imports
+import com.github.ajalt.clikt.parameters.options.* // ktlint-disable no-wildcard-imports
+import com.github.ajalt.clikt.parameters.types.* // ktlint-disable no-wildcard-imports
 import org.ucombinator.jade.util.Log
 import org.ucombinator.jade.util.DynamicCallerConverter
 import ch.qos.logback.classic.Level
@@ -43,7 +43,7 @@ fun main(args: Array<String>): Unit =
 //   showEndOfOptionsDelimiterInUsageHelp = true,
 class Jade: CliktCommand() {
   init {
-    versionOption(BuildInformation.version, message= { BuildInformation.versionMessage })
+    versionOption(BuildInformation.version!!, message= { BuildInformation.versionMessage })
   }
 //   @Option(
 //     names = Array("--log"),

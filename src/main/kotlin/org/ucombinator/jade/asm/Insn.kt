@@ -1,13 +1,12 @@
 package org.ucombinator.jade.asm
 
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.* // ktlint-disable no-wildcard-imports
+import org.objectweb.asm.util.Textifier
+import org.objectweb.asm.util.TraceMethodVisitor
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.reflect.Modifier
-
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.*
-import org.objectweb.asm.util.Textifier
-import org.objectweb.asm.util.TraceMethodVisitor
 
 data class Insn(val method: MethodNode, val insn: AbstractInsnNode) {
   fun index(): Int = method.instructions.indexOf(insn)
@@ -34,7 +33,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) {
         for (insn in insnList) {
           when (insn) {
             is LabelNode -> this.labelNames.put(insn.getLabel(), "L${insnList.indexOf(insn)}")
-          else -> {/* Do nothing */}
+            else -> { /* Do nothing */ }
           }
         }
       }
@@ -62,19 +61,21 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) {
         }
 
       // Not currently needed but keep it around so we can find it again
-      //val opcode = if (i.getOpcode == -1) { "no_opcode" } else Printer.OPCODES(i.getOpcode)
+      // val opcode = if (i.getOpcode == -1) { "no_opcode" } else Printer.OPCODES(i.getOpcode)
 
-      return "${index}:${string} (${typeString})"
+      return "$index:$string ($typeString)"
     }
 
     val typeToInt: Map<String, Int> =
       AbstractInsnNode::class.java.getDeclaredFields()
         .filter {
           // As of ASM 7.1, all final public static int members of AbstractInsNode are ones we want. Updates beware.
-          it.getType() == Int::class.java && it.getModifiers() == (Modifier.FINAL or Modifier.PUBLIC or Modifier.STATIC) }
+          it.getType() == Int::class.java && it.getModifiers() == (Modifier.FINAL or Modifier.PUBLIC or Modifier.STATIC)
+        }
         .map {
           val x = (it.get(null) as Integer).toInt()
-          Pair<String, Int>(it.getName(), x) }
+          Pair<String, Int>(it.getName(), x)
+        }
         .toMap()
 
     val intToType: Map<Int, String> = typeToInt.toList().map { Pair(it.second, it.first) }.toMap()
@@ -90,5 +91,4 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) {
     //   }
     // }
   }
-
 }

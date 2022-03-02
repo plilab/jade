@@ -1,9 +1,7 @@
-import java.text.SimpleDateFormat
-import java.util.Date
-import org.jetbrains.dokka.gradle.DokkaTask
-import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 import org.ucombinator.jade.gradle.GenerateClassfileFlags
 import org.ucombinator.jade.gradle.GitVersionPlugin
+import java.text.SimpleDateFormat
+import java.util.Date
 
 repositories {
   mavenCentral()
@@ -26,7 +24,7 @@ plugins {
   id("jacoco") // Adds: ./gradlew jacocoTestReport
   id("org.jetbrains.kotlinx.kover") version "0.5.0" // Adds: ./gradlew koverMergedHtmlReport
 
-  // Code licenses
+  // Licenses
   id("com.github.jk1.dependency-license-report") version "2.1" // Adds: ./gradlew generateLicenseReport
 
   // Dependency versions
@@ -81,29 +79,30 @@ application {
 // version = "0.1.0" // Uncomment to manually set the version
 apply<GitVersionPlugin>()
 
-// spotless { // if you are using build.gradle.kts, instead of 'spotless {' use:
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-  // kotlin {
-  //   // by default the target is every '.kt' and '.kts` file in the java sourcesets
-  //   ktfmt()
-  //   // ktlint().userData(mapOf(
-  //   //   "indent_size" to "2",
-  //   //   "continuation_indent_size" to "2",
-  //   //   "disabled_rules" to "import-ordering"))
-  //   diktat()   // has its own section below
-  //   prettier() // has its own section below
-  //   // licenseHeader '/* (C)$YEAR */' // or licenseHeaderFile
-  // }
-  kotlinGradle {
-    target("*.gradle.kts") // default target for kotlinGradle
+  kotlin {
     // ktfmt()
-    // ktlint().userData(
-    //   mapOf(
-    //     "indent_size" to "2",
-    //     "continuation_indent_size" to "2",
-    //     "disabled_rules" to "import-ordering"
-    //   )
-    // )
+    ktlint().userData(
+      mapOf(
+        "indent_size" to "2",
+        "continuation_indent_size" to "2",
+        // "disabled_rules" to "no-wildcard-imports",
+        // "verbose" to "true",
+        // TODO: "space_before_extend_colon" to "false",
+        // TODO: Unit return values
+      )
+    )
+    // diktat()
+    // prettier()
+  }
+  kotlinGradle {
+    // ktfmt()
+    ktlint().userData(
+      mapOf(
+        "indent_size" to "2",
+        "continuation_indent_size" to "2",
+      )
+    )
     // diktat()
     // prettier()
   }
@@ -117,22 +116,22 @@ val antlrCharVocab by tasks.registering {
     val file = File(dir, "Character.tokens")
 
     file.bufferedWriter().use { w ->
-        w.write("'\\0'=${0x0000}\n")
-        w.write("'\\b'=${0x0008}\n")
-        w.write("'\\t'=${0x0009}\n")
-        w.write("'\\n'=${0x000a}\n")
-        w.write("'\\f'=${0x000c}\n")
-        w.write("'\\r'=${0x000d}\n")
-        w.write("'\\\"'=${0x0022}\n")
-        w.write("'\\''=${0x0027}\n")
-        w.write("'\\\\'=${0x005c}\n")
-        for (i in 0..127) {
-            w.write("CHAR_x${"%02X".format(i)}=$i\n")
-            w.write("CHAR_u${"%04X".format(i)}=$i\n")
-            if (i >= 32 && i <= 126 && i.toChar() != '\'' && i.toChar() != '\\') {
-                w.write("'${i.toChar()}'=$i\n")
-            }
+      w.write("'\\0'=${0x0000}\n")
+      w.write("'\\b'=${0x0008}\n")
+      w.write("'\\t'=${0x0009}\n")
+      w.write("'\\n'=${0x000a}\n")
+      w.write("'\\f'=${0x000c}\n")
+      w.write("'\\r'=${0x000d}\n")
+      w.write("'\\\"'=${0x0022}\n")
+      w.write("'\\''=${0x0027}\n")
+      w.write("'\\\\'=${0x005c}\n")
+      for (i in 0..127) {
+        w.write("CHAR_x${"%02X".format(i)}=$i\n")
+        w.write("CHAR_u${"%04X".format(i)}=$i\n")
+        if (i >= 32 && i <= 126 && i.toChar() != '\'' && i.toChar() != '\\') {
+          w.write("'${i.toChar()}'=$i\n")
         }
+      }
     }
   }
 }
@@ -161,7 +160,8 @@ val generateClassfileFlags by tasks.registering {
     // TODO: avoid running when unchanged
     val code = GenerateClassfileFlags.code(
       File(projectDir, "src/main/kotlin/org/ucombinator/jade/classfile/Flags.txt")
-        .readText(Charsets.UTF_8))
+        .readText(Charsets.UTF_8)
+    )
     generateSrc("Flags.kt", code)
   }
 }
@@ -180,7 +180,7 @@ val generateBuildInfo by tasks.registering {
       .getProperties()
       .toList()
       .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) }
-      .map { "    \"${it.first.toString()}\" to \"${it.second.toString()}\"," }
+      .map { "    \"${it.first}\" to \"${it.second}\"," }
       .sorted()
       .joinToString("\n")
 
@@ -188,14 +188,17 @@ val generateBuildInfo by tasks.registering {
       .configurations
       .flatMap { it.dependencies }
       .filterIsInstance<ExternalDependency>()
-      .map { "    \"${it.group}:${it.name}:${it.version}\" to \"${it.targetConfiguration?:"default"}\"," }
+      .map { "    \"${it.group}:${it.name}:${it.version}\" to \"${it.targetConfiguration ?: "default"}\"," }
       .sorted()
       .joinToString("\n")
 
     fun field(fieldName: String, value: Any?): String {
+      val v = if (value === null) { "null" } else { "\"$value\"" }
       return (
-        "  /** The value is \"${value.toString()}\". */\n" +
-        "  val $fieldName: String = \"${value.toString()}\"\n")
+        """  /** The value is $v. */
+          |  val ${fieldName.trim()}: String? = $v
+          |""".trimMargin()
+        )
     }
 
     val code = """// Do not edit this file by hand.  It is generated by `gradle`.
@@ -204,17 +207,16 @@ val generateBuildInfo by tasks.registering {
       |
       |/** This object was generated by `gradle`. */
       |object BuildInformation {
-      |${field("group",         project.group)}
-      |${field("name",          project.name)}
-      |${field("version",       project.version)}
-      |${field("description",   project.description)}
+      |${field("group        ", project.group)}
+      |${field("name         ", project.name)}
+      |${field("version      ", project.version)}
+      |${field("description  ", project.description)}
       |${field("kotlinVersion", project.kotlin.coreLibrariesVersion)}
-      |${field("javaVersion",   System.getProperty("java.version"))}
+      |${field("javaVersion  ", System.getProperty("java.version"))}
       |${field("gradleVersion", project.gradle.gradleVersion)}
-      |${field("buildTime",     SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(Date()))}
-      |${field("status",        project.status)}
-      |${field("path",          project.path)}
-      |
+      |${field("buildTime    ", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(Date()))}
+      |${field("status       ", project.status)}
+      |${field("path         ", project.path)}
       |  // TODO: javadoc
       |  val dependencies: List<Pair<String, String>> = listOf(
       |$dependencies
@@ -225,9 +227,9 @@ val generateBuildInfo by tasks.registering {
       |$systemProperties
       |  )
       |
-      |  val versionMessage = "${'$'}{name} version ${'$'}{version} (https://github.org/ucombinator/jade)"
+      |  val versionMessage = "${'$'}name version ${'$'}version (https://github.org/ucombinator/jade)"
       |}
-    """.trimMargin()
+      |""".trimMargin()
 
     generateSrc("BuildInformation.kt", code)
   }
@@ -242,7 +244,7 @@ tasks.withType<Test> {
   }
 }
 
-tasks.withType<DokkaTask>().configureEach {
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
   dokkaSourceSets {
     named("main") {
       includes.from("Module.md")
@@ -250,7 +252,7 @@ tasks.withType<DokkaTask>().configureEach {
   }
 }
 
-// For why we fully qualify KotlinCompile see:
+// For why we have to fully qualify KotlinCompile see:
 // https://stackoverflow.com/questions/55456176/unresolved-reference-compilekotlin-in-build-gradle-kts
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
   // Avoid the warning: 'compileJava' task (current target is 11) and

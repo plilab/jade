@@ -1,8 +1,8 @@
 package org.ucombinator.jade.analysis
 
 import org.objectweb.asm.tree.analysis.BasicValue
-import org.ucombinator.jade.asm.Insn
 import org.objectweb.asm.tree.analysis.Value
+import org.ucombinator.jade.asm.Insn
 
 sealed class Var(val name: String) : Value {
   abstract val basicValue: BasicValue

@@ -11,10 +11,10 @@ import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.`type`.PrimitiveType
 import com.github.javaparser.ast.`type`.Type
 import com.github.javaparser.ast.comments.BlockComment
-import com.github.javaparser.ast.expr.*
-import com.github.javaparser.ast.stmt.*
+import com.github.javaparser.ast.expr.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.stmt.* // ktlint-disable no-wildcard-imports
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.*
+import org.objectweb.asm.tree.* // ktlint-disable no-wildcard-imports
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.analysis.StaticSingleAssignment

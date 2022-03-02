@@ -1,7 +1,7 @@
 package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.`type`.PrimitiveType
-import kotlin.test.*
+import kotlin.test.* // ktlint-disable no-wildcard-imports
 
 object DescriptorTest {
   object `field descriptor` {

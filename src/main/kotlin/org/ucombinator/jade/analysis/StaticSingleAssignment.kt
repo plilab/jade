@@ -1,18 +1,16 @@
 package org.ucombinator.jade.analysis
 
-import org.objectweb.asm.*
-import org.objectweb.asm.tree.*
-import org.objectweb.asm.tree.analysis.*
+import org.objectweb.asm.* // ktlint-disable no-wildcard-imports
+import org.objectweb.asm.tree.* // ktlint-disable no-wildcard-imports
+import org.objectweb.asm.tree.analysis.* // ktlint-disable no-wildcard-imports
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.asm.TypedBasicInterpreter
-import org.ucombinator.jade.analysis.ControlFlowGraph
 import org.ucombinator.jade.util.Errors
-import org.ucombinator.jade.util.Log
 
 data class StaticSingleAssignment(
-    val frames: Array<Frame<Var>>,
-    val insnVars: Map<AbstractInsnNode, Pair<Var, List<Var>>>,
-    val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>,
+  val frames: Array<Frame<Var>>,
+  val insnVars: Map<AbstractInsnNode, Pair<Var, List<Var>>>,
+  val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>,
 )
 
 fun staticSingleAssignment(owner: String, method: MethodNode, cfg: ControlFlowGraph): StaticSingleAssignment {
@@ -49,7 +47,7 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   var originInsn: AbstractInsnNode? = null // For `merge`
   var returnTypeValue: ReturnVar? = null // There is no getReturn method on frames, so we save it here
 
-  fun phiInputs(key: PhiVar, insn: AbstractInsnNode?, value: Var?, ignoreNull: Boolean = false): Unit {
+  fun phiInputs(key: PhiVar, insn: AbstractInsnNode?, value: Var?, ignoreNull: Boolean = false) {
     if (!ignoreNull || value != null) {
       val usedKey = key.change()
       val entry = Pair(insn!!, value)
@@ -65,8 +63,7 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   override fun newReturnTypeValue(`type`: Type): Var? {
     // ASM requires that we return null when `type` is Type.VOID_TYPE
     this.returnTypeValue =
-      if (`type` == Type.VOID_TYPE) { null }
-      else { ReturnVar(TypedBasicInterpreter.newReturnTypeValue(`type`)) }
+      if (`type` == Type.VOID_TYPE) { null } else { ReturnVar(TypedBasicInterpreter.newReturnTypeValue(`type`)) }
     return this.returnTypeValue
   }
 
@@ -74,9 +71,9 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     EmptyVar
 
   override fun newExceptionValue(
-      tryCatchBlockNode: TryCatchBlockNode,
-      handlerFrame: Frame<Var>,
-      exceptionType: Type
+    tryCatchBlockNode: TryCatchBlockNode,
+    handlerFrame: Frame<Var>,
+    exceptionType: Type
   ): Var =
     ExceptionVar(
       TypedBasicInterpreter
@@ -151,14 +148,14 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     )
 
   @Throws(AnalyzerException::class)
-  override fun returnOperation(insn: AbstractInsnNode, value: Var, expected: Var): Unit =
+  override fun returnOperation(insn: AbstractInsnNode, value: Var, expected: Var) {
     // TODO: capture `expected` Var somehow
     // Note that `unaryOperation` is also called whenever `returnOperation` is called.
     // We override the effect of `unaryOperation` by calling `record` with `null` here.
     // TODO: explain why we do not do this
-    //TypedBasicInterpreter.returnOperation(insn, value.basicValue, expected.basicValue)
-    //record(insn, List(value), null)
-    Unit
+    // TypedBasicInterpreter.returnOperation(insn, value.basicValue, expected.basicValue)
+    // record(insn, List(value), null)
+  }
 
   override fun merge(value1: Var, value2: Var): Var {
     when {
@@ -169,15 +166,15 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
       }
       value1 === EmptyVar -> return value2
       value2 === EmptyVar -> return value1
-      value1 === value2   -> return value1
-      else -> throw Exception("unexpected merge: value1: ${value1} value2: ${value2}")
+      value1 === value2 -> return value1
+      else -> throw Exception("unexpected merge: value1: $value1 value2: $value2")
     }
   }
 }
 
 private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpreter) : Analyzer<Var>(interpreter) {
 
-  override fun init(owner: String, method: MethodNode): Unit {
+  override fun init(owner: String, method: MethodNode) {
     // We override this method because it runs near the start of `Analyzer.analyze`
     // but after the `Analyzer.frames` array is created.
     //
@@ -189,18 +186,15 @@ private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpr
     // came from.  By the time `merge` runs, that information for the first value is gone.
     for (insn in method.instructions) {
       val insnIndex = method.instructions.indexOf(insn)
-      val minimumInEdges =
-        if (insnIndex == 0) { 0 }
-        else { 1 }
-      if (
-        cfg.graph.incomingEdgesOf(Insn(method, insn)).size > minimumInEdges
+      val minimumInEdges = if (insnIndex == 0) { 0 } else { 1 }
+      if (cfg.graph.incomingEdgesOf(Insn(method, insn)).size > minimumInEdges
         || method.tryCatchBlocks.any({ p -> p.handler === insn })
       ) {
         // We are at a join point
         val cfgFrame = cfg.frames.get(insnIndex)
         val frame =
-          this.getFrames().get(insnIndex) ?:
-          Frame<Var>(cfgFrame.getLocals(), cfgFrame.getMaxStackSize())
+          this.getFrames().get(insnIndex)
+            ?: Frame<Var>(cfgFrame.getLocals(), cfgFrame.getMaxStackSize())
         // Note that Frame.returnValue is null until `frame.setReturn` later in this method
         for (i in 0..cfgFrame.getLocals()) {
           assert((insnIndex == 0) == (frame.getLocal(i) != null))

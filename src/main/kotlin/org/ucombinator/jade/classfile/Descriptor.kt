@@ -1,13 +1,6 @@
 package org.ucombinator.jade.classfile
 
-import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.`type`.ClassOrInterfaceType
 import com.github.javaparser.ast.`type`.Type
-import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.ast.expr.FieldAccessExpr
-import com.github.javaparser.ast.expr.Name
-import com.github.javaparser.ast.expr.NameExpr
-import com.github.javaparser.ast.expr.SimpleName
 
 object Descriptor {
   fun fieldDescriptor(string: String): Type = Signature.typeSignature(string)

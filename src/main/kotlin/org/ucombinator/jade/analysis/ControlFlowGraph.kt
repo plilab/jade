@@ -15,11 +15,11 @@ import org.ucombinator.jade.asm.TypedBasicInterpreter
 // import ControlFlowGraph.Edge
 
 data class ControlFlowGraph(
-    val entry: Insn,
-    val graph: DirectedPseudograph<Insn, Edge>,
-    val graphWithExceptions: Graph<Insn, Edge>,
-    val frames: Array<Frame<BasicValue>>) {
-
+  val entry: Insn,
+  val graph: DirectedPseudograph<Insn, Edge>,
+  val graphWithExceptions: Graph<Insn, Edge>,
+  val frames: Array<Frame<BasicValue>>
+) {
   final data class Edge(val source: Insn, val target: Insn)
 
   companion object {
@@ -42,12 +42,12 @@ data class ControlFlowGraph(
       val graphWithExceptions: Graph<Insn, Edge> = AsGraphUnion(graph, g)
       return ControlFlowGraph(entry, graph, graphWithExceptions, frames)
     }
+  }
 }
-    }
 
-private class ControlFlowGraphAnalyzer(val method: MethodNode, val graph: DirectedPseudograph<Insn, ControlFlowGraph.Edge>)
-    : Analyzer<BasicValue>(TypedBasicInterpreter) {
-  override protected fun newControlFlowEdge(insn: Int, successor: Int): Unit {
+private class ControlFlowGraphAnalyzer(val method: MethodNode, val graph: DirectedPseudograph<Insn, ControlFlowGraph.Edge>) :
+  Analyzer<BasicValue>(TypedBasicInterpreter) {
+  protected override fun newControlFlowEdge(insn: Int, successor: Int) {
     val source = Insn(method, this.method.instructions.get(insn))
     val target = Insn(method, this.method.instructions.get(successor))
     this.graph.addEdge(source, target, ControlFlowGraph.Edge(source, target))

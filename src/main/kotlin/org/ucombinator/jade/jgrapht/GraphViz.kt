@@ -1,16 +1,12 @@
 package org.ucombinator.jade.jgrapht
 
-import java.io.StringWriter
-import java.io.Writer
-
-// import scala.collection.mutable
-// import scala.jdk.CollectionConverters._
-
 import org.jgrapht.Graph
 import org.jgrapht.nio.DefaultAttribute
 import org.jgrapht.nio.dot.DOTExporter
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.analysis.ControlFlowGraph
+import java.io.StringWriter
+import java.io.Writer
 
 object GraphViz {
   fun escape(string: String): String =

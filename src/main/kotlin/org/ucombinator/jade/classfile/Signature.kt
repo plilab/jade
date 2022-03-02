@@ -23,7 +23,8 @@ object Signature {
   private fun parser(string: String): SignatureParser =
     SignatureParser(CommonTokenStream(ListTokenSource(string.map { CommonToken(it.code, it.toString()) })))
 
-  ////////////////////////////////////////////////////////////////
+  // TODO: ktlint: allow /////////////////
+  /**************************************************************/
   // TODO
 
   fun convert(tree: BaseTypeContext): Type =
@@ -42,7 +43,7 @@ object Signature {
   fun convert(tree: VoidDescriptorContext): VoidType =
     VoidType()
 
-  ////////////////////////////////////////////////////////////////
+  /**************************************************************/
   // Java type signature
 
   fun convert(tree: JavaTypeSignatureContext): Type =
@@ -52,7 +53,7 @@ object Signature {
       else -> TODO("impossible case in Signature.convert: $tree")
     }
 
-  ////////////////////////////////////////////////////////////////
+  /**************************************************************/
   // Reference type signature
 
   fun convert(tree: ReferenceTypeSignatureContext): ReferenceType =
@@ -69,7 +70,10 @@ object Signature {
       convert(
         tree.simpleClassTypeSignature(),
         convert(
-          tree.packageSpecifier())))
+          tree.packageSpecifier()
+        )
+      )
+    )
 
   fun convert(tree: PackageSpecifierContext?): ClassOrInterfaceType? =
     when (tree) {
@@ -84,14 +88,16 @@ object Signature {
         convert(
           // TODO: 'plus' causes quadratic behavior
           tree.first().packageSpecifier().plus(tree.subList(1, tree.size)),
-          ClassOrInterfaceType(scope, tree.first().identifier().text))
+          ClassOrInterfaceType(scope, tree.first().identifier().text)
+        )
     }
 
   fun convert(tree: SimpleClassTypeSignatureContext, scope: ClassOrInterfaceType?): ClassOrInterfaceType =
     ClassOrInterfaceType(
       scope,
       SimpleName(tree.identifier().text),
-      convert(tree.typeArguments()))
+      convert(tree.typeArguments())
+    )
 
   fun convert(tree: TypeArgumentsContext?): NodeList<Type>? =
     when (tree) {
@@ -123,7 +129,9 @@ object Signature {
           tree.subList(1, tree.size),
           convert(
             tree.first().simpleClassTypeSignature(),
-            scope))
+            scope
+          )
+        )
     }
 
   fun convert(tree: ClassTypeSignatureSuffixContext, scope: ClassOrInterfaceType): ClassOrInterfaceType =
@@ -135,14 +143,15 @@ object Signature {
   fun convert(tree: ArrayTypeSignatureContext): ArrayType =
     ArrayType(convert(tree.javaTypeSignature()))
 
-  ////////////////////////////////////////////////////////////////
+  /**************************************************************/
   // Class signature
 
   fun convert(tree: ClassSignatureContext): Triple<List<TypeParameter>, ClassOrInterfaceType, List<ClassOrInterfaceType>> =
     Triple(
       convert(tree.typeParameters()),
       convert(tree.superclassSignature()),
-      tree.superinterfaceSignature().map(::convert))
+      tree.superinterfaceSignature().map(::convert)
+    )
 
   fun convert(tree: TypeParametersContext?): List<TypeParameter> =
     when (tree) {
@@ -154,7 +163,7 @@ object Signature {
     when (t) {
       is ClassOrInterfaceType -> t
       is TypeParameter -> {
-        assert(t.getTypeBound().isEmpty(), { "non-empty type bounds in ${t}" })
+        assert(t.getTypeBound().isEmpty(), { "non-empty type bounds in $t" })
         // TODO: mark this as a type parameter
         ClassOrInterfaceType(null, t.getName(), null)
       }
@@ -167,7 +176,9 @@ object Signature {
       NodeList(
         convert(tree.classBound())
           .plus(tree.interfaceBound().map(::convert))
-          .map(::referenceTypeToClassOrInterfaceType)))
+          .map(::referenceTypeToClassOrInterfaceType)
+      )
+    )
 
   fun convert(tree: ClassBoundContext): List<ReferenceType> = // NOTE: this list is zero or one element
     when (val ref = tree.referenceTypeSignature()) {
@@ -184,7 +195,7 @@ object Signature {
   fun convert(tree: SuperinterfaceSignatureContext): ClassOrInterfaceType =
     convert(tree.classTypeSignature())
 
-  ////////////////////////////////////////////////////////////////
+  /**************************************************************/
   // Method signature
 
   fun convert(tree: MethodSignatureContext): Fourple<List<TypeParameter>, List<Type>, Type, List<ReferenceType>> =
@@ -192,7 +203,8 @@ object Signature {
       convert(tree.typeParameters()),
       tree.javaTypeSignature().map(::convert),
       convert(tree.result()),
-      tree.throwsSignature().map(::convert))
+      tree.throwsSignature().map(::convert)
+    )
 
   fun convert(tree: ResultContext): Type =
     when (tree) {
@@ -208,7 +220,7 @@ object Signature {
       else -> TODO("impossible case in Signature.convert: $tree")
     }
 
-  ////////////////////////////////////////////////////////////////
+  /**************************************************************/
   // Field signature
 
   // NOTE: This method is unused

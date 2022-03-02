@@ -10,27 +10,24 @@ object SignatureTest {
   // TODO: fix '\$' in these tests
 
   // Tests harvested from jdk12
-  val harvestedTests = listOf<Triple<Kind, String, String>>(
-    // ("signature type", "signature", "expected result"),
-    // format: off
-
+  val harvestedTests = listOf<Triple<Kind, String, String>>( // ("signature type", "signature", "expected result")
     // jdk12/test/jdk/tools/jlink/plugins/SignatureParserTest.java
     Triple(Kind.TYPE, "[Ljava/lang/String;", "java.lang.String[]"),
     Triple(Kind.TYPE, "[[[[[[[[[[Ljava/lang/String;", "java.lang.String[][][][][][][][][][]"),
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;:Ljava/lang/Comparable<-TT;>;>(Ljava/lang/String;Ljava/lang/Class<TT;>;TT;Ljava/lang/Comparable<-TT;>;Ljava/lang/Comparable<-TT;>;ZZ)V", "T extends java.lang.Object&java.lang.Comparable<? super T>;java.lang.String,java.lang.Class<T>,T,java.lang.Comparable<? super T>,java.lang.Comparable<? super T>,boolean,boolean;void;"),
     Triple(Kind.METHOD, "(Ljava/lang/String;ZLjava/util/EventListener;TTK;)V", ";java.lang.String,boolean,java.util.EventListener,TK;void;"),
     // These are not valid type, class, or method signatures, so I am not sure why SignatureParserTest.java has them
-    //Triple(Kind.TYPE, "<Y:Ljava/lang/String;>", ""),
-    //Triple(Kind.TYPE, "<Y:Ljava/lang/String;Z::Ljava/util/EventListener;>", ""),
-    //Triple(Kind.TYPE, "<Y:Ljava/lang/String;Z::Ljava/util/EventListener;O::Ljava/lang/Comparable<Ljava/lang/String;>;>", ""),
-    //Triple(Kind.TYPE, "<Y:Ljava/lang/String;O::Ljava/lang/Comparable<Ljava/lang/String;Ljava/lang/Float;>;>", ""),
-    //Triple(Kind.TYPE, "<Y:Ljava/lang/String;O::Ljava/lang/Comparable<Ljava/lang/String;Ljava/lang/Float<Ljava/lang/Object;>;>;>", ""),
+    // Triple(Kind.TYPE, "<Y:Ljava/lang/String;>", ""),
+    // Triple(Kind.TYPE, "<Y:Ljava/lang/String;Z::Ljava/util/EventListener;>", ""),
+    // Triple(Kind.TYPE, "<Y:Ljava/lang/String;Z::Ljava/util/EventListener;O::Ljava/lang/Comparable<Ljava/lang/String;>;>", ""),
+    // Triple(Kind.TYPE, "<Y:Ljava/lang/String;O::Ljava/lang/Comparable<Ljava/lang/String;Ljava/lang/Float;>;>", ""),
+    // Triple(Kind.TYPE, "<Y:Ljava/lang/String;O::Ljava/lang/Comparable<Ljava/lang/String;Ljava/lang/Float<Ljava/lang/Object;>;>;>", ""),
     Triple(Kind.TYPE, "Ljava/util/Set;", "java.util.Set"),
     Triple(Kind.TYPE, "Ljavaapplication20/Titi<[Ljava/lang/String;Ljava/lang/Integer;>;", "javaapplication20.Titi<java.lang.String[],java.lang.Integer>"),
     Triple(Kind.TYPE, "Ljava/lang/Comparable<TK;>;", "java.lang.Comparable<K>"),
     // These are not valid type, class, or method signatures, so I am not sure why SignatureParserTest.java has them
-    //Triple(Kind.TYPE, "Ljava/io/Serializable;Ljava/lang/Comparable<TK;>;", ""),
-    //Triple(Kind.TYPE, "<Y:Ljava/lang/String;Z::Ljava/util/EventListener;K::Ljava/util/EventListener;O::Ljava/lang/Comparable<Ljava/lang/String;>;>Ljavaapplication20/Titi<[Ljava/lang/String;Ljava/lang/Integer;TZ;>;Ljava/io/Serializable;Ljava/lang/Comparable<TK;>;", ""),
+    // Triple(Kind.TYPE, "Ljava/io/Serializable;Ljava/lang/Comparable<TK;>;", ""),
+    // Triple(Kind.TYPE, "<Y:Ljava/lang/String;Z::Ljava/util/EventListener;K::Ljava/util/EventListener;O::Ljava/lang/Comparable<Ljava/lang/String;>;>Ljavaapplication20/Titi<[Ljava/lang/String;Ljava/lang/Integer;TZ;>;Ljava/io/Serializable;Ljava/lang/Comparable<TK;>;", ""),
     Triple(Kind.METHOD, "<PO:Ljava/lang/Object;>(Ljava/lang/Integer;TPO;)Ljava/lang/Integer;", "PO extends java.lang.Object;java.lang.Integer,PO;java.lang.Integer;"),
     Triple(Kind.METHOD, "<PO:Ljava/lang/Object;>(Ljava/lang/Integer;TPO;)TPO;", "PO extends java.lang.Object;java.lang.Integer,PO;PO;"),
     Triple(Kind.METHOD, "<T::Ljava/util/EventListener;>(Ljava/lang/Class<TT;>;)[TT;", "T extends java.util.EventListener;java.lang.Class<T>;T[];"),
@@ -318,11 +315,10 @@ object SignatureTest {
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>(TT;)F", "T extends java.lang.Object;T;float;"),
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>(TT;)D", "T extends java.lang.Object;T;double;"),
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>(TT;)Ljava/lang/Object;", "T extends java.lang.Object;T;java.lang.Object;"),
-
-    // format: on
   )
 
-  fun <T: Type> resultsToString(r: List<T>): String = r.joinToString(",") { it.asString() }
+  // TODO: ktlint: <T: Type>
+  fun <T : Type> resultsToString(r: List<T>): String = r.joinToString(",") { it.asString() }
   @Test fun `harvested signatures`() {
     for ((kind, signature, expectedResult) in harvestedTests) {
       expect(expectedResult) {

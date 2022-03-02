@@ -1,7 +1,6 @@
 
 // initial implementation: dir or file only (no "inner" paths)
 
-
 // url
 // dir(traversedPath, remainingPath)
 

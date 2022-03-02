@@ -1,26 +1,22 @@
 package org.ucombinator.jade.util
 
-import mu.KotlinLogging
-import mu.KLogger
-import ch.qos.logback.classic.pattern.ClassicConverter
-import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.classic.spi.CallerData
-import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.pattern.ClassicConverter
+import ch.qos.logback.classic.spi.CallerData
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.pattern.color.ANSIConstants
-import ch.qos.logback.core.pattern.color.ForegroundCompositeConverterBase
-import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as OldHighlightingCompositeConverter
-import ch.qos.logback.classic.Logger as LogbackLogger
-import org.slf4j.Logger as Slf4jLogger
+import mu.KotlinLogging
 import org.slf4j.LoggerFactory
+import ch.qos.logback.classic.Logger as LogbackLogger
+import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as OldHighlightingCompositeConverter
+import org.slf4j.Logger as Slf4jLogger
 
 object Log {
   fun logger(func: () -> Unit) = KotlinLogging.logger(func)
   val prefix = "org.ucombinator.jade." // TODO: autodetect
   fun getLog(name: String): LogbackLogger {
-    val modifiedName =
-      if (name.isEmpty()) { Slf4jLogger.ROOT_LOGGER_NAME }
-      else { name }
+    val modifiedName = if (name.isEmpty()) { Slf4jLogger.ROOT_LOGGER_NAME } else { name }
     return LoggerFactory.getLogger(modifiedName) as LogbackLogger
   }
 
@@ -68,13 +64,13 @@ object Log {
 //       println(l.getName)
 //     }
 //   }
-
 }
 
-class RelativeLoggerConverter: ClassicConverter() {
+class RelativeLoggerConverter : ClassicConverter() {
   lateinit var prefix: String
 
-  override fun start(): Unit {
+  // override fun start(): Unit {
+  override fun start() {
     val x = getOptionList()
     assert(x.size == 1)
     prefix = x.get(0)
@@ -83,12 +79,17 @@ class RelativeLoggerConverter: ClassicConverter() {
 
   override fun convert(event: ILoggingEvent): String {
     val name = event.getLoggerName()
-    if (name.startsWith(prefix)) { return name.removePrefix(prefix) }
-    else { return "." + name }
+    // if (name.startsWith(prefix)) { return name.removePrefix(prefix) }
+    // else { return "." + name }
+    if (name.startsWith(prefix)) {
+      return name.removePrefix(prefix)
+    } else {
+      return "." + name
+    }
   }
 }
 
-class DynamicCallerConverter: ClassicConverter() {
+class DynamicCallerConverter : ClassicConverter() {
   companion object {
     var depthStart = 0
     var depthEnd = 0
@@ -96,27 +97,26 @@ class DynamicCallerConverter: ClassicConverter() {
 
   override fun convert(event: ILoggingEvent): String {
     var buf = StringBuilder()
-    var cda = event.getCallerData();
+    var cda = event.getCallerData()
     if (cda != null && cda.size > depthStart) {
       val limit = if (depthEnd < cda.size) depthEnd else cda.size
 
       for (i in depthStart..limit - 1) {
-          buf.append("Caller+");
-          buf.append(i);
-          buf.append("\t at ");
-          buf.append(cda[i]);
-          buf.append(CoreConstants.LINE_SEPARATOR);
+        buf.append("Caller+")
+        buf.append(i)
+        buf.append("\t at ")
+        buf.append(cda[i])
+        buf.append(CoreConstants.LINE_SEPARATOR)
       }
-      return buf.toString();
+      return buf.toString()
     } else {
-      return CallerData.CALLER_DATA_NA;
+      return CallerData.CALLER_DATA_NA
     }
   }
 }
 
-
-class HighlightingCompositeConverter: OldHighlightingCompositeConverter() {
-  override protected fun getForegroundColorCode(event: ILoggingEvent): String =
+class HighlightingCompositeConverter : OldHighlightingCompositeConverter() {
+  protected override fun getForegroundColorCode(event: ILoggingEvent): String =
     when (event.getLevel().toInt()) {
       Level.INFO_INT -> ANSIConstants.GREEN_FG
       Level.DEBUG_INT -> ANSIConstants.CYAN_FG

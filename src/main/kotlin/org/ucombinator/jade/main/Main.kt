@@ -1,19 +1,21 @@
 package org.ucombinator.jade.main
 
-import mu.KotlinLogging
+import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.* // ktlint-disable no-wildcard-imports
 import com.github.ajalt.clikt.parameters.options.* // ktlint-disable no-wildcard-imports
 import com.github.ajalt.clikt.parameters.types.* // ktlint-disable no-wildcard-imports
-import org.ucombinator.jade.util.Log
 import org.ucombinator.jade.util.DynamicCallerConverter
-import ch.qos.logback.classic.Level
-import org.ucombinator.jade.main.BuildInformation
+import org.ucombinator.jade.util.Log
+
+// import mu.KotlinLogging
+// import org.ucombinator.jade.main.BuildInformation
+
 // TODO: analysis to ensure using only the canonical constructor (helps with detecting forward version changes) (as a compiler plugin?)
 // TODO: exit code list
 // TODO: exit codes
 
-////////////////
+/**************/
 // Top-level command
 
 // TODO: description
@@ -41,9 +43,9 @@ fun main(args: Array<String>): Unit =
 //   showAtFileInUsageHelp = true,
 //   showDefaultValues = true,
 //   showEndOfOptionsDelimiterInUsageHelp = true,
-class Jade: CliktCommand() {
+class Jade : CliktCommand() {
   init {
-    versionOption(BuildInformation.version!!, message= { BuildInformation.versionMessage })
+    versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
   }
 //   @Option(
 //     names = Array("--log"),
@@ -62,18 +64,17 @@ class Jade: CliktCommand() {
 //   // TODO: check --help
   val log = listOf<LogSetting>()
 
-  val logCallerDepth: Int by
-    option(
-      metavar="DEPTH",
-      help="Number of callers to print after log messages",
-    ).int().default(0)
+  val logCallerDepth: Int by option(
+    metavar = "DEPTH",
+    help = "Number of callers to print after log messages",
+  ).int().default(0)
 
-  val wait: Boolean by
-    option(
-      help="Wait for input from user before running (useful when attaching to the process)")
-    .flag(
-      "--no-wait",
-      default=false)
+  val wait: Boolean by option(
+    help = "Wait for input from user before running (useful when attaching to the process)"
+  ).flag(
+    "--no-wait",
+    default = false
+  )
 
   override fun run() {
     DynamicCallerConverter.depthEnd = logCallerDepth
@@ -82,9 +83,13 @@ class Jade: CliktCommand() {
       // TODO: warn if log exists
       // TODO: warn if no such class or package (and suggest qualifications)
       val parsedName =
-        if (name.startsWith(".")) { name.substring(1) }
-        else if (name == "") { "" }
-        else { Log.prefix + lvl }
+        if (name.startsWith(".")) {
+          name.substring(1)
+        } else if (name == "") {
+          ""
+        } else {
+          Log.prefix + lvl
+        }
       Log.getLog(parsedName).setLevel(lvl)
     }
 
@@ -110,10 +115,10 @@ data class LogSetting(val name: String, val lvl: Level)
 //   }
 // }
 
-////////////////
+/**************/
 // Sub-commands
 
-class TestLog: CliktCommand() {
+class TestLog : CliktCommand() {
   class Bar {
     val logger = Log.logger {} // TODO: lazy?
     fun f() {
@@ -131,14 +136,18 @@ class TestLog: CliktCommand() {
   }
 }
 
-class BuildInfo: CliktCommand(help="Display information about how `jade` was built") {
+class BuildInfo : CliktCommand(help = "Display information about how `jade` was built") {
   // TODO: --long --short
   override fun run() {
-    with (BuildInformation) {
-      println("""${versionMessage}
-        |Build tools: Kotlin ${kotlinVersion}, Gradle ${gradleVersion}, Java ${javaVersion}
-        |Build time: ${buildTime}
-        |Dependencies:""".trimMargin())
+    // with (BuildInformation) {
+    // "${kotlinVersion}"
+    with(BuildInformation) {
+      println(
+        """$versionMessage
+          |Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
+          |Build time: $buildTime
+          |Dependencies:""".trimMargin()
+      )
     }
     for (d in BuildInformation.dependencies) {
       println("  ${d.first} (configuration: ${d.second})")
@@ -148,17 +157,19 @@ class BuildInfo: CliktCommand(help="Display information about how `jade` was bui
       println("  ${l.first}=${l.second}")
     }
     println("Runtime system properties:")
-    for (p in System
+    for (
+      p in System
         .getProperties()
         .toList()
         .sortedBy { it.first.toString() }
-        .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) }) {
+        .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) }
+    ) {
       println("  ${p.first}=${p.second}")
     }
   }
 }
 
-class Decompile: CliktCommand(help="Display information about how `jade` was built") {
+class Decompile : CliktCommand(help = "Display information about how `jade` was built") {
   // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
 
   // @Parameters(paramLabel = "<path>", arity = "1..*", description = Array("Files or directories to decompile"), `type` = Array(classOf[java.nio.file.Path]))
@@ -169,7 +180,7 @@ class Decompile: CliktCommand(help="Display information about how `jade` was bui
   }
 }
 
-class Compile: CliktCommand(help="Compile a java file") {
+class Compile : CliktCommand(help = "Compile a java file") {
   override fun run() {
     // TODO: Use a JavaAgent of a nested compiler to test whether the code compiles
     // TODO: Test whether it compiles under different Java versions
@@ -180,14 +191,14 @@ class Compile: CliktCommand(help="Compile a java file") {
 
 // TODO: commands for decompiling with other decompilers
 
-class Diff: CliktCommand(help="Compare class files") {
+class Diff : CliktCommand(help = "Compare class files") {
   override fun run() {
     TODO("implement diff")
   }
 }
 
 // TODO: rename to loggers?
-class Logs: CliktCommand(help="Lists available logs") {
+class Logs : CliktCommand(help = "Lists available logs") {
   override fun run() {
     // Log.listLogs()
     TODO("implement list-logs")

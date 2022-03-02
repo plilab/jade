@@ -5,9 +5,9 @@ package org.ucombinator.jade.jgrapht
 // import scala.reflect.ClassTag
 
 import org.jgrapht.Graph
+import org.jgrapht.alg.lca.EulerTourRMQLCAFinder
 import org.jgrapht.graph.SimpleDirectedGraph
 import org.ucombinator.jade.util.Errors
-import org.jgrapht.alg.lca.EulerTourRMQLCAFinder
 
 data class DominatorTreeJob<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
   private val lca = EulerTourRMQLCAFinder(tree, root)
@@ -22,8 +22,9 @@ object Dominator {
   final data class Edge<V>(val source: V, val target: V)
 
   fun <V, E> isDominator(tree: Graph<V, E>, v1: V, v2: V): Boolean =
-    if (v1 == v2) { true }
-    else {
+    if (v1 == v2) {
+      true
+    } else {
       val edges = tree.outgoingEdgesOf(v2)
       when (val x = edges.size) {
         0 -> false
@@ -46,7 +47,7 @@ object Dominator {
 
     var N = 0
 
-    val bucket = HashMap<V, Set<V>>() //buckets of nodes with the same sdom
+    val bucket = HashMap<V, Set<V>>() // buckets of nodes with the same sdom
     for (vertex in graph.vertexSet()) {
       bucket.put(vertex, HashSet<V>())
     }
@@ -62,8 +63,8 @@ object Dominator {
 
     // Finds the ancestor of v with the lowest semidominator. Uses path compression to keep runtime down.
     fun ancestorWithLowestSemi(v: V): V {
-      val a = ancestor.getValue(v) //ancestor initially means parent; only modified here
-      if (ancestor.contains(a)) { //if defined
+      val a = ancestor.getValue(v) // ancestor initially means parent; only modified here
+      if (ancestor.contains(a)) { // if defined
         val b = ancestorWithLowestSemi(a)
         ancestor.put(v, ancestor.getValue(a))
         if (dfnum.getValue(semi.getValue(b)) < dfnum.getValue(semi.getValue(best.getValue(v)))) {
@@ -74,7 +75,7 @@ object Dominator {
     }
 
     // Helper function: p is parent of n
-    fun link(p: V, n: V): Unit {
+    fun link(p: V, n: V) {
       ancestor.put(n, p)
       best.put(n, n)
     }
@@ -140,7 +141,7 @@ object Dominator {
 
     // Algorithm complete; remaining code is just for translation to expected result structure
     val tree = SimpleDirectedGraph<V, Edge<V>>(Edge::class.java as Class<Edge<V>>) // TODO: alterative to "as"?
-    tree.addVertex(start) //suspicious: may or may not be key in idom
+    tree.addVertex(start) // suspicious: may or may not be key in idom
     for ((key, _) in idom) {
       tree.addVertex(key)
     }

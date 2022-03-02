@@ -1,8 +1,6 @@
 package org.ucombinator.jade.decompile
 
-//import java.lang.invoke.LambdaMetafactory
-
-// import scala.annotation.tailrec
+// import java.lang.invoke.LambdaMetafactory
 
 import com.github.javaparser.ast.ArrayCreationLevel
 import com.github.javaparser.ast.NodeList
@@ -43,6 +41,8 @@ Generators
   }
  */
 
+// TODO: ktlint: alligned forms
+// TODO: ktlint: two-line if
 sealed class DecompiledInsn(val usesNextInsn: Boolean = true)
 data class DecompiledStatement(val statement: Statement, val usesNextInsnArg: Boolean = true) : DecompiledInsn(usesNextInsnArg)
 data class DecompiledExpression(val expression: Expression)                          : DecompiledInsn()
@@ -89,7 +89,7 @@ object DecompileInsn {
     val (retVar, argVars) = ssa.insnVars.getOrElse(node, { Pair(null, listOf()) })
     val argsArray: Array<Expression> = argVars.map(::decompileVar).toTypedArray()
     fun args(i: Int): Expression = argsArray.get(i)
-    //val ret: Expression = decompileVar(retVar)
+    // val ret: Expression = decompileVar(retVar)
     fun call(node: AbstractInsnNode): Triple<MethodInsnNode, List<Type>, NodeList<Type>> {
       val insn = node as MethodInsnNode
       val (argumentTypes, _) = Descriptor.methodDescriptor(insn.desc)
@@ -325,7 +325,7 @@ object DecompileInsn {
           val (typ, expectedDims) = unwrap(Descriptor.fieldDescriptor(node.desc))
           val dimArgs =
             argsArray.toList().subList(0, dims).map {ArrayCreationLevel(it, NodeList())}
-          val nonDimArgs = 
+          val nonDimArgs =
             (dims..expectedDims).map { ArrayCreationLevel(null, NodeList()) }
           val levels = NodeList(dimArgs.plus(nonDimArgs))
           DecompiledExpression(ArrayCreationExpr(typ, levels, /*TODO: initializer*/ null))

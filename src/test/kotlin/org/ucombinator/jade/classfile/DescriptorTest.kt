@@ -23,15 +23,21 @@ object DescriptorTest {
     @Test fun `Object type`() {
       expect(
         "java.lang.Object",
-        { Descriptor.fieldDescriptor("Ljava/lang/Object;").asClassOrInterfaceType().toString() })
+        { Descriptor.fieldDescriptor("Ljava/lang/Object;").asClassOrInterfaceType().toString() }
+      )
     }
     @Test fun `array types`() {
-      assertEquals("boolean[][]",
-        Descriptor.fieldDescriptor("[[Z").asArrayType().toString())
-      assertEquals("java.lang.Object[][]",
-        Descriptor.fieldDescriptor("[[Ljava/lang/Object;").asArrayType().toString())
+      assertEquals(
+        "boolean[][]",
+        Descriptor.fieldDescriptor("[[Z").asArrayType().toString()
+      )
+      assertEquals(
+        "java.lang.Object[][]",
+        Descriptor.fieldDescriptor("[[Ljava/lang/Object;").asArrayType().toString()
+      )
     }
   }
+  // TODO: ktlint closing paren on same line
 
   object `method descriptor` {
     @Test fun `non-void`() {

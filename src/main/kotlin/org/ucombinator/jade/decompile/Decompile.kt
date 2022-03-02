@@ -27,7 +27,7 @@ object Decompile {
   val classes = mutableMapOf<CompilationUnit, ClassNode>()
   val methods = mutableMapOf<BodyDeclaration<out BodyDeclaration<*>>, Pair<ClassNode, MethodNode>>()
 
-  // def main(paths: List[Path]): Unit = {
+  fun main(paths: List<Path>): Unit {
   //   for (path <- paths) {
   //     VFS.get0(path)
   //   }
@@ -52,9 +52,10 @@ object Decompile {
   //       this.log.debug(f"compilationUnit\n${compilationUnit}")
   //     }
   //   }
-  // }
+    TODO()
+  }
 
-  // def decompileClassFile(name: String, owner: String, cr: ClassReader, i: Int): CompilationUnit = {
+  fun decompileClassFile(name: String, owner: String, cr: ClassReader, i: Int): CompilationUnit {
   //   // TODO: name use "." instead of "/" and "$"
   //   this.log.info(f"Decompiling [${i + 1} of ${VFS.classes.size}] ${name} from ${owner}")
   //   val log = this.log
@@ -99,5 +100,6 @@ object Decompile {
   //   })
 
   //   DecompileClass.decompileClass(classNode)
-  // }
+    TODO()
+  }
 }

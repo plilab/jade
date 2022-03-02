@@ -32,7 +32,7 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 object DecompileMethodBody {
-  // private def stubBody(message: String, comment: BlockComment): BlockStmt = {
+  private fun stubBody(message: String, comment: BlockComment): BlockStmt {
   //   val statements = new NodeList[Statement](
   //     JavaParser.setComment(
   //       new ThrowStmt(
@@ -54,10 +54,10 @@ object DecompileMethodBody {
   //     )
   //   }
   //   new BlockStmt(statements)
-  // }
+    TODO()
+  }
 
   fun decompileBodyStub(node: MethodNode): BlockStmt {
-    TODO()
   //   val instructions = {
   //     if (node.instructions.size() == 0) {
   //       "   <no instructions>" // TODO: check
@@ -81,20 +81,24 @@ object DecompileMethodBody {
   //          |         """.stripMargin
   //     )
   //   )
+    TODO()
   }
-  // def setDeclarationBody(declaration: BodyDeclaration[_ <: BodyDeclaration[_]], body: BlockStmt): Unit = {
-  //   declaration match {
-  //     case declaration: InitializerDeclaration => declaration.setBody(body); ()
-  //     case declaration: ConstructorDeclaration => declaration.setBody(body); ()
-  //     case declaration: MethodDeclaration => declaration.setBody(body); ()
-  //     case declaration => Errors.unmatchedType(declaration)
-  //   }
-  // }
-  // def decompileBody(
-  //     classNode: ClassNode,
-  //     method: MethodNode,
-  //     declaration: BodyDeclaration[_ <: BodyDeclaration[_]]
-  // ): Unit = {
+
+  fun setDeclarationBody(declaration: BodyDeclaration<out BodyDeclaration<*>>, body: BlockStmt): Unit {
+    // declaration match {
+    //   case declaration: InitializerDeclaration => declaration.setBody(body); ()
+    //   case declaration: ConstructorDeclaration => declaration.setBody(body); ()
+    //   case declaration: MethodDeclaration => declaration.setBody(body); ()
+    //   case declaration => Errors.unmatchedType(declaration)
+    // }
+    TODO()
+  }
+
+  fun decompileBody(
+    classNode: ClassNode,
+    method: MethodNode,
+    declaration: BodyDeclaration<out BodyDeclaration<*>>
+  ): Unit {
   //   if (method.instructions.size == 0) {
   //     // The method has no body as even methods with empty bodies have a `return` instruction
   //     this.log.debug("**** Method is has no body ****")
@@ -199,5 +203,6 @@ object DecompileMethodBody {
   //     // this.log.debug("++++ statements ++++\n" + statements.mkString("\n"))
   //     // setDeclarationBody(declaration, new BlockStmt(new NodeList[Statement](statements.asJava)))
   //   }
-  // }
+    TODO()
+  }
 }

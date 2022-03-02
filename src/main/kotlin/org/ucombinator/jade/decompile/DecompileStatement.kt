@@ -22,6 +22,10 @@ package org.ucombinator.jade.decompile
 // import org.ucombinator.jade.classfile.Descriptor
 // import org.ucombinator.jade.util.JavaParser
 // import com.github.javaparser.ast.comments.BlockComment
+import com.github.javaparser.ast.stmt.BlockStmt
+import org.ucombinator.jade.analysis.ControlFlowGraph
+import org.ucombinator.jade.analysis.StaticSingleAssignment
+import org.ucombinator.jade.analysis.Structure
 
 // TODO: rename to Statement
 object DecompileStatement {
@@ -33,7 +37,7 @@ object DecompileStatement {
   is it a loop head, which loop head is this part of
    */
 
-  // def apply(cfg: ControlFlowGraph, ssa: StaticSingleAssignment, structure: Structure): BlockStmt = {
+  fun apply(cfg: ControlFlowGraph, ssa: StaticSingleAssignment, structure: Structure): BlockStmt {
   //   // TODO: check for SCCs with multiple entry points
   //   // TODO: LocalClassDeclarationStmt
   //   val jumpTargets = cfg.graph // TODO: rename to insnOfLabel
@@ -194,5 +198,6 @@ object DecompileStatement {
   //   statements.add(stmt)
   //   val stmt2 = new BlockStmt(statements)
   //   return stmt2
-  // }
+    TODO()
+  }
 }

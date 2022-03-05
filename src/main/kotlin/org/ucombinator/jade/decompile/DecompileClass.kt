@@ -57,7 +57,7 @@ object DecompileClass {
         NormalAnnotationExpr(
           name,
           NodeList<MemberValuePair>(
-            (0..vs.size step 2).map { i -> MemberValuePair(vs.get(i) as String, decompileLiteral(vs.get(i + 1))) }
+            (0..vs.size step 2).map { MemberValuePair(vs.get(it) as String, decompileLiteral(vs.get(it + 1))) }
           )
         )
     }
@@ -163,7 +163,7 @@ object DecompileClass {
         nullToSeq(node.visibleParameterAnnotations.toList()),
         nullToSeq(node.invisibleParameterAnnotations.toList())
       ).withIndex()
-    val parameters: NodeList<Parameter> = NodeList(ps.map { x -> decompileParameter(node, sig._2.size, x) })
+    val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig._2.size, it) })
     val type: Type = sig._3
     val thrownExceptions: NodeList<ReferenceType> = NodeList(sig._4)
     val name: SimpleName = SimpleName(node.name)

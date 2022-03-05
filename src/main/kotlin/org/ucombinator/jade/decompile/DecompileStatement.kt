@@ -45,9 +45,7 @@ object DecompileStatement {
       .toMap()
 
     // TODO: remove back edges
-    val graph = AsSubgraph(
-      MaskSubgraph(cfg.graph, { _: Insn -> false }, { e: ControlFlowGraph.Edge -> structure.backEdges.contains(e) })
-    )
+    val graph = AsSubgraph(MaskSubgraph(cfg.graph, { false }, structure.backEdges::contains))
 
     fun labelString(label: LabelNode): String = "JADE_${jumpTargets.getValue(label.label).index()}"
     fun insnLabelString(insn: Insn): String = "JADE_${insn.index()}" // TODO: overload with labelString

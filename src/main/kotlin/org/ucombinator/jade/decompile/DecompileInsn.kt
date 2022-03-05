@@ -121,11 +121,19 @@ object DecompileInsn {
     }
     fun instanceCall(node: AbstractInsnNode): DecompiledInsn {
       val (insn, argumentTypes, typeArguments) = call(node)
-      return DecompiledExpression(MethodCallExpr( /*TODO: cast to insn.owner?*/ args(0), typeArguments, insn.name, NodeList(argumentTypes.indices.map { i -> args(i + 1) }))) // TODO: better way for this
+      return DecompiledExpression(MethodCallExpr(
+        /*TODO: cast to insn.owner?*/ args(0),
+        typeArguments,
+        insn.name,
+        NodeList(argumentTypes.indices.map { args(it + 1) }))) // TODO: better way for this
     }
     fun staticCall(node: AbstractInsnNode): DecompiledInsn {
       val (insn, argumentTypes, typeArguments) = call(node)
-      return DecompiledExpression(MethodCallExpr(ClassName.classNameExpr(insn.owner), typeArguments, insn.name, NodeList(argumentTypes.indices.map(::args))))
+      return DecompiledExpression(MethodCallExpr(
+        ClassName.classNameExpr(insn.owner),
+        typeArguments,
+        insn.name,
+        NodeList(argumentTypes.indices.map(::args))))
     }
     return Pair(
       retVar,
@@ -275,7 +283,7 @@ object DecompileInsn {
         Opcodes.TABLESWITCH -> {
           val insn = node as TableSwitchInsnNode
           assert(insn.labels.size == insn.max - insn.min)
-          DecompiledSwitch((insn.labels.mapIndexed { i, l -> Pair(insn.min + i, l) }).toMap(), insn.dflt)
+          DecompiledSwitch((insn.labels.mapIndexed { i, l -> insn.min + i to l }).toMap(), insn.dflt)
         }
         // LookupSwitch
         Opcodes.LOOKUPSWITCH -> {

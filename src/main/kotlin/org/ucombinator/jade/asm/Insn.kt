@@ -89,6 +89,6 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
         }
         .toMap()
 
-    val intToType: Map<Int, String> = typeToInt.toList().map { Pair(it.second, it.first) }.toMap()
+    val intToType: Map<Int, String> = typeToInt.toList().map { it.second to it.first }.toMap()
   }
 }

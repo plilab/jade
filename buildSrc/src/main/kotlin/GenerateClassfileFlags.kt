@@ -171,7 +171,7 @@ object GenerateClassfileFlags {
       builder.append("  private val ${kind}Mapping = listOf<Pair<Int, ${kind}Flag>>(\n")
       for (flagInfo in flagInfosForKind.sortedBy { it.value }) {
         builder.append(
-          "    Pair( /*0x${"%04x".format(flagInfo.value)}*/ ${flagInfo.accName}.value(), ${flagInfo.accName}), // ${flagInfo.description}\n"
+          "    /*0x${"%04x".format(flagInfo.value)}*/ ${flagInfo.accName}.value() to ${flagInfo.accName}, // ${flagInfo.description}\n"
         )
       }
       builder.append("  )\n")

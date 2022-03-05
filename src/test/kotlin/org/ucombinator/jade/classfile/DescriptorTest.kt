@@ -8,14 +8,14 @@ object DescriptorTest {
   object `field descriptor` {
     @Test fun `base types`() {
       val types = mapOf(
-        Pair(PrimitiveType.Primitive.BOOLEAN, "Z"),
-        Pair(PrimitiveType.Primitive.CHAR, "C"),
-        Pair(PrimitiveType.Primitive.BYTE, "B"),
-        Pair(PrimitiveType.Primitive.SHORT, "S"),
-        Pair(PrimitiveType.Primitive.INT, "I"),
-        Pair(PrimitiveType.Primitive.LONG, "J"),
-        Pair(PrimitiveType.Primitive.FLOAT, "F"),
-        Pair(PrimitiveType.Primitive.DOUBLE, "D"),
+        PrimitiveType.Primitive.BOOLEAN to "Z",
+        PrimitiveType.Primitive.CHAR to "C",
+        PrimitiveType.Primitive.BYTE to "B",
+        PrimitiveType.Primitive.SHORT to "S",
+        PrimitiveType.Primitive.INT to "I",
+        PrimitiveType.Primitive.LONG to "J",
+        PrimitiveType.Primitive.FLOAT to "F",
+        PrimitiveType.Primitive.DOUBLE to "D",
       )
       for ((p, s) in types) {
         assertSame(p, Descriptor.fieldDescriptor(s).asPrimitiveType().type)

@@ -23,7 +23,7 @@ object GraphViz {
   fun <N, E> print(writer: Writer, graph: Graph<N, E>) {
     val dotExporter = DOTExporter<N, E>()
     dotExporter.setVertexAttributeProvider {
-      hashMapOf(Pair("label", DefaultAttribute.createAttribute(it.toString())))
+      mapOf("label" to DefaultAttribute.createAttribute(it.toString()))
     }
     dotExporter.exportGraph(graph, writer)
   }
@@ -37,7 +37,7 @@ object GraphViz {
   fun print(writer: Writer, graph: ControlFlowGraph) {
     val dotExporter = DOTExporter<Insn, ControlFlowGraph.Edge>()
     dotExporter.setVertexAttributeProvider {
-      hashMapOf(Pair("label", DefaultAttribute.createAttribute(it.longString())))
+      mapOf("label" to DefaultAttribute.createAttribute(it.longString()))
     }
     dotExporter.exportGraph(graph.graph, writer)
   }

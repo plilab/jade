@@ -10,7 +10,7 @@ import org.ucombinator.jade.util.Errors
 data class StaticSingleAssignment(
   val frames: Array<Frame<Var>>,
   val insnVars: Map<AbstractInsnNode, Pair<Var, List<Var>>>,
-  val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>,
+  val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>, // TODO: change Set to Map?
 ) {
   companion object {
     fun make(owner: String, method: MethodNode, cfg: ControlFlowGraph): StaticSingleAssignment {
@@ -53,7 +53,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   fun phiInputs(key: PhiVar, insn: AbstractInsnNode?, value: Var?, ignoreNull: Boolean = false) {
     if (!ignoreNull || value != null) {
       val usedKey = key.change()
-      val entry = Pair(insn!!, value)
+      val entry = insn!! to value
       this.phiInputs.put(usedKey, this.phiInputs.getOrElse(usedKey, { setOf() }).plus(entry))
     }
   }

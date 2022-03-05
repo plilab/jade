@@ -1,8 +1,8 @@
 package org.ucombinator.jade.analysis
 
-import org.objectweb.asm.* // ktlint-disable no-wildcard-imports
-import org.objectweb.asm.tree.* // ktlint-disable no-wildcard-imports
-import org.objectweb.asm.tree.analysis.* // ktlint-disable no-wildcard-imports
+import org.objectweb.asm.*
+import org.objectweb.asm.tree.*
+import org.objectweb.asm.tree.analysis.*
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.asm.TypedBasicInterpreter
 import org.ucombinator.jade.util.Errors
@@ -13,8 +13,8 @@ data class StaticSingleAssignment(
   val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>,
 ) {
   companion object {
-    fun apply(owner: String, method: MethodNode, cfg: ControlFlowGraph): StaticSingleAssignment {
-      val interpreter = SSAInterpreter(method)
+    fun make(owner: String, method: MethodNode, cfg: ControlFlowGraph): StaticSingleAssignment {
+      val interpreter = SsaInterpreter(method)
 
       // Hook into a method that is called whenever `analyze` starts working on a new instruction
       val oldInstructions = method.instructions
@@ -31,7 +31,7 @@ data class StaticSingleAssignment(
         method.instructions.add(i)
       }
 
-      val frames = SSAAnalyzer(cfg, interpreter).analyze(owner, method)
+      val frames = SsaAnalyzer(cfg, interpreter).analyze(owner, method)
 
       return StaticSingleAssignment(frames, interpreter.insnVars, interpreter.phiInputs)
     }
@@ -40,10 +40,11 @@ data class StaticSingleAssignment(
 
 // TODO: maybe handle `this` var specially (i.e., no phivar)
 // TODO: extend TypedBasicInterpreter?
-private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.ASM9) {
+private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.ASM9) {
   // Variables to be put in output
   val insnVars = mutableMapOf<AbstractInsnNode, Pair<Var, List<Var>>>()
   val phiInputs = mutableMapOf<Var, Set<Pair<AbstractInsnNode, Var?>>>()
+
   // Other bookkeeping variables
   var copyOperationPosition: Int = 0 // For `copyOperation()`
   var originInsn: AbstractInsnNode? = null // For `merge`
@@ -65,7 +66,7 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   override fun newReturnTypeValue(type: Type): Var? {
     // ASM requires that we return null when type is Type.VOID_TYPE
     this.returnTypeValue =
-      if (type == Type.VOID_TYPE) { null } else { ReturnVar(TypedBasicInterpreter.newReturnTypeValue(type)) }
+      if (type == Type.VOID_TYPE) null else ReturnVar(TypedBasicInterpreter.newReturnTypeValue(type))
     return this.returnTypeValue
   }
 
@@ -136,9 +137,7 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
       )
     )
 
-  // override fun naryOperation(insn: AbstractInsnNode, values: (MutableList<out Var!>..List<Var!>?)): Var!
   @Throws(AnalyzerException::class)
-  // override fun naryOperation(insn: AbstractInsnNode, values: java.util.List<out Var>): Var {
   override fun naryOperation(insn: AbstractInsnNode, values: MutableList<out Var>): Var =
     record(
       insn,
@@ -174,8 +173,7 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   }
 }
 
-private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpreter) : Analyzer<Var>(interpreter) {
-
+private class SsaAnalyzer(val cfg: ControlFlowGraph, val interpreter: SsaInterpreter) : Analyzer<Var>(interpreter) {
   override fun init(owner: String, method: MethodNode) {
     // We override this method because it runs near the start of `Analyzer.analyze`
     // but after the `Analyzer.frames` array is created.
@@ -188,9 +186,9 @@ private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpr
     // came from.  By the time `merge` runs, that information for the first value is gone.
     for (insn in method.instructions) {
       val insnIndex = method.instructions.indexOf(insn)
-      val minimumInEdges = if (insnIndex == 0) { 0 } else { 1 }
-      if (cfg.graph.incomingEdgesOf(Insn(method, insn)).size > minimumInEdges
-        || method.tryCatchBlocks.any({ p -> p.handler === insn })
+      val minimumInEdges = if (insnIndex == 0) 0 else 1
+      if (cfg.graph.incomingEdgesOf(Insn(method, insn)).size > minimumInEdges ||
+        method.tryCatchBlocks.any { it.handler === insn }
       ) {
         // We are at a join point
         val cfgFrame = cfg.frames.get(insnIndex)
@@ -221,9 +219,7 @@ private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpr
     // This gets passed as to `returnOperation` as `expected`.
     for (frame in this.frames) {
       // Unreachable code has null frames, so skip those
-      if (frame != null) {
-        frame.setReturn(interpreter.returnTypeValue)
-      }
+      frame?.setReturn(interpreter.returnTypeValue)
     }
   }
 }

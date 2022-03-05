@@ -1,28 +1,27 @@
 package org.ucombinator.jade.decompile
 
-import com.github.javaparser.ast.expr.* // ktlint-disable no-wildcard-imports
-import com.github.javaparser.ast.stmt.* // ktlint-disable no-wildcard-imports
-import com.github.javaparser.ast.stmt.BlockStmt
-import org.jgrapht.graph.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.expr.*
+import com.github.javaparser.ast.stmt.*
+import org.jgrapht.graph.*
 import org.objectweb.asm.tree.LabelNode
 import org.ucombinator.jade.analysis.ControlFlowGraph
 import org.ucombinator.jade.analysis.StaticSingleAssignment
 import org.ucombinator.jade.analysis.Structure
+import org.ucombinator.jade.analysis.Var
 import org.ucombinator.jade.asm.Insn
-import org.ucombinator.jade.decompile.* // ktlint-disable no-wildcard-imports
-// import com.github.javaparser.ast.NodeList
+import org.ucombinator.jade.classfile.Descriptor
+import org.ucombinator.jade.javaparser.JavaParser
+import org.ucombinator.jade.util.Errors
+
+// import org.ucombinator.jade.decompile.*
 // import com.github.javaparser.ast.body.VariableDeclarator
 // import com.github.javaparser.ast.comments.BlockComment
 // import com.github.javaparser.ast.type.PrimitiveType
-// import org.ucombinator.jade.analysis.Var
-// import org.ucombinator.jade.classfile.Descriptor
-// import org.ucombinator.jade.javaparser.JavaParser
-// import org.ucombinator.jade.util.Errors
 // import org.ucombinator.jade.util.Log
 // import com.github.javaparser.ast.type.Type as JavaParserType
 // import org.objectweb.asm.Type as AsmType
 
-// TODO: rename to Statement
 object DecompileStatement {
   /*
   As long as one is jumping forwards, we can always encode as a sequence of breaks
@@ -32,14 +31,14 @@ object DecompileStatement {
   is it a loop head, which loop head is this part of
    */
 
-  fun apply(cfg: ControlFlowGraph, ssa: StaticSingleAssignment, structure: Structure): BlockStmt {
+  fun make(cfg: ControlFlowGraph, ssa: StaticSingleAssignment, structure: Structure): BlockStmt {
     // TODO: check for SCCs with multiple entry points
     // TODO: LocalClassDeclarationStmt
     val jumpTargets = cfg.graph // TODO: rename to insnOfLabel
       .vertexSet()
       .flatMap { insn ->
-        when (val e = insn.insn) {
-          is LabelNode -> setOf(e.label to insn)
+        when (val node = insn.insn) {
+          is LabelNode -> setOf(node.label to insn)
           else -> setOf()
         }
       }
@@ -50,149 +49,153 @@ object DecompileStatement {
       MaskSubgraph(cfg.graph, { _: Insn -> false }, { e: ControlFlowGraph.Edge -> structure.backEdges.contains(e) })
     )
 
-    fun labelString(label: LabelNode): String = "JADE_" + jumpTargets.getValue(label.label).index()
-    fun insnLabelString(insn: Insn): String = "JADE_" + insn.index() // TODO: overload with labelString
+    fun labelString(label: LabelNode): String = "JADE_${jumpTargets.getValue(label.label).index()}"
+    fun insnLabelString(insn: Insn): String = "JADE_${insn.index()}" // TODO: overload with labelString
 
     fun structuredBlock(head: Insn): Pair<Statement, Set<Insn> /* pendingOutside */ > {
-      // // do statements in instruction order if possible
-      // // constraints (loops *must* be together):
-      // // 1. Respect edges
-      // // 2. Loop instructions must be together (thus avoid exiting loop)
-      // // 3. Pick following instruction if possible and not goto.
-      // //    Otherwise, pick the smallest instruction.
-      // //
-      // // Any instruction could require a "break" or "continue" attached to it.
-      // // Only loops are allowed to be continue targets.
+      // do statements in instruction order if possible
+      // constraints (loops *must* be together):
+      // 1. Respect edges
+      // 2. Loop instructions must be together (thus avoid exiting loop)
+      // 3. Pick following instruction if possible and not goto.
+      //    Otherwise, pick the smallest instruction.
+      //
+      // Any instruction could require a "break" or "continue" attached to it.
+      // Only loops are allowed to be continue targets.
 
-      // val headStructure = structure.nesting(head)
+      val headStructure = structure.nesting.getValue(head)
 
-      // // worklist of vertexes with no more incoming edges that are inside the current loop (back edges do not count)
-      // // NOTE: We use TreeSet so we have `minOption()`
-      // var pendingInside = TreeSet[Insn]()
+      // worklist of vertexes with no more incoming edges that are inside the current loop (back edges do not count)
+      // NOTE: We use TreeSet so we have `minOption()`
+      // var pendingInside = TreeSet<Insn>()
+      var pendingInside = sortedSetOf<Insn>()
 
-      // // worklist of vertexes with no more incoming edges that are outside the current loop (back edges do not count)
-      // var pendingOutside = Set[Insn]()
+      // worklist of vertexes with no more incoming edges that are outside the current loop (back edges do not count)
+      var pendingOutside = setOf<Insn>()
 
-      // def addPending(insns: Set[Insn]): Unit = {
-      //   for (insn <- insns) {
-      //     assert(graph.inDegreeOf(insn) == 0)
-      //     if (MyersList.partialOrdering.gteq(structure.nesting(insn), headStructure)) {
-      //       pendingInside += insn
-      //     } else {
-      //       pendingOutside += insn
-      //     }
-      //   }
-      // }
+      fun addPending(insns: Set<Insn>) {
+        for (insn in insns) {
+          assert(graph.inDegreeOf(insn) == 0)
+          if (TODO()) { // (MyersList.partialOrdering.gteq(structure.nesting.getValue(insn), headStructure)) {
+            pendingInside += insn
+          } else {
+            pendingOutside += insn
+          }
+        }
+      }
 
-      // def removeOutEdges(insn: Insn): Set[Insn] = {
-      //   val outEdges = Set.from(graph.outgoingEdgesOf(insn).asScala)
-      //   val targets = outEdges.map(e => graph.getEdgeTarget(e))
-      //   outEdges.foreach(e => graph.removeEdge(e))
-      //   addPending(targets.filter(e => graph.inDegreeOf(e) == 0))
-      //   outEdges.map(e => graph.getEdgeTarget(e))
-      // }
+      fun removeOutEdges(insn: Insn): Set<Insn> {
+        val outEdges = graph.outgoingEdgesOf(insn)
+        val targets = outEdges.map(graph::getEdgeTarget)
+        outEdges.forEach(graph::removeEdge)
+        addPending(targets.filter { graph.inDegreeOf(it) == 0 }.toSet())
+        return outEdges.map(graph::getEdgeTarget).toSet()
+      }
 
-      // // ASSUMPTION: structured statements have a single entry point
-      // def structuredStmt(insn: Insn): Statement = {
-      //   val block = structure.nesting(insn).head
-      //   if (block.headInsn eq insn) { // insn is the head of a structured statement
-      //     // TODO: multiple nested structures starting at same place (for now assume everything is a loop)
-      //     val (stmt, newPending) = structuredBlock(insn)
-      //     addPending(newPending)
-      //     block.kind match {
-      //       case Structure.Loop() =>
-      //         val label = labelString(insn.insn.asInstanceOf[LabelNode]) // TODO: do better
-      //         new LabeledStmt(label, new WhileStmt(new BooleanLiteralExpr(true), stmt))
-      //       case Structure.Exception() => ???
-      //       case Structure.Synchronized() => ???
-      //     }
-      //   } else {
-      //     return simpleStmt(insn)
-      //   }
-      // }
+      fun simpleStmt(insn: Insn): Statement {
+        // ASSUMPTION: we ignore allocs but implement the constructors
+        val (retVal, decompiled) = DecompileInsn.decompileInsn(insn.insn, ssa)
+        return when (decompiled) {
+          is DecompiledIf -> {
+            // this.log.debug("IF: " + decompiled.labelNode + "///" + decompiled.labelNode.getLabel)
+            IfStmt(decompiled.condition, BreakStmt(labelString(decompiled.labelNode)), null)
+          }
+          is DecompiledGoto ->
+            BreakStmt(labelString(decompiled.labelNode)) // TODO: use instruction number?
+          else -> DecompileInsn.decompileInsn(retVal, decompiled)
+        }
+        // TODO: break vs continue
+        // TODO: labels in break or continue
+      }
+      // TODO: explicitly labeled instructions
 
-      // def simpleStmt(insn: Insn): Statement = {
-      //   // ASSUMPTION: we ignore allocs but implement the constructors
-      //   val (retVal, decompiled) = DecompileInsn.decompileInsn(insn.insn, ssa)
-      //   decompiled match {
-      //     case DecompiledIf(labelNode, condition) =>
-      //       this.log.debug("IF: " + labelNode + "///" + labelNode.getLabel)
-      //       new IfStmt(condition, new BreakStmt(labelString(labelNode)), null)
-      //     case DecompiledGoto(labelNode: LabelNode) =>
-      //       new BreakStmt(labelString(labelNode)) // TODO: use instruction number?
-      //     case _ => return DecompileInsn.decompileInsn(retVal, decompiled)
-      //   }
-      //   // TODO: break vs continue
-      //   // TODO: labels in break or continue
-      // }
-      // // TODO: explicitly labeled instructions
+      // ASSUMPTION: structured statements have a single entry point
+      fun structuredStmt(insn: Insn): Statement {
+        val block = structure.nesting.getValue(insn).first()
+        return if (block.headInsn == insn) { // insn is the head of a structured statement
+          // TODO: multiple nested structures starting at same place (for now assume everything is a loop)
+          val (stmt, newPending) = structuredBlock(insn)
+          addPending(newPending)
+          when (block.kind) {
+            is Structure.Loop -> {
+              val label = labelString(insn.insn as LabelNode) // TODO: do better
+              LabeledStmt(label, WhileStmt(BooleanLiteralExpr(true), stmt))
+            }
+            is Structure.Exception -> TODO()
+            is Structure.Synchronized -> TODO()
+          }
+        } else {
+          simpleStmt(insn)
+        }
+      }
 
-      // var currentInsn: Insn = head
-      // var currentStmt: Statement = simpleStmt(currentInsn)
-      // // If the next instruction is an outgoing edge via normal control,
-      // //   if it is available, use it
-      // //   otherwise, insert a 'break' ('continue' is impossible since we are looking at the next instruction), then do part two
-      // // If the next instruction is not an outgoing edge,
-      // //   use the smallest available
-      // def getNextInsn(): Insn = {
-      //   // TODO: switch?
-      //   // TODO: constructor?
-      //   val outEdges = removeOutEdges(currentInsn)
-      //   val (_, decompiled) = DecompileInsn.decompileInsn(currentInsn.insn, ssa)
-      //   val nextInsn =
-      //     if (!decompiled.usesNextInsn) {
-      //       // Use the smallest available instruction
-      //       pendingInside.minOption
-      //     } else {
-      //       // ASSUMPTION: last Insn in method does not use next
-      //       val next = currentInsn.next
-      //       assert(outEdges.contains(next))
-      //       if (pendingInside(next)) {
-      //         // Use the next instruction
-      //         Some(next)
-      //       } else {
-      //         // NOTE [Branch Targets]:
-      //         // We can't go to the sequencially next instruction (probably due to a CFG dependency)
-      //         // so we insert a `break` and pick the next instruction that we can go to.
-      //         // This line is why every statement is a potential break target.
-      //         currentStmt = new BlockStmt(new NodeList[Statement](currentStmt, new BreakStmt(insnLabelString(next))))
-      //         // Use the smallest available instruction
-      //         pendingInside.minOption
-      //       }
-      //     }
-      //   nextInsn.orNull
-      // }
+      var currentInsn: Insn? = head
+      var currentStmt: Statement = simpleStmt(currentInsn!!)
 
-      // while ({ currentInsn = getNextInsn(); currentInsn != null }) {
-      //   pendingInside -= currentInsn
-      //   currentStmt = new LabeledStmt(
+      // If the next instruction is an outgoing edge via normal control,
+      //   if it is available, use it
+      //   otherwise, insert a 'break' ('continue' is impossible since we are looking at the next instruction),
+      //     then do part two
+      // If the next instruction is not an outgoing edge,
+      //   use the smallest available
+      fun getNextInsn(): Insn? {
+        // TODO: switch?
+        // TODO: constructor?
+        val outEdges = removeOutEdges(currentInsn!!)
+        val (_, decompiled) = DecompileInsn.decompileInsn(currentInsn!!.insn, ssa)
+        val nextInsn =
+          if (!decompiled.usesNextInsn) {
+            // Use the smallest available instruction
+            pendingInside.first()
+          } else {
+            // ASSUMPTION: last Insn in method does not use next
+            val next = currentInsn?.next()
+            assert(outEdges.contains(next))
+            if (pendingInside.contains(next)) {
+              // Use the next instruction
+              next
+            } else {
+              // NOTE [Branch Targets]:
+              // We can't go to the sequencially next instruction (probably due to a CFG dependency)
+              // so we insert a `break` and pick the next instruction that we can go to.
+              // This line is why every statement is a potential break target.
+              currentStmt = BlockStmt(NodeList<Statement>(currentStmt, BreakStmt(insnLabelString(next!!))))
+              // Use the smallest available instruction
+              if (pendingInside.isEmpty()) null else pendingInside.first()
+            }
+          }
+        return nextInsn
+      }
+
+      // while (true) {
+      //   currentInsn = getNextInsn()
+      //   if (currentInsn == null) { break; }
+      //   pendingInside.remove(currentInsn)
+      //   currentStmt = LabeledStmt(
       //     insnLabelString(currentInsn),
-      //     new BlockStmt(new NodeList[Statement](currentStmt, structuredStmt(currentInsn)))
+      //     BlockStmt(NodeList<Statement>(currentStmt, structuredStmt(currentInsn)))
       //   )
       // }
 
-      // return (currentStmt, pendingOutside)
-      TODO()
+      return Pair(currentStmt, pendingOutside)
     }
 
-    // val (stmt, pendingOutside) = structuredBlock(cfg.entry)
-    // if (!pendingOutside.isEmpty) { Errors.fatal(f"Non-empty pending ${pendingOutside}") }
-    // val variables = ssa.insnVars.values.map(_._1) ++ ssa.phiInputs.keys
-    // def decompileVarDecl(v: Var): Statement = {
-    //   // TODO: modifiers
-    //   if (v.basicValue == null || v.basicValue.type == null) {
-    //     JavaParser.noop(f"${v}")
-    //   } else {
-    //     val t = Descriptor.fieldDescriptor(v.basicValue.type.descriptor)
-    //     new ExpressionStmt(new VariableDeclarationExpr(t, v.name))
-    //   }
-    // }
-    // val declarations = variables.map(decompileVarDecl)
+    val (stmt, pendingOutside) = structuredBlock(cfg.entry)
+    if (pendingOutside.isNotEmpty()) { Errors.fatal("Non-empty pending $pendingOutside") }
+    val variables = ssa.insnVars.values.map(Pair<Var, List<Var>>::first) + ssa.phiInputs.keys
+    fun decompileVarDecl(v: Var): Statement =
+      // TODO: modifiers
+      if (v.basicValue == null || v.basicValue.type == null) {
+        JavaParser.noop(v.toString())
+      } else {
+        val t = Descriptor.fieldDescriptor(v.basicValue.type.descriptor)
+        ExpressionStmt(VariableDeclarationExpr(t, v.name))
+      }
+    val declarations = variables.map(::decompileVarDecl)
 
-    // val statements = new NodeList[Statement](declarations.toList.asJava)
-    // statements.add(stmt)
-    // val stmt2 = new BlockStmt(statements)
-    // return stmt2
-    TODO()
+    val statements = NodeList<Statement>(declarations.toList())
+    statements.add(stmt)
+    val stmt2 = BlockStmt(statements)
+    return stmt2
   }
 }

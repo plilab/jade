@@ -4,14 +4,14 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.ArrayCreationLevel
 import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.expr.* // ktlint-disable no-wildcard-imports
-import com.github.javaparser.ast.stmt.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.expr.*
+import com.github.javaparser.ast.stmt.*
 import com.github.javaparser.ast.type.ArrayType
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.type.PrimitiveType
 import com.github.javaparser.ast.type.Type
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.* // ktlint-disable no-wildcard-imports
+import org.objectweb.asm.tree.*
 import org.ucombinator.jade.analysis.StaticSingleAssignment
 import org.ucombinator.jade.analysis.Var
 import org.ucombinator.jade.classfile.ClassName
@@ -42,19 +42,32 @@ Generators
 // TODO: ktlint: alligned forms
 // TODO: ktlint: two-line if
 sealed class DecompiledInsn(val usesNextInsn: Boolean = true)
-data class DecompiledStatement(val statement: Statement, val usesNextInsnArg: Boolean = true) : DecompiledInsn(usesNextInsnArg)
-data class DecompiledExpression(val expression: Expression)                          : DecompiledInsn()
-data class DecompiledStackOperation(val insn: AbstractInsnNode)                      : DecompiledInsn()
-data class DecompiledIf(val labelNode: LabelNode, val condition: Expression)         : DecompiledInsn()
-data class DecompiledGoto(val labelNode: LabelNode)                                  : DecompiledInsn(false)
-data class DecompiledSwitch(val labels: Map<Int, LabelNode>, val default: LabelNode) : DecompiledInsn(false)
-data class DecompiledNew(val descriptor: ClassOrInterfaceType)                       : DecompiledInsn()
-data class DecompiledMonitorEnter(val expression: Expression)                        : DecompiledInsn()
-data class DecompiledMonitorExit(val expression: Expression)                         : DecompiledInsn()
-data class DecompiledLabel(val node: LabelNode)                                      : DecompiledInsn()
-data class DecompiledFrame(val node: FrameNode)                                      : DecompiledInsn()
-data class DecompiledLineNumber(val node: LineNumberNode)                            : DecompiledInsn()
-data class DecompiledUnsupported(val insn: AbstractInsnNode)                         : DecompiledInsn()
+data class DecompiledStatement(val statement: Statement, val usesNextInsnArg: Boolean = true) :
+  DecompiledInsn(usesNextInsnArg)
+data class DecompiledExpression(val expression: Expression) :
+  DecompiledInsn()
+data class DecompiledStackOperation(val insn: AbstractInsnNode) :
+  DecompiledInsn()
+data class DecompiledIf(val labelNode: LabelNode, val condition: Expression) :
+  DecompiledInsn()
+data class DecompiledGoto(val labelNode: LabelNode) :
+  DecompiledInsn(false)
+data class DecompiledSwitch(val labels: Map<Int, LabelNode>, val default: LabelNode) :
+  DecompiledInsn(false)
+data class DecompiledNew(val descriptor: ClassOrInterfaceType) :
+  DecompiledInsn()
+data class DecompiledMonitorEnter(val expression: Expression) :
+  DecompiledInsn()
+data class DecompiledMonitorExit(val expression: Expression) :
+  DecompiledInsn()
+data class DecompiledLabel(val node: LabelNode) :
+  DecompiledInsn()
+data class DecompiledFrame(val node: FrameNode) :
+  DecompiledInsn()
+data class DecompiledLineNumber(val node: LineNumberNode) :
+  DecompiledInsn()
+data class DecompiledUnsupported(val insn: AbstractInsnNode) :
+  DecompiledInsn()
 
 // TODO: typo in Opcodes.java: visiTableSwitchInsn -> visitTableSwitchInsn
 // TODO: typo in javaparser BlockComment: can has -> can have
@@ -63,14 +76,24 @@ data class DecompiledUnsupported(val insn: AbstractInsnNode)                    
 // TODO: literals: float vs double
 // TODO: use `|` patterns
 // TODO: UnaryExpr.Operator.BITWISE_COMPLEMENT: 0: iload_1; 1: iconst_m1; 2: ixor
+
+@Suppress("LONG_LINE")
 object DecompileInsn {
   fun decompileVar(variable: Var): NameExpr = NameExpr(variable.name)
 
-  fun decompileInsn(retVar: Var, insn: DecompiledInsn): Statement =
+  fun decompileExpression(retVar: Var?, expression: Expression) =
+    if (retVar === null) {
+      ExpressionStmt(expression)
+    } else {
+      ExpressionStmt(AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN))
+    }
+
+  @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE")
+  fun decompileInsn(retVar: Var?, insn: DecompiledInsn): Statement =
     when (insn) {
       /* ktlint-disable no-multi-spaces */
       is DecompiledStatement      -> insn.statement
-      is DecompiledExpression     -> ExpressionStmt(AssignExpr(decompileVar(retVar), insn.expression, AssignExpr.Operator.ASSIGN))
+      is DecompiledExpression     -> decompileExpression(retVar, insn.expression)
       is DecompiledStackOperation -> JavaParser.noop("Operand Stack Operation: $insn")
       is DecompiledIf             -> IfStmt(insn.condition, BreakStmt(insn.labelNode.toString()), null)
       is DecompiledGoto           -> BreakStmt(insn.labelNode.toString()) // TODO: use instruction number?
@@ -85,11 +108,11 @@ object DecompileInsn {
       /* ktlint-enable no-multi-spaces */
     }
 
+  @Suppress("MORE_THAN_ONE_STATEMENT_PER_LINE", "TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE")
   fun decompileInsn(node: AbstractInsnNode, ssa: StaticSingleAssignment): Pair<Var?, DecompiledInsn> {
     val (retVar, argVars) = ssa.insnVars.getOrElse(node, { Pair(null, listOf()) })
     val argsArray: Array<Expression> = argVars.map(::decompileVar).toTypedArray()
     fun args(i: Int): Expression = argsArray.get(i)
-    // val ret: Expression = decompileVar(retVar)
     fun call(node: AbstractInsnNode): Triple<MethodInsnNode, List<Type>, NodeList<Type>> {
       val insn = node as MethodInsnNode
       val (argumentTypes, _) = Descriptor.methodDescriptor(insn.desc)
@@ -335,14 +358,13 @@ object DecompileInsn {
         Opcodes.IFNULL    -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), NullLiteralExpr(), BinaryExpr.Operator.EQUALS))
         Opcodes.IFNONNULL -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), NullLiteralExpr(), BinaryExpr.Operator.NOT_EQUALS))
         // Synthetic instructions
-        else -> {
+        else ->
           when (node) {
             is LabelNode      -> DecompiledLabel(node)
             is FrameNode      -> DecompiledFrame(node)
             is LineNumberNode -> DecompiledLineNumber(node)
-            else           -> throw Exception("unknown instruction type: $node")
+            else              -> throw Exception("unknown instruction type: $node")
           }
-        }
         /* ktlint-enable no-multi-spaces */
       }
     )

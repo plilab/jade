@@ -1,6 +1,7 @@
 package org.ucombinator.jade.analysis
 
 import org.ucombinator.jade.asm.Insn
+
 // import org.ucombinator.jade.util.MyersList
 // import org.ucombinator.jade.jgrapht.Dominator
 // import org.jgrapht.traverse.DepthFirstIterator
@@ -37,20 +38,27 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
   sealed interface Kind // TODO: structural type
   object Loop : Kind
   object Exception : Kind
+
   // case class Exception(insns: List[Insn], handlers: List[(Insn, Type)]) extends Kind
   // handlers: dominated by head insn
   // body: dominated by head but not handlers
   // finally: ignore until refactoring pass
   // try ResourceSpecification Block [Catches] [Finally]
+
   object Synchronized : Kind
+
   // Syncronized involves a try-finally pattern
   // case class Synchronized(value) extends Kind
-  companion object {
 
-    fun apply(cfg: ControlFlowGraph): Structure {
+  companion object {
+    fun make(cfg: ControlFlowGraph): Structure {
       // // This dummy works only on code with no loops, try/catches, or synchronized blocks
       // val backEdges = Set[ControlFlowGraph.Edge]()
-      // // TODO: note that head block is present so we can always safely call .head, but its headInsn is null so it doesn't match the first instruction of the method
+
+      // // TODO: note that head block is present so we can always safely call
+      // // .head, but its headInsn is null so it doesn't match the first
+      // // instruction of the method
+
       // val nestingRoot: Nesting = MyersList.Cons(Block(kind = null, headInsn = null), MyersList.Nil)
       // val nestingMap = cfg.graph.vertexSet().asScala.map(_ -> nestingRoot).toMap
       // //val nestingMap: Map[Insn, Nesting] = Map.empty[Insn, Nesting]
@@ -63,7 +71,7 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
       // // val highestBlock = Map[Insn, Block]()
       // // val lowestBlock = Map[Insn, Block]()
       // // for (insn <- DepthFirstIterator(dominatorTree, cfg.entry).asScala) {
-      // //   val backEdgeSet = cfg.graph.incomingEdgesOf(insn).asScala.filter(e => dominatorTree.dominatesSource(insn, e))
+      // //   val backEdgeSet = cfg.graph.incomingEdgesOf(insn).filter { dominatorTree.dominatesSource(insn, it)) }
       // //   if (!backEdgeSet.empty) {
       // //     // backEdges ++= backEdgeSet
       // //     def addBlock(insn: Insn): Set[Insn] = {
@@ -111,7 +119,8 @@ object Exceptions {
   //   val union = new AsGraphUnion(cfg.graph, ???) // Edge from entry of try to each handler?
   //   val doms = Dominator.dominatorTree(union, cfg.entry)
   //   for (handler <- cfg.method.tryCatchBlocks.asScala) yield {
-  //     val insns = new DepthFirstIterator[Insn, Dominator.Edge[Insn]](doms, Insn(cfg.method, handler.handler)).asScala.toList.sortBy(_.index)
+  //     val insns = new DepthFirstIterator[Insn, Dominator.Edge[Insn]](
+  //       doms, Insn(cfg.method, handler.handler)).asScala.toList.sortBy(_.index)
   //     val indexes = insns.map(_.index)
   //     assert(indexes == (indexes.min to indexes.max).toList)
   //     handler -> insns

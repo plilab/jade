@@ -76,7 +76,7 @@ object DecompileMethodBody {
           |         * Max Stack: ${node.maxStack}
           |         * Max Locals: ${node.maxLocals}
           |         * Instructions:
-          |${instructions.lines().map { "         *" + it }.joinToString("\n")}
+          |${instructions.lines().map { "         *$it" }.joinToString("\n")}
           |
         """.trimMargin()
       )
@@ -116,7 +116,8 @@ object DecompileMethodBody {
         is ConstructorDeclaration ->
           declaration.setBody(
             warningBody(
-              "No implementation for constructor ${classNode.name}(signature = ${method.signature}, descriptor = ${method.desc})"
+              "No implementation for constructor ${classNode.name}" +
+                "(signature = ${method.signature}, descriptor = ${method.desc})"
             )
           )
         is MethodDeclaration -> {
@@ -127,7 +128,8 @@ object DecompileMethodBody {
           } else {
             declaration.setBody(
               warningBody(
-                "No implementation for non-abstract, non-native method: ${classNode.name}.${method.name}(signature = ${method.signature}, descriptor = ${method.desc})"
+                "No implementation for non-abstract, non-native method: ${classNode.name}.${method.name}" +
+                  "(signature = ${method.signature}, descriptor = ${method.desc})"
               )
             )
           }
@@ -144,15 +146,15 @@ object DecompileMethodBody {
       // catch via dominators
       // synchronized: via CFG (problem: try{sync{try}}?)
 
-      val cfg = ControlFlowGraph.apply(classNode.name, method)
+      val cfg = ControlFlowGraph.make(classNode.name, method)
 
-      this.log.debug("++++ cfg ++++\n" + GraphViz.toString(cfg))
+      this.log.debug("++++ cfg ++++\n${GraphViz.toString(cfg)}")
       for (v in cfg.graph.vertexSet()) {
         this.log.debug("v: ${cfg.graph.incomingEdgesOf(v).size}: $v")
       }
 
       this.log.debug("**** SSA ****")
-      val ssa = StaticSingleAssignment.apply(classNode.name, method, cfg)
+      val ssa = StaticSingleAssignment.make(classNode.name, method, cfg)
 
       this.log.debug("++++ frames: ${ssa.frames.size} ++++")
       for (i in 0 until method.instructions.size()) {
@@ -173,19 +175,19 @@ object DecompileMethodBody {
       this.log.debug("**** Dominators ****")
       val doms = Dominator.dominatorTree(cfg.graphWithExceptions, cfg.entry)
 
-      this.log.debug("++++ dominator tree ++++\n" + GraphViz.toString(doms))
+      this.log.debug("++++ dominator tree ++++\n${GraphViz.toString(doms)}")
 
       this.log.debug(
-        "++++ dominator nesting ++++\n" + GraphViz.nestingTree(cfg.graphWithExceptions, doms, cfg.entry)
+        "++++ dominator nesting ++++\n${GraphViz.nestingTree(cfg.graphWithExceptions, doms, cfg.entry)}"
       )
 
       this.log.debug("**** Structure ****")
-      val structure = Structure.apply(cfg)
+      val structure = Structure.make(cfg)
 
       // TODO: JEP 334: JVM Constants API: https://openjdk.java.net/jeps/334
 
       this.log.debug("**** Statement ****")
-      val statement = DecompileStatement.apply(cfg, ssa, structure)
+      val statement = DecompileStatement.make(cfg, ssa, structure)
       this.log.debug(statement.toString())
       setDeclarationBody(declaration, statement)
 

@@ -9,6 +9,7 @@ import org.objectweb.asm.commons.AnalyzerAdapter
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import java.nio.file.Path
+
 // import org.objectweb.asm.util.Textifier
 // import org.objectweb.asm.util.TraceClassVisitor
 // import org.ucombinator.jade.util.Log
@@ -43,7 +44,9 @@ object Decompile {
     //       for ((((classNode, methodNode), bodyDeclaration), methodIndex) <- members.zipWithIndex) {
     //         this.log.debug("!!!!!!!!!!!!")
     //         this.log.info(
-    //           f"Decompiling [${classIndex + 1} of ${VFS.classes.size}] ${classNode.name} [${methodIndex + 1} of ${members.size}] ${methodNode.name} (signature = ${methodNode.signature}, descriptor = ${methodNode.desc})"
+    //           "Decompiling [${classIndex + 1} of ${VFS.classes.size}] ${classNode.name} [${methodIndex + 1} of " +
+    //           "${members.size}] ${methodNode.name} (signature = ${methodNode.signature}, " +
+    //           "descriptor = ${methodNode.desc})"
     //         )
     //         DecompileMethodBody.decompileBody(classNode, methodNode, bodyDeclaration)
     //       }
@@ -70,8 +73,7 @@ object Decompile {
         if (true) {
           super.visitMethod(access, name, descriptor, signature, exceptions)
         } else {
-          var aa: AnalyzerAdapter? = null
-          aa = AnalyzerAdapter(
+          AnalyzerAdapter(
             owner,
             access,
             name,
@@ -84,19 +86,18 @@ object Decompile {
               }
             }
           )
-          aa
         }
     }
     cr.accept(classNode, ClassReader.EXPAND_FRAMES) // TODO: Do we actually need ClassReader.EXPAND_FRAMES?
 
-    if (classNode.name == null) { return null } // TODO
+    if (classNode.name === null) return null // TODO
     // this.log.debug("class name: " + classNode.name)
 
-    // this.asmLog.whenDebugEnabled({
+    // this.asmLog.whenDebugEnabled {
     //   val stringWriter = StringWriter()
     //   classNode.accept(TraceClassVisitor(null, Textifier(), PrintWriter(stringWriter)))
     //   this.asmLog.debug("++++ asm ++++\n" + stringWriter.toString())
-    // })
+    // }
 
     return DecompileClass.decompileClass(classNode)
   }

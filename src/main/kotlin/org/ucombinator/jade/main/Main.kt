@@ -2,24 +2,26 @@ package org.ucombinator.jade.main
 
 import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.completion.CompletionCommand
-import com.github.ajalt.clikt.core.* // ktlint-disable no-wildcard-imports
+import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.output.CliktHelpFormatter
-import com.github.ajalt.clikt.parameters.arguments.* // ktlint-disable no-wildcard-imports
-import com.github.ajalt.clikt.parameters.options.* // ktlint-disable no-wildcard-imports
-import com.github.ajalt.clikt.parameters.types.* // ktlint-disable no-wildcard-imports
+import com.github.ajalt.clikt.parameters.arguments.*
+import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.*
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
-import org.ucombinator.jade.util.VFS
+import org.ucombinator.jade.util.Vfs
 import java.io.File
 
 // import mu.KotlinLogging
 // import org.ucombinator.jade.main.BuildInformation
 
-// TODO: analysis to ensure using only the canonical constructor (helps with detecting forward version changes) (as a compiler plugin?)
+// TODO: analysis to ensure using only the canonical constructor (helps with
+// detecting forward version changes) (as a compiler plugin?)
+
 // TODO: exit code list
 // TODO: exit codes
 
-/**************/
+// /////////////////////////////////////////////////////////////
 // Top-level command
 
 // TODO: description
@@ -81,7 +83,7 @@ class Jade : CliktCommand() {
   ).int().default(0)
 
   val wait: Boolean by option(
-    help = "Wait for input from user before running.  This is useful to allow time for a debugger to attach to this process."
+    help = "Wait for input from user before running.  This allows time for a debugger to attach to this process."
   ).flag(
     "--no-wait",
     default = false
@@ -99,7 +101,7 @@ class Jade : CliktCommand() {
         } else if (name == "") {
           ""
         } else {
-          Log.prefix + lvl
+          Log.PREFIX + lvl
         }
       Log.getLog(parsedName).setLevel(lvl)
     }
@@ -112,7 +114,7 @@ class Jade : CliktCommand() {
   }
 }
 
-/**************/
+// /////////////////////////////////////////////////////////////
 // Sub-commands
 
 class TestLog : CliktCommand() {
@@ -178,7 +180,7 @@ class Decompile : CliktCommand(help = "Display information about how `jade` was 
 
   override fun run() {
     // TODO("implemenet decompile")
-    val vfs = VFS()
+    val vfs = Vfs()
     for (file in files) {
       vfs.dir(file)
     }

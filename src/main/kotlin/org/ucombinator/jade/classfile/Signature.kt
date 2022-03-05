@@ -2,13 +2,13 @@ package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.SimpleName
-import com.github.javaparser.ast.type.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.type.*
 import org.antlr.v4.runtime.CommonToken
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ListTokenSource
 import org.ucombinator.jade.classfile.SignatureParser.* // ktlint-disable no-unused-imports no-wildcard-imports
 import org.ucombinator.jade.util.Errors
-import org.ucombinator.jade.util.Fourple
+import org.ucombinator.jade.util.tuple.Fourple
 
 object Signature {
   fun typeSignature(string: String): Type =
@@ -24,7 +24,7 @@ object Signature {
     SignatureParser(CommonTokenStream(ListTokenSource(string.map { CommonToken(it.code, it.toString()) })))
 
   // TODO: ktlint: allow /////////////////
-  /**************************************************************/
+  // /////////////////////////////////////////////////////////////
   // TODO
 
   fun convert(tree: BaseTypeContext): Type =
@@ -40,10 +40,10 @@ object Signature {
       else -> TODO("impossible case in Signature.convert: $tree")
     }
 
-  fun convert(tree: VoidDescriptorContext): VoidType =
+  fun convert(@Suppress("UNUSED_PARAMETER") tree: VoidDescriptorContext): VoidType =
     VoidType()
 
-  /**************************************************************/
+  // /////////////////////////////////////////////////////////////
   // Java type signature
 
   fun convert(tree: JavaTypeSignatureContext): Type =
@@ -53,7 +53,7 @@ object Signature {
       else -> TODO("impossible case in Signature.convert: $tree")
     }
 
-  /**************************************************************/
+  // /////////////////////////////////////////////////////////////
   // Reference type signature
 
   fun convert(tree: ReferenceTypeSignatureContext): ReferenceType =
@@ -120,7 +120,8 @@ object Signature {
       else -> TODO("impossible case in Signature.convert: $tree")
     }
 
-  // NOTE: Renamed to deconflict with convert(tree: List<PackageSpecifierContext>, scope: ClassOrInterfaceType?): ClassOrInterfaceType?
+  // NOTE: Renamed to deconflict with:
+  //   convert(tree: List<PackageSpecifierContext>, scope: ClassOrInterfaceType?): ClassOrInterfaceType?
   fun convertSuffix(tree: List<ClassTypeSignatureSuffixContext>, scope: ClassOrInterfaceType): ClassOrInterfaceType =
     when {
       tree.isEmpty() -> scope
@@ -137,16 +138,17 @@ object Signature {
   fun convert(tree: ClassTypeSignatureSuffixContext, scope: ClassOrInterfaceType): ClassOrInterfaceType =
     convert(tree.simpleClassTypeSignature(), scope)
 
-  fun convert(tree: TypeVariableSignatureContext): TypeParameter = // TODO: check 'TypeParameter'
+  fun convert(tree: TypeVariableSignatureContext): TypeParameter =
     TypeParameter(tree.identifier().text)
 
   fun convert(tree: ArrayTypeSignatureContext): ArrayType =
     ArrayType(convert(tree.javaTypeSignature()))
 
-  /**************************************************************/
+  // /////////////////////////////////////////////////////////////
   // Class signature
 
-  fun convert(tree: ClassSignatureContext): Triple<List<TypeParameter>, ClassOrInterfaceType, List<ClassOrInterfaceType>> =
+  fun convert(tree: ClassSignatureContext):
+    Triple<List<TypeParameter>, ClassOrInterfaceType, List<ClassOrInterfaceType>> =
     Triple(
       convert(tree.typeParameters()),
       convert(tree.superclassSignature()),
@@ -180,7 +182,8 @@ object Signature {
       )
     )
 
-  fun convert(tree: ClassBoundContext): List<ReferenceType> = // NOTE: this list is zero or one element
+  // NOTE: The returned list is either zero or one element long
+  fun convert(tree: ClassBoundContext): List<ReferenceType> =
     when (val ref = tree.referenceTypeSignature()) {
       null -> listOf()
       else -> listOf(convert(ref))
@@ -195,7 +198,7 @@ object Signature {
   fun convert(tree: SuperinterfaceSignatureContext): ClassOrInterfaceType =
     convert(tree.classTypeSignature())
 
-  /**************************************************************/
+  // /////////////////////////////////////////////////////////////
   // Method signature
 
   fun convert(tree: MethodSignatureContext): Fourple<List<TypeParameter>, List<Type>, Type, List<ReferenceType>> =
@@ -220,7 +223,7 @@ object Signature {
       else -> TODO("impossible case in Signature.convert: $tree")
     }
 
-  /**************************************************************/
+  // /////////////////////////////////////////////////////////////
   // Field signature
 
   // NOTE: This method is unused

@@ -1,8 +1,9 @@
 package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.type.PrimitiveType
-import kotlin.test.* // ktlint-disable no-wildcard-imports
+import kotlin.test.*
 
+@Suppress("BACKTICKS_PROHIBITED")
 object DescriptorTest {
   object `field descriptor` {
     @Test fun `base types`() {

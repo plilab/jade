@@ -1,7 +1,5 @@
 package org.ucombinator.jade.analysis
 
-// import scala.jdk.CollectionConverters._
-
 import org.jgrapht.Graph
 import org.jgrapht.graph.AsGraphUnion
 import org.jgrapht.graph.DirectedPseudograph
@@ -12,8 +10,6 @@ import org.objectweb.asm.tree.analysis.Frame
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.asm.TypedBasicInterpreter
 
-// import ControlFlowGraph.Edge
-
 data class ControlFlowGraph(
   val entry: Insn,
   val graph: DirectedPseudograph<Insn, Edge>,
@@ -23,7 +19,7 @@ data class ControlFlowGraph(
   final data class Edge(val source: Insn, val target: Insn)
 
   companion object {
-    fun apply(owner: String, method: MethodNode): ControlFlowGraph {
+    fun make(owner: String, method: MethodNode): ControlFlowGraph {
       val graph = DirectedPseudograph<Insn, Edge>(Edge::class.java)
       for (i in method.instructions.toArray()) {
         graph.addVertex(Insn(method, i))
@@ -33,11 +29,11 @@ data class ControlFlowGraph(
       val entry = Insn(method, method.instructions.first)
       val g = DirectedPseudograph<Insn, Edge>(Edge::class.java)
       for (handler in method.tryCatchBlocks) {
-        val s = Insn(method, handler.start)
-        val h = Insn(method, handler.handler)
-        g.addVertex(s)
-        g.addVertex(h)
-        g.addEdge(s, h, Edge(s, h))
+        val startInsn = Insn(method, handler.start)
+        val handlerInsn = Insn(method, handler.handler)
+        g.addVertex(startInsn)
+        g.addVertex(handlerInsn)
+        g.addEdge(startInsn, handlerInsn, Edge(startInsn, handlerInsn))
       }
       val graphWithExceptions: Graph<Insn, Edge> = AsGraphUnion(graph, g)
       return ControlFlowGraph(entry, graph, graphWithExceptions, frames)
@@ -45,8 +41,10 @@ data class ControlFlowGraph(
   }
 }
 
-private class ControlFlowGraphAnalyzer(val method: MethodNode, val graph: DirectedPseudograph<Insn, ControlFlowGraph.Edge>) :
-  Analyzer<BasicValue>(TypedBasicInterpreter) {
+private class ControlFlowGraphAnalyzer(
+  val method: MethodNode,
+  val graph: DirectedPseudograph<Insn, ControlFlowGraph.Edge>
+) : Analyzer<BasicValue>(TypedBasicInterpreter) {
   protected override fun newControlFlowEdge(insn: Int, successor: Int) {
     val source = Insn(method, this.method.instructions.get(insn))
     val target = Insn(method, this.method.instructions.get(successor))

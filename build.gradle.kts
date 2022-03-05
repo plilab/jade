@@ -32,13 +32,13 @@ plugins {
 }
 
 dependencies {
-  // NOTE: these are sorted alphabetically
-
   // For parsing signatures
   antlr("org.antlr:antlr4:4.9.3")
 
   // Testing
   testImplementation(kotlin("test"))
+
+  // NOTE: these are sorted alphabetically
 
   // Logging (see also io.github.microutils:kotlin-logging-jvm)
   implementation("ch.qos.logback:logback-classic:1.2.6")
@@ -253,6 +253,13 @@ tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
       includes.from("Module.md")
     }
   }
+}
+
+tasks.withType<org.jmailen.gradle.kotlinter.tasks.LintTask> {
+  dependsOn(tasks.generateGrammarSource)
+  dependsOn(tasks.generateTestGrammarSource)
+  dependsOn(generateClassfileFlags)
+  dependsOn(generateBuildInfo)
 }
 
 // For why we have to fully qualify KotlinCompile see:

@@ -4,22 +4,24 @@ import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.PackageDeclaration
-import com.github.javaparser.ast.body.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.body.*
 import com.github.javaparser.ast.comments.BlockComment
-import com.github.javaparser.ast.expr.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.type.ReferenceType
 import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.type.TypeParameter
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.* // ktlint-disable no-wildcard-imports
+import org.objectweb.asm.tree.*
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.Flags
 import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
-import org.ucombinator.jade.util.Fourple
+import org.ucombinator.jade.util.list.tail
+import org.ucombinator.jade.util.list.zipAll
+import org.ucombinator.jade.util.tuple.*
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 object DecompileClass {
@@ -31,9 +33,9 @@ object DecompileClass {
       null -> null
       is Int -> IntegerLiteralExpr(node.toString())
       is Long -> LongLiteralExpr(node.toString())
-      is Float -> DoubleLiteralExpr(node.toString() + "") // `JavaParser` uses Doubles for Floats
-      is Double -> DoubleLiteralExpr(node.toString() + "D")
-      is String -> StringLiteralExpr(node.toString())
+      is Float -> DoubleLiteralExpr("${node}F") // `JavaParser` uses Doubles for Floats
+      is Double -> DoubleLiteralExpr("${node}D")
+      is String -> StringLiteralExpr(node)
       is org.objectweb.asm.Type -> ClassExpr(Descriptor.fieldDescriptor(node.descriptor))
       else -> throw Exception("unimplemented literal '$node'")
     }
@@ -61,7 +63,6 @@ object DecompileClass {
     }
   }
 
-  //  java.util.List<_ <: AnnotationNode>*
   private fun decompileAnnotations(vararg nodes: List<AnnotationNode>?): NodeList<AnnotationExpr> =
     NodeList<AnnotationExpr>(nodes.filterNotNull().flatMap { it.map(::decompileAnnotation) })
 
@@ -75,7 +76,11 @@ object DecompileClass {
       node.invisibleTypeAnnotations
     )
     val type: Type =
-      if (node.signature == null) { Descriptor.fieldDescriptor(node.desc) } else { Signature.typeSignature(node.signature) }
+      if (node.signature === null) {
+        Descriptor.fieldDescriptor(node.desc)
+      } else {
+        Signature.typeSignature(node.signature)
+      }
     val name = SimpleName(node.name)
     val initializer = decompileLiteral(node.value)
     val variables = NodeList<VariableDeclarator>(VariableDeclarator(type, name, initializer))
@@ -87,57 +92,41 @@ object DecompileClass {
   private fun decompileParameter(
     method: MethodNode,
     paramCount: Int,
-    parameter: IndexedValue<Fourple<Type, ParameterNode?, List<AnnotationNode>, List<AnnotationNode>>>
+    parameter: IndexedValue<Fourple<Type?, ParameterNode?, List<AnnotationNode>?, List<AnnotationNode>?>>
   ): Parameter {
     val index = parameter.index
-    val (typ, node, a1, a2) = parameter.value
-    val flags =
-      if (node == null) { listOf() } else { Flags.parameterFlags(node.access) }
+    val (type, node, a1, a2) = parameter.value
+    val flags = if (node === null) listOf() else Flags.parameterFlags(node.access)
     val modifiers = Flags.toModifiers(flags)
     val annotations: NodeList<AnnotationExpr> = decompileAnnotations(a1, a2, null, null)
-    val type: Type = typ
     val isVarArgs: Boolean =
       Flags.methodFlags(method.access).contains(Flags.ACC_VARARGS) &&
         index == paramCount - 1
     val varArgsAnnotations = NodeList<AnnotationExpr>() // TODO?
-    val name: SimpleName =
-      SimpleName(if (node == null) { "parameter${index + 1}" } else { node.name }) // TODO: make consistent with analysis.ParameterVar
+    // TODO: make consistent with analysis.ParameterVar
+    val name: SimpleName = SimpleName(if (node === null) "parameter${index + 1}" else node.name)
     return Parameter(modifiers, annotations, type, isVarArgs, varArgsAnnotations, name)
   }
 
-  fun <T> List<T>.tail(): List<T> = this.subList(1, this.size)
-  fun <A, B> Pair<A, B>._1(): A = this.first
-  fun <A, B> Pair<A, B>._2(): B = this.second
-  fun <A, B, C> Triple<A, B, C>._1(): A = this.first
-  fun <A, B, C> Triple<A, B, C>._2(): B = this.second
-  fun <A, B, C> Triple<A, B, C>._3(): C = this.third
-
   fun parameterTypes(desc: List<Type>, sig: List<Type>, params: List<ParameterNode>): List<Type> =
     when {
-      desc.isNotEmpty()
-        && params.isNotEmpty()
-        && (Flags.parameterFlags(params.first().access).contains(Flags.ACC_SYNTHETIC)
-          || Flags.parameterFlags(params.first().access).contains(Flags.ACC_MANDATED))
-      -> // TODO: Flags.checkParameter(access, Modifier)
-        listOf(desc.first()) +
-          parameterTypes(desc.tail(), sig, params.tail())
-      desc.isNotEmpty()
-        && sig.isNotEmpty()
-        && params.isNotEmpty()
-      ->
-        listOf(sig.first()) +
-          parameterTypes(desc.tail(), sig.tail(), params.tail())
+      desc.isNotEmpty() &&
+        params.isNotEmpty() && (
+        Flags.parameterFlags(params.first().access).contains(Flags.ACC_SYNTHETIC) ||
+          Flags.parameterFlags(params.first().access).contains(Flags.ACC_MANDATED)
+        )
+      // TODO: Flags.checkParameter(access, Modifier)
+      -> listOf(desc.first()) + parameterTypes(desc.tail(), sig, params.tail())
+      desc.isNotEmpty() &&
+        sig.isNotEmpty() &&
+        params.isNotEmpty()
+      -> listOf(sig.first()) + parameterTypes(desc.tail(), sig.tail(), params.tail())
       params.isEmpty()
-      ->
-        sig
+      -> sig
       else -> throw Exception("failed to construct parameter types: $desc, $sig, $params")
     }
 
-  fun <A> nullToSeq(x: List<A>?): List<A> = if (x === null) { listOf() } else { x }
-  // fun <A> nullToSeq(x: Array<A>?): Array<A> = if (x === null) { arrayOf() } else { x }
-  fun <A, B, C, D> zipAll(a: List<A>, b: List<B>, c: List<C>, d: List<D>): List<Fourple<A, B, C, D>> {
-    TODO()
-  }
+  fun <A> nullToSeq(x: List<A>?): List<A> = if (x === null) listOf() else x
 
   fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
     // attr (ignore?)
@@ -157,10 +146,10 @@ object DecompileClass {
     )
     val descriptor: Pair<List<Type>, Type> = Descriptor.methodDescriptor(node.desc)
     val sig = // : Fourple<List<TypeParameter>, List<Type>, Type, out List<ReferenceType>> =
-      if (node.signature != null) {
-        Signature.methodSignature(node.signature)
-      } else {
+      if (node.signature === null) {
         Fourple(listOf(), descriptor.first, descriptor.second, node.exceptions.map(ClassName::classNameType))
+      } else {
+        Signature.methodSignature(node.signature)
       }
     val parameterNodes = nullToSeq(node.parameters)
     if (node.parameters != null && sig._2.size != node.parameters.size) {
@@ -252,19 +241,15 @@ object DecompileClass {
         extendedTypes: NodeList<ClassOrInterfaceType>,
         implementedTypes: NodeList<ClassOrInterfaceType>
       ) =
-        if (node.signature != null) {
-          val s = Signature.classSignature(node.signature)
-          Triple(NodeList(s._1()), NodeList(s._2()), NodeList(s._3()))
-        } else {
+        if (node.signature === null) {
           Triple(
             NodeList(),
-            if (node.superName == null) {
-              NodeList()
-            } else {
-              NodeList(ClassName.classNameType(node.superName))
-            },
+            if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
             NodeList(node.interfaces.map { ClassName.classNameType(it) })
           )
+        } else {
+          val s = Signature.classSignature(node.signature)
+          Triple(NodeList(s._1()), NodeList(s._2()), NodeList(s._3()))
         }
       val members: NodeList<BodyDeclaration<*>> = run {
         val list = NodeList<BodyDeclaration<*>>()

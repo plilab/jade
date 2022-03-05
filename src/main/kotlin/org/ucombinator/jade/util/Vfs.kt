@@ -1,4 +1,5 @@
 package org.ucombinator.jade.util
+
 // initial implementation: dir or file only (no "inner" paths)
 
 // url
@@ -41,19 +42,22 @@ import org.apache.commons.compress.archivers.ArchiveException
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.compressors.CompressorException
 import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.ucombinator.jade.util.list.map
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 
-fun <A, B, C> List<Pair<A, B>>.map(f: (A, B) -> C): List<C> = this.map { p -> f(p.first, p.second) }
-
-class VFS {
+@Suppress("CLASS_NAME_INCORRECT")
+class Vfs {
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT")
   companion object {
-    private val CLASS_SIGNATURE = listOf(0xca, 0xfe, 0xba, 0xbe).map { it.toUByte().toByte() }
-    private val JMOD_SIGNATURE = listOf(0x4a, 0x4d, 0x01, 0x00, 0x50, 0x4b, 0x03, 0x04).map { it.toUByte().toByte() }
-    private val JMOD_OFFSET = 4
+    private val CLASS_SIGNATURE =
+      listOf<UByte>(0xcaU, 0xfeU, 0xbaU, 0xbeU).map { it.toByte() }
+    private val JMOD_SIGNATURE =
+      listOf<UByte>(0x4aU, 0x4dU, 0x01U, 0x00U, 0x50U, 0x4bU, 0x03U, 0x04U).map { it.toByte() }
+    private const val JMOD_OFFSET = 4
   }
 
   // TODO: keep list of already traversed paths
@@ -82,9 +86,9 @@ class VFS {
     assert(inputStream.markSupported())
     inputStream.mark(header.size)
     // `ByteArray`s always compare as false (I don't know why), so we use List<Byte> instead
-    val h = inputStream.readNBytes(header.size).toList()
+    val bytes = inputStream.readNBytes(header.size).toList()
     inputStream.reset()
-    return h == header
+    return bytes == header
   }
 
   // TODO: better handling of closing input streams
@@ -94,7 +98,9 @@ class VFS {
     while (true) {
       try {
         input = BufferedInputStream(CompressorStreamFactory().createCompressorInputStream(input))
-      } catch (e: CompressorException) { break }
+      } catch (e: CompressorException) {
+        break
+      }
     }
 
     if (headerMatches(input, CLASS_SIGNATURE)) {

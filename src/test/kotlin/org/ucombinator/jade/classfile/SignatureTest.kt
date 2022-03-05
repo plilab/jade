@@ -1,10 +1,11 @@
 package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.type.Type
-import kotlin.test.* // ktlint-disable no-wildcard-imports
+import kotlin.test.*
 
+@Suppress("BACKTICKS_PROHIBITED", "LONG_LINE")
 object SignatureTest {
-
+  @Suppress("WRONG_DECLARATIONS_ORDER")
   enum class Kind { TYPE, CLASS, METHOD }
 
   // TODO: fix '\$' in these tests

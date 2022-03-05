@@ -1,7 +1,8 @@
 package org.ucombinator.jade.classfile
 
-import kotlin.test.* // ktlint-disable no-wildcard-imports
+import kotlin.test.*
 
+@Suppress("BACKTICKS_PROHIBITED")
 object ClassNameTest {
   @Test fun `className()`() {
     expect("abc.def.Ghi") { ClassName.className("abc/def/Ghi").toString() }

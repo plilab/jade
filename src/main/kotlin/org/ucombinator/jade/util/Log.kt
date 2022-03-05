@@ -14,9 +14,9 @@ import org.slf4j.Logger as Slf4jLogger
 
 object Log {
   fun log(func: () -> Unit) = KotlinLogging.logger(func)
-  val prefix = "org.ucombinator.jade." // TODO: autodetect
+  const val PREFIX = "org.ucombinator.jade." // TODO: autodetect
   fun getLog(name: String): LogbackLogger {
-    val modifiedName = if (name.isEmpty()) { Slf4jLogger.ROOT_LOGGER_NAME } else { name }
+    val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name
     return LoggerFactory.getLogger(modifiedName) as LogbackLogger
   }
 
@@ -79,13 +79,7 @@ class RelativeLoggerConverter : ClassicConverter() {
 
   override fun convert(event: ILoggingEvent): String {
     val name = event.loggerName
-    // if (name.startsWith(prefix)) { return name.removePrefix(prefix) }
-    // else { return "." + name }
-    if (name.startsWith(prefix)) {
-      return name.removePrefix(prefix)
-    } else {
-      return "." + name
-    }
+    return if (name.startsWith(prefix)) name.removePrefix(prefix) else ".$name"
   }
 }
 

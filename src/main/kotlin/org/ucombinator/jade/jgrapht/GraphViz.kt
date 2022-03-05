@@ -22,9 +22,9 @@ object GraphViz {
 
   fun <N, E> print(writer: Writer, graph: Graph<N, E>) {
     val dotExporter = DOTExporter<N, E>()
-    dotExporter.setVertexAttributeProvider({ v: N ->
-      hashMapOf(Pair("label", DefaultAttribute.createAttribute(v.toString())))
-    })
+    dotExporter.setVertexAttributeProvider {
+      hashMapOf(Pair("label", DefaultAttribute.createAttribute(it.toString())))
+    }
     dotExporter.exportGraph(graph, writer)
   }
 
@@ -36,9 +36,9 @@ object GraphViz {
 
   fun print(writer: Writer, graph: ControlFlowGraph) {
     val dotExporter = DOTExporter<Insn, ControlFlowGraph.Edge>()
-    dotExporter.setVertexAttributeProvider({ v: Insn ->
-      hashMapOf(Pair("label", DefaultAttribute.createAttribute(v.longString())))
-    })
+    dotExporter.setVertexAttributeProvider {
+      hashMapOf(Pair("label", DefaultAttribute.createAttribute(it.longString())))
+    }
     dotExporter.exportGraph(graph.graph, writer)
   }
 
@@ -57,42 +57,43 @@ object GraphViz {
     flatten: Boolean = true
   ) {
     out.write("digraph {\n")
-    var cluster = 0
+
     val ids = mutableMapOf<V, String>()
-    fun id(v: V): String = ids.getOrPut(v, { "n" + ids.size })
+    fun id(v: V): String = ids.getOrPut(v, { "n${ids.size}" })
+
+    var cluster = 0
     fun go(indent: String, v: V, backgroundColor: Boolean, soleChild: Boolean) {
       cluster += 1
       // NOTE: subgraph must have a name starting with "cluster" to get GraphViz to draw a box around it
       if (!flatten || !soleChild) {
-        out.write(indent + "subgraph cluster$cluster {\n")
+        out.write("${indent}subgraph cluster$cluster {\n")
         if (alternateBackgroundColor) {
-          val bgcolor =
-            if (backgroundColor) { "\"#eeeeee\"" } else { "\"#ffffff\"" }
-          out.write(indent + "  bgcolor=$bgcolor;\n")
+          val bgcolor = if (backgroundColor) "\"#eeeeee\"" else "\"#ffffff\""
+          out.write("$indent  bgcolor=$bgcolor;\n")
         }
       }
-      val label = "\"" + GraphViz.escape(v.toString()) + "\""
-      out.write(indent + "  ${id(v)} < label=$label >;\n")
+      val label = "\"${GraphViz.escape(v.toString())}\""
+      out.write("$indent  ${id(v)} < label=$label >;\n")
       val edges = tree.incomingEdgesOf(v)
       // TODO: edges in trees should always go down
       val sole = when (edges.size) {
         1 -> {
           var x = edges.first()
           val y = tree.getEdgeSource(x)
-          graph.outgoingEdgesOf(v).map(graph::getEdgeTarget) == setOf(y)
-            && graph.incomingEdgesOf(y).map(graph::getEdgeSource) == setOf(v)
+          graph.outgoingEdgesOf(v).map(graph::getEdgeTarget) == setOf(y) &&
+            graph.incomingEdgesOf(y).map(graph::getEdgeSource) == setOf(v)
         }
         else -> false
       }
       for (child in edges.map(tree::getEdgeSource)) {
-        val newIndent =
-          if (!flatten || !sole) { indent + "  " } else { indent }
+        val newIndent = if (!flatten || !sole) "$indent  " else indent
         go(newIndent, child, (flatten && sole) == backgroundColor, sole)
       }
       if (!flatten || !soleChild) {
-        out.write(indent + "}\n")
+        out.write("$indent}\n")
       }
     }
+
     go("  ", root, false, false)
     for (edge in graph.edgeSet()) {
       val source = graph.getEdgeSource(edge)

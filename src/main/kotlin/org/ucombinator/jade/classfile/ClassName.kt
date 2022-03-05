@@ -9,9 +9,8 @@ import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 
 object ClassName {
-  fun className(string: String): Name {
-    return string.split('/').fold<String, Name?>(null) { qualifier, identifier -> Name(qualifier, identifier) }!!
-  }
+  fun className(string: String): Name =
+    string.split('/').fold<String, Name?>(null) { qualifier, identifier -> Name(qualifier, identifier) }!!
 
   fun classNameExpr(string: String): Expression =
     string.split('/').fold(null) { qualifier, identifier ->
@@ -21,12 +20,9 @@ object ClassName {
       }
     }!!
 
-  fun classNameType(string: String): ClassOrInterfaceType? =
+  fun classNameType(string: String): ClassOrInterfaceType =
     classNameType(className(string))
 
-  fun classNameType(name: Name?): ClassOrInterfaceType? =
-    when (name) {
-      null -> null
-      else -> ClassOrInterfaceType(classNameType(name.qualifier.orElse(null)), name.identifier)
-    }
+  fun classNameType(name: Name): ClassOrInterfaceType =
+    ClassOrInterfaceType(classNameType(name.qualifier.orElse(null)), name.identifier)
 }

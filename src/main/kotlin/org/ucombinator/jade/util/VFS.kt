@@ -24,7 +24,6 @@ package org.ucombinator.jade.util
 // .xz
 // .Z (compress)
 
-
 // .iso
 // .cab
 // .dmg
@@ -42,15 +41,13 @@ import org.apache.commons.compress.archivers.ArchiveException
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.compressors.CompressorException
 import org.apache.commons.compress.compressors.CompressorStreamFactory
-
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 
-
-fun <A,B,C> List<Pair<A,B>>.map(f: (A, B) -> C): List<C> = this.map { p -> f(p.first, p.second) }
+fun <A, B, C> List<Pair<A, B>>.map(f: (A, B) -> C): List<C> = this.map { p -> f(p.first, p.second) }
 
 class VFS {
   companion object {
@@ -68,10 +65,11 @@ class VFS {
     file
       .walk()
       .onEnter {
-        if (seen.contains(it)) { false }
-        else {
+        if (seen.contains(it)) {
+          false
+        } else {
           seen.add(it)
-          //match_file_branch
+          // match_file_branch
           true
         }
       }
@@ -90,7 +88,7 @@ class VFS {
   }
 
   // TODO: better handling of closing input streams
-  fun read(name: List<File>, inputStream: InputStream): Unit {
+  fun read(name: List<File>, inputStream: InputStream) {
     // We wrap in a BufferedInputStream to ensure we have support for `mark()` and `reset()`
     var input = BufferedInputStream(inputStream)
     while (true) {

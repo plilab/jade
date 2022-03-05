@@ -17,18 +17,16 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.util.Textifier
 import org.objectweb.asm.util.TraceMethodVisitor
-import org.ucombinator.jade.asm.Insn
-import org.ucombinator.jade.classfile.Descriptor
-import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.analysis.ControlFlowGraph
-import org.ucombinator.jade.decompile.DecompileStatement
-import org.ucombinator.jade.analysis.Structure
 import org.ucombinator.jade.analysis.StaticSingleAssignment
-import org.ucombinator.jade.util.Errors
+import org.ucombinator.jade.analysis.Structure
+import org.ucombinator.jade.asm.Insn
+import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.javaparser.JavaParser
-import org.ucombinator.jade.util.Log
 import org.ucombinator.jade.jgrapht.Dominator
 import org.ucombinator.jade.jgrapht.GraphViz
+import org.ucombinator.jade.util.Errors
+import org.ucombinator.jade.util.Log
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -79,12 +77,13 @@ object DecompileMethodBody {
           |         * Max Locals: ${node.maxLocals}
           |         * Instructions:
           |${instructions.lines().map { "         *" + it }.joinToString("\n")}
-          |         """.trimMargin()
+          |
+        """.trimMargin()
       )
     )
   }
 
-  fun setDeclarationBody(declaration: BodyDeclaration<out BodyDeclaration<*>>, body: BlockStmt): Unit {
+  fun setDeclarationBody(declaration: BodyDeclaration<out BodyDeclaration<*>>, body: BlockStmt) {
     when (declaration) {
       is InitializerDeclaration -> declaration.setBody(body)
       is ConstructorDeclaration -> declaration.setBody(body)
@@ -97,7 +96,7 @@ object DecompileMethodBody {
     classNode: ClassNode,
     method: MethodNode,
     declaration: BodyDeclaration<out BodyDeclaration<*>>
-  ): Unit {
+  ) {
     if (method.instructions.size() == 0) {
       // The method has no body as even methods with empty bodies have a `return` instruction
       this.log.debug("**** Method is has no body ****")
@@ -149,7 +148,7 @@ object DecompileMethodBody {
 
       this.log.debug("++++ cfg ++++\n" + GraphViz.toString(cfg))
       for (v in cfg.graph.vertexSet()) {
-        this.log.debug("v: ${cfg.graph.incomingEdgesOf(v).size}: ${v}")
+        this.log.debug("v: ${cfg.graph.incomingEdgesOf(v).size}: $v")
       }
 
       this.log.debug("**** SSA ****")
@@ -157,18 +156,18 @@ object DecompileMethodBody {
 
       this.log.debug("++++ frames: ${ssa.frames.size} ++++")
       for (i in 0 until method.instructions.size()) {
-        this.log.debug("frame(${i}): ${ssa.frames.get(i)}")
+        this.log.debug("frame($i): ${ssa.frames.get(i)}")
       }
 
       this.log.debug("++++ results and arguments ++++")
       for (i in 0 until method.instructions.size()) {
         val insn = method.instructions.get(i)
-        this.log.debug("args(${i}): ${Insn.longString(method, insn)} --- ${ssa.insnVars.get(insn)}")
+        this.log.debug("args($i): ${Insn.longString(method, insn)} --- ${ssa.insnVars.get(insn)}")
       }
 
       this.log.debug("++++ ssa map ++++")
       for ((key, value) in ssa.phiInputs) {
-        this.log.debug("ssa: ${key} -> ${value}")
+        this.log.debug("ssa: $key -> $value")
       }
 
       this.log.debug("**** Dominators ****")

@@ -128,18 +128,17 @@ object DecompileClass {
         listOf(sig.first()) +
           parameterTypes(desc.tail(), sig.tail(), params.tail())
       params.isEmpty()
-        -> sig
+      ->
+        sig
       else -> throw Exception("failed to construct parameter types: $desc, $sig, $params")
     }
 
   fun <A> nullToSeq(x: List<A>?): List<A> = if (x === null) { listOf() } else { x }
   // fun <A> nullToSeq(x: Array<A>?): Array<A> = if (x === null) { arrayOf() } else { x }
-  fun <A,B,C,D> zipAll(a: List<A>, b: List<B>, c: List<C>, d: List<D>): List<Fourple<A,B,C,D>> {
+  fun <A, B, C, D> zipAll(a: List<A>, b: List<B>, c: List<C>, d: List<D>): List<Fourple<A, B, C, D>> {
     TODO()
   }
 
-
-  // BodyDeclaration<_ <: BodyDeclaration<_>>
   fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
     // attr (ignore?)
     // instructions
@@ -157,9 +156,10 @@ object DecompileClass {
       node.invisibleTypeAnnotations
     )
     val descriptor: Pair<List<Type>, Type> = Descriptor.methodDescriptor(node.desc)
-    val sig = //: Fourple<List<TypeParameter>, List<Type>, Type, out List<ReferenceType>> =
-      if (node.signature != null) { Signature.methodSignature(node.signature) }
-      else {
+    val sig = // : Fourple<List<TypeParameter>, List<Type>, Type, out List<ReferenceType>> =
+      if (node.signature != null) {
+        Signature.methodSignature(node.signature)
+      } else {
         Fourple(listOf(), descriptor.first, descriptor.second, node.exceptions.map(ClassName::classNameType))
       }
     val parameterNodes = nullToSeq(node.parameters)
@@ -172,8 +172,8 @@ object DecompileClass {
         parameterTypes(descriptor._1(), sig._2, parameterNodes),
         parameterNodes,
         nullToSeq(node.visibleParameterAnnotations.toList()),
-        nullToSeq(node.invisibleParameterAnnotations.toList()))
-      .withIndex()
+        nullToSeq(node.invisibleParameterAnnotations.toList())
+      ).withIndex()
     val parameters: NodeList<Parameter> = NodeList(ps.map { x -> decompileParameter(node, sig._2.size, x) })
     val type: Type = sig._3
     val thrownExceptions: NodeList<ReferenceType> = NodeList(sig._4)
@@ -217,7 +217,8 @@ object DecompileClass {
         |* Source File: ${node.sourceFile}
         |* Class-file Format Version: ${node.version}
         |* Source Debug Extension: ${node.sourceDebug} // See JSR-45 https://www.jcp.org/en/jsr/detail?id=045
-        |""".trimMargin()
+        |
+      """.trimMargin()
     )
     // outerClass
     // outerMethod
@@ -265,7 +266,6 @@ object DecompileClass {
             NodeList(node.interfaces.map { ClassName.classNameType(it) })
           )
         }
-        // NodeList[BodyDeclaration[_ <: BodyDeclaration[_]]]
       val members: NodeList<BodyDeclaration<*>> = run {
         val list = NodeList<BodyDeclaration<*>>()
         list.addAll(NodeList(node.fields.map(::decompileField)))

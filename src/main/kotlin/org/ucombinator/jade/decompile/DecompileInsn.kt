@@ -4,21 +4,19 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.ArrayCreationLevel
 import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.expr.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.stmt.* // ktlint-disable no-wildcard-imports
 import com.github.javaparser.ast.type.ArrayType
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.type.PrimitiveType
 import com.github.javaparser.ast.type.Type
-import com.github.javaparser.ast.comments.BlockComment
-import com.github.javaparser.ast.expr.* // ktlint-disable no-wildcard-imports
-import com.github.javaparser.ast.stmt.* // ktlint-disable no-wildcard-imports
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.* // ktlint-disable no-wildcard-imports
-import org.ucombinator.jade.classfile.Descriptor
-import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.analysis.StaticSingleAssignment
 import org.ucombinator.jade.analysis.Var
+import org.ucombinator.jade.classfile.ClassName
+import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.javaparser.JavaParser
-import org.ucombinator.jade.util.Log
 
 /*
 Nestings
@@ -70,9 +68,10 @@ object DecompileInsn {
 
   fun decompileInsn(retVar: Var, insn: DecompiledInsn): Statement =
     when (insn) {
+      /* ktlint-disable no-multi-spaces */
       is DecompiledStatement      -> insn.statement
       is DecompiledExpression     -> ExpressionStmt(AssignExpr(decompileVar(retVar), insn.expression, AssignExpr.Operator.ASSIGN))
-      is DecompiledStackOperation -> JavaParser.noop("Operand Stack Operation: ${insn}")
+      is DecompiledStackOperation -> JavaParser.noop("Operand Stack Operation: $insn")
       is DecompiledIf             -> IfStmt(insn.condition, BreakStmt(insn.labelNode.toString()), null)
       is DecompiledGoto           -> BreakStmt(insn.labelNode.toString()) // TODO: use instruction number?
       is DecompiledSwitch         -> JavaParser.noop("Switch ${insn.labels} ${insn.default}")
@@ -82,7 +81,8 @@ object DecompileInsn {
       is DecompiledLabel          -> JavaParser.noop("Label: ${insn.node.label}")
       is DecompiledFrame          -> JavaParser.noop("Frame: ${insn.node.local} ${insn.node.stack}")
       is DecompiledLineNumber     -> JavaParser.noop("Line number: ${insn.node.line}")
-      is DecompiledUnsupported    -> JavaParser.noop("Unsupported: ${insn}")
+      is DecompiledUnsupported    -> JavaParser.noop("Unsupported: $insn")
+      /* ktlint-enable no-multi-spaces */
     }
 
   fun decompileInsn(node: AbstractInsnNode, ssa: StaticSingleAssignment): Pair<Var?, DecompiledInsn> {
@@ -107,6 +107,7 @@ object DecompileInsn {
     return Pair(
       retVar,
       when (node.opcode) {
+        /* ktlint-disable no-multi-spaces */
         // InsnNode
         Opcodes.NOP         -> DecompiledStatement(EmptyStmt())
         Opcodes.ACONST_NULL -> DecompiledExpression(NullLiteralExpr())
@@ -265,7 +266,7 @@ object DecompileInsn {
         Opcodes.FRETURN -> DecompiledStatement(ReturnStmt(args(0)), false)
         Opcodes.DRETURN -> DecompiledStatement(ReturnStmt(args(0)), false)
         Opcodes.ARETURN -> DecompiledStatement(ReturnStmt(args(0)), false)
-        Opcodes.RETURN  -> DecompiledStatement(ReturnStmt( /*Nothing*/ ), false)
+        Opcodes.RETURN  -> DecompiledStatement(ReturnStmt(/*Nothing*/), false)
         // FieldInsnNode
         Opcodes.GETSTATIC -> { val insn = node as FieldInsnNode; DecompiledExpression(FieldAccessExpr(ClassName.classNameExpr(insn.owner), /*TODO*/ NodeList(), SimpleName(insn.name))) }
         Opcodes.PUTSTATIC -> { val insn = node as FieldInsnNode; DecompiledExpression(AssignExpr(FieldAccessExpr(ClassName.classNameExpr(insn.owner), /*TODO*/ NodeList(), SimpleName(insn.name)), args(0), AssignExpr.Operator.ASSIGN)) }
@@ -324,7 +325,7 @@ object DecompileInsn {
           }
           val (type, expectedDims) = unwrap(Descriptor.fieldDescriptor(node.desc))
           val dimArgs =
-            argsArray.toList().subList(0, dims).map {ArrayCreationLevel(it, NodeList())}
+            argsArray.toList().subList(0, dims).map { ArrayCreationLevel(it, NodeList()) }
           val nonDimArgs =
             (dims..expectedDims).map { ArrayCreationLevel(null, NodeList()) }
           val levels = NodeList(dimArgs.plus(nonDimArgs))
@@ -339,9 +340,10 @@ object DecompileInsn {
             is LabelNode      -> DecompiledLabel(node)
             is FrameNode      -> DecompiledFrame(node)
             is LineNumberNode -> DecompiledLineNumber(node)
-            else           -> throw Exception("unknown instruction type: ${node}")
+            else           -> throw Exception("unknown instruction type: $node")
           }
         }
+        /* ktlint-enable no-multi-spaces */
       }
     )
   }

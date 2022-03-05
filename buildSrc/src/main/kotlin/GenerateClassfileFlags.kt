@@ -126,7 +126,8 @@ object GenerateClassfileFlags {
         |  fun modifier(): Modifier? = if (keyword() === null) { null } else { Modifier(keyword()) }
         |}
         |
-        |""".trimMargin()
+        |
+      """.trimMargin()
     )
 
     for (kind in flagInfos.map { it.kind }.distinct()) {
@@ -147,7 +148,8 @@ object GenerateClassfileFlags {
         |    result.map { it.second }
         |  }
         |
-        |""".trimMargin()
+        |
+      """.trimMargin()
     )
 
     for (flagsInfo in uniqueFlagInfos) {
@@ -159,7 +161,8 @@ object GenerateClassfileFlags {
           |    override fun value() = 0x${"%04x".format(flagsInfo.value)}
           |    override fun keyword() = $keyword
           |  }
-          |""".trimMargin()
+          |
+        """.trimMargin()
       )
     }
 

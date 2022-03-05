@@ -141,7 +141,8 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
         """$versionMessage
           |Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
           |Build time: $buildTime
-          |Dependencies:""".trimMargin()
+          |Dependencies:
+        """.trimMargin()
       )
     }
     for (d in BuildInformation.dependencies) {

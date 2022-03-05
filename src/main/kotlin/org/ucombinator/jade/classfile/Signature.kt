@@ -6,7 +6,7 @@ import com.github.javaparser.ast.type.* // ktlint-disable no-wildcard-imports
 import org.antlr.v4.runtime.CommonToken
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ListTokenSource
-import org.ucombinator.jade.classfile.SignatureParser.* // ktlint-disable no-wildcard-imports
+import org.ucombinator.jade.classfile.SignatureParser.* // ktlint-disable no-unused-imports no-wildcard-imports
 import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Fourple
 

@@ -1,6 +1,6 @@
 package org.ucombinator.jade.classfile
 
-import com.github.javaparser.ast.`type`.Type
+import com.github.javaparser.ast.type.Type
 
 object Descriptor {
   fun fieldDescriptor(string: String): Type = Signature.typeSignature(string)

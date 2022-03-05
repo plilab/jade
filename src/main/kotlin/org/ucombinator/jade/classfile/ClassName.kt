@@ -6,7 +6,7 @@ import com.github.javaparser.ast.expr.FieldAccessExpr
 import com.github.javaparser.ast.expr.Name
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.SimpleName
-import com.github.javaparser.ast.`type`.ClassOrInterfaceType
+import com.github.javaparser.ast.type.ClassOrInterfaceType
 
 object ClassName {
   fun className(string: String): Name {
@@ -27,6 +27,6 @@ object ClassName {
   fun classNameType(name: Name?): ClassOrInterfaceType? =
     when (name) {
       null -> null
-      else -> ClassOrInterfaceType(classNameType(name.getQualifier().orElse(null)), name.getIdentifier())
+      else -> ClassOrInterfaceType(classNameType(name.qualifier.orElse(null)), name.identifier)
     }
 }

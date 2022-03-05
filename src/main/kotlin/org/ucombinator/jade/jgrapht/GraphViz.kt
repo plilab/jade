@@ -28,13 +28,13 @@ object GraphViz {
     dotExporter.exportGraph(graph, writer)
   }
 
-  fun <E> toString(graph: ControlFlowGraph): String {
+  fun toString(graph: ControlFlowGraph): String {
     val writer = StringWriter()
-    print<E>(writer, graph)
+    print(writer, graph)
     return writer.toString()
   }
 
-  fun <E> print(writer: Writer, graph: ControlFlowGraph) {
+  fun print(writer: Writer, graph: ControlFlowGraph) {
     val dotExporter = DOTExporter<Insn, ControlFlowGraph.Edge>()
     dotExporter.setVertexAttributeProvider({ v: Insn ->
       hashMapOf(Pair("label", DefaultAttribute.createAttribute(v.longString())))

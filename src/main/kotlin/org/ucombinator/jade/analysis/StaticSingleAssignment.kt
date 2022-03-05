@@ -11,29 +11,31 @@ data class StaticSingleAssignment(
   val frames: Array<Frame<Var>>,
   val insnVars: Map<AbstractInsnNode, Pair<Var, List<Var>>>,
   val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>,
-)
+) {
+  companion object {
+    fun apply(owner: String, method: MethodNode, cfg: ControlFlowGraph): StaticSingleAssignment {
+      val interpreter = SSAInterpreter(method)
 
-fun staticSingleAssignment(owner: String, method: MethodNode, cfg: ControlFlowGraph): StaticSingleAssignment {
-  val interpreter = SSAInterpreter(method)
+      // Hook into a method that is called whenever `analyze` starts working on a new instruction
+      val oldInstructions = method.instructions
+      method.instructions = object : InsnList() {
+        override fun get(index: Int): AbstractInsnNode {
+          val insn = super.get(index)
+          interpreter.copyOperationPosition = 0
+          interpreter.originInsn = insn
+          return insn
+        }
+      }
 
-  // Hook into a method that is called whenever `analyze` starts working on a new instruction
-  val oldInstructions = method.instructions
-  method.instructions = object : InsnList() {
-    override fun get(index: Int): AbstractInsnNode {
-      val insn = super.get(index)
-      interpreter.copyOperationPosition = 0
-      interpreter.originInsn = insn
-      return insn
+      for (i in oldInstructions) {
+        method.instructions.add(i)
+      }
+
+      val frames = SSAAnalyzer(cfg, interpreter).analyze(owner, method)
+
+      return StaticSingleAssignment(frames, interpreter.insnVars, interpreter.phiInputs)
     }
   }
-
-  for (i in oldInstructions) {
-    method.instructions.add(i)
-  }
-
-  val frames = SSAAnalyzer(cfg, interpreter).analyze(owner, method)
-
-  return StaticSingleAssignment(frames, interpreter.insnVars, interpreter.phiInputs)
 }
 
 // TODO: maybe handle `this` var specially (i.e., no phivar)
@@ -55,15 +57,15 @@ private class SSAInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     }
   }
 
-  override fun newValue(`type`: Type): Var = Errors.fatal("Impossible call of newValue on ${`type`}")
+  override fun newValue(type: Type): Var = Errors.fatal("Impossible call of newValue on $type")
 
-  override fun newParameterValue(isInstanceMethod: Boolean, local: Int, `type`: Type): Var =
-    ParameterVar(TypedBasicInterpreter.newValue(`type`)!!, local)
+  override fun newParameterValue(isInstanceMethod: Boolean, local: Int, type: Type): Var =
+    ParameterVar(TypedBasicInterpreter.newValue(type)!!, local)
 
-  override fun newReturnTypeValue(`type`: Type): Var? {
-    // ASM requires that we return null when `type` is Type.VOID_TYPE
+  override fun newReturnTypeValue(type: Type): Var? {
+    // ASM requires that we return null when type is Type.VOID_TYPE
     this.returnTypeValue =
-      if (`type` == Type.VOID_TYPE) { null } else { ReturnVar(TypedBasicInterpreter.newReturnTypeValue(`type`)) }
+      if (type == Type.VOID_TYPE) { null } else { ReturnVar(TypedBasicInterpreter.newReturnTypeValue(type)) }
     return this.returnTypeValue
   }
 
@@ -193,10 +195,10 @@ private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpr
         // We are at a join point
         val cfgFrame = cfg.frames.get(insnIndex)
         val frame =
-          this.getFrames().get(insnIndex)
-            ?: Frame<Var>(cfgFrame.getLocals(), cfgFrame.getMaxStackSize())
+          this.frames.get(insnIndex)
+            ?: Frame<Var>(cfgFrame.locals, cfgFrame.maxStackSize)
         // Note that Frame.returnValue is null until `frame.setReturn` later in this method
-        for (i in 0..cfgFrame.getLocals()) {
+        for (i in 0..cfgFrame.locals) {
           assert((insnIndex == 0) == (frame.getLocal(i) != null))
           val phiVar = PhiVar(cfgFrame.getLocal(i), Insn(method, insn), i) // Note: not `.used`
           this.interpreter.phiInputs(phiVar.change(), this.interpreter.originInsn, frame.getLocal(i), true)
@@ -204,20 +206,20 @@ private class SSAAnalyzer(val cfg: ControlFlowGraph, val interpreter: SSAInterpr
         }
         // Note that we use `push` instead of `setStack` as the `Frame` constructor
         // starts with an empty stack regardless of `stackSize`
-        assert(frame.getStackSize() == 0)
-        for (i in 0..cfgFrame.getStackSize()) {
+        assert(frame.stackSize == 0)
+        for (i in 0..cfgFrame.stackSize) {
           assert((insnIndex == 0) == (frame.getStack(i) != null))
-          val phiVar = PhiVar(cfgFrame.getStack(i), Insn(method, insn), i + frame.getLocals())
+          val phiVar = PhiVar(cfgFrame.getStack(i), Insn(method, insn), i + frame.locals)
           this.interpreter.phiInputs(phiVar.change(), this.interpreter.originInsn, frame.getStack(i), true)
           frame.push(phiVar)
         }
-        this.getFrames().set(insnIndex, frame)
+        this.frames.set(insnIndex, frame)
       }
     }
 
     // Set the `Frame.returnValue` as it is not updated by `Frame.merge`.
     // This gets passed as to `returnOperation` as `expected`.
-    for (frame in this.getFrames()) {
+    for (frame in this.frames) {
       // Unreachable code has null frames, so skip those
       if (frame != null) {
         frame.setReturn(interpreter.returnTypeValue)

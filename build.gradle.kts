@@ -56,6 +56,9 @@ dependencies {
   // Logging (see also ch.qos.logback:logback-classic)
   implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
 
+  // Compressed files
+  implementation("org.apache.commons:commons-compress:1.21")
+
   // Vertex and edge graphs
   implementation("org.jgrapht:jgrapht-core:1.5.1")
   implementation("org.jgrapht:jgrapht-ext:1.5.1")

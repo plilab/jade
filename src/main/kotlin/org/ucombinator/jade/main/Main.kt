@@ -3,10 +3,14 @@ package org.ucombinator.jade.main
 import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.* // ktlint-disable no-wildcard-imports
+import com.github.ajalt.clikt.output.CliktHelpFormatter
+import com.github.ajalt.clikt.parameters.arguments.* // ktlint-disable no-wildcard-imports
 import com.github.ajalt.clikt.parameters.options.* // ktlint-disable no-wildcard-imports
 import com.github.ajalt.clikt.parameters.types.* // ktlint-disable no-wildcard-imports
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
+import org.ucombinator.jade.util.VFS
+import java.io.File
 
 // import mu.KotlinLogging
 // import org.ucombinator.jade.main.BuildInformation
@@ -38,31 +42,38 @@ fun main(args: Array<String>): Unit =
 //   commandLine.setAbbreviatedOptionsAllowed(true)
 //   commandLine.setAbbreviatedSubcommandsAllowed(true)
 //   commandLine.setOverwrittenOptionsAllowed(true)
-
-//   requiredOptionMarker = '*', // TODO: put in documentation string
 //   showAtFileInUsageHelp = true,
-//   showDefaultValues = true,
 //   showEndOfOptionsDelimiterInUsageHelp = true,
 class Jade : CliktCommand() {
   init {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
+    context {
+      helpFormatter = CliktHelpFormatter(
+        showRequiredTag = true,
+        showDefaultValues = true,
+      )
+    }
   }
-//   @Option(
-//     names = Array("--log"),
-//     paramLabel = "LEVEL",
-//     description = Array(
-//       "Set the logging level where LEVEL is LVL or NAME=LVL.",
-//       "",
-//       "LVL is one of (case insensitive):",
-//       "  off info warning error debug trace all",
-//       "NAME is a qualified package or class name and is relative to `org.ucombinator.jade` unless prefixed with `.`."
-//     ),
-//     split = ",",
+
+  data class LogSetting(val name: String, val lvl: Level)
+  val log: List<LogSetting> by option(
+    metavar = "LEVEL",
+    help = """
+      Set the logging level where LEVEL is a comma-seperated list of LVL or NAME=LVL.
+      LVL is one of (case insensitive): off info warning error debug trace all.
+      NAME is a qualified package or class name and is relative to `org.ucombinator.jade` unless prefixed with `.`.
+    """
+  ).convert {
+    it.split(",").map {
+      val r = it.split("=", limit = 2)
+      when (r.size) {
+        1 -> LogSetting("", Level.toLevel(r.get(0)))
+        2 -> LogSetting(r.get(0), Level.toLevel(r.get(1)))
+        else -> TODO("impossible")
+      }
+    }
+  }.default(listOf())
 //     showDefaultValue = CommandLine.Help.Visibility.NEVER,
-//     converter = Array(classOf[LevelConverter]),
-//   )
-//   // TODO: check --help
-  val log = listOf<LogSetting>()
 
   val logCallerDepth: Int by option(
     metavar = "DEPTH",
@@ -70,7 +81,7 @@ class Jade : CliktCommand() {
   ).int().default(0)
 
   val wait: Boolean by option(
-    help = "Wait for input from user before running (useful when attaching to the process)"
+    help = "Wait for input from user before running.  This is useful to allow time for a debugger to attach to this process."
   ).flag(
     "--no-wait",
     default = false
@@ -94,40 +105,26 @@ class Jade : CliktCommand() {
     }
 
     if (wait) {
-      // TODO: from TTY not stdin/stdout
-      // TODO: TermUi.prompt()
-      println("Waiting for user.  Press \"Enter\" to continue.")
-      readLine()
+      // We use the system console in case stdin or stdout are redirected
+      System.console().printf("Waiting for user.  Press \"Enter\" to continue.")
+      System.console().readLine()
     }
   }
 }
-
-data class LogSetting(val name: String, val lvl: Level)
-// class LevelConverter extends ITypeConverter[LogSetting] {
-//   override def convert(value: String): LogSetting = {
-//     val (name, level) = value.split("=") match {
-//       case Array(l) => ("", Level.toLevel(l, null))
-//       case Array(n, l) => (n, Level.toLevel(l, null))
-//       case _ => throw new Exception("could not parse log level") // TODO: explain notation
-//     }
-//     if (level == null) throw new Exception(f"invalid level: ${level}") // TODO: "must be one of ..."
-//     LogSetting(name, level)
-//   }
-// }
 
 /**************/
 // Sub-commands
 
 class TestLog : CliktCommand() {
   class Bar {
-    val logger = Log.logger {} // TODO: lazy?
+    val log = Log.log {} // TODO: lazy?
     fun f() {
-      println(this.javaClass.getName())
-      logger.error("error")
-      logger.warn("warn")
-      logger.info("info")
-      logger.debug("debug")
-      logger.trace("trace")
+      println(this.javaClass.name)
+      log.error("error")
+      log.warn("warn")
+      log.info("info")
+      log.debug("debug")
+      log.trace("trace")
     }
   }
   override fun run() {
@@ -139,8 +136,6 @@ class TestLog : CliktCommand() {
 class BuildInfo : CliktCommand(help = "Display information about how `jade` was built") {
   // TODO: --long --short
   override fun run() {
-    // with (BuildInformation) {
-    // "${kotlinVersion}"
     with(BuildInformation) {
       println(
         """$versionMessage
@@ -171,12 +166,24 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
 
 class Decompile : CliktCommand(help = "Display information about how `jade` was built") {
   // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
+  // --filter=+dir=
 
-  // @Parameters(paramLabel = "<path>", arity = "1..*", description = Array("Files or directories to decompile"), `type` = Array(classOf[java.nio.file.Path]))
-  // var path: java.util.List[java.nio.file.Path] = _
+  // TODO: convert from File to Path (Path is more modern)
+  val files: List<File> by argument(
+    name = "PATH",
+    help = "Files or directories to decompile",
+  ).file(mustExist = true).multiple(required = true)
+  val op by option().int().required()
 
   override fun run() {
-    TODO("implemenet decompile")
+    // TODO("implemenet decompile")
+    val vfs = VFS()
+    for (file in files) {
+      vfs.dir(file)
+    }
+    for ((k, _) in vfs.result) {
+      println("k $k")
+    }
   }
 }
 

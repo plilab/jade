@@ -1,6 +1,6 @@
 package org.ucombinator.jade.classfile
 
-import com.github.javaparser.ast.`type`.PrimitiveType
+import com.github.javaparser.ast.type.PrimitiveType
 import kotlin.test.* // ktlint-disable no-wildcard-imports
 
 object DescriptorTest {
@@ -17,7 +17,7 @@ object DescriptorTest {
         Pair(PrimitiveType.Primitive.DOUBLE, "D"),
       )
       for ((p, s) in types) {
-        assertSame(p, Descriptor.fieldDescriptor(s).asPrimitiveType().getType())
+        assertSame(p, Descriptor.fieldDescriptor(s).asPrimitiveType().type)
       }
     }
     @Test fun `Object type`() {
@@ -43,8 +43,8 @@ object DescriptorTest {
     @Test fun `non-void`() {
       val (params, result) = Descriptor.methodDescriptor("(ZJ[[Ljava/lang/Object;)[[Ljava/lang/Object;")
       expect(3) { params.size }
-      expect(PrimitiveType.Primitive.BOOLEAN) { params.get(0).asPrimitiveType().getType() }
-      expect(PrimitiveType.Primitive.LONG) { params.get(1).asPrimitiveType().getType() }
+      expect(PrimitiveType.Primitive.BOOLEAN) { params.get(0).asPrimitiveType().type }
+      expect(PrimitiveType.Primitive.LONG) { params.get(1).asPrimitiveType().type }
       expect("java.lang.Object[][]") { params.get(2).asArrayType().toString() }
       expect("java.lang.Object[][]") { result.asArrayType().toString() }
     }

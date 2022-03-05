@@ -1,31 +1,27 @@
 package org.ucombinator.jade.decompile
 
-// import com.github.javaparser.ast.NodeList
-// import com.github.javaparser.ast.expr._
-// import com.github.javaparser.ast.stmt._
-// import org.jgrapht.graph._
-// import org.ucombinator.jade.asm.Insn
-// import org.ucombinator.jade.asm.Insn.ordering
-// import org.ucombinator.jade.decompile._
-// import org.ucombinator.jade.analysis.Structure
-// import org.ucombinator.jade.analysis.StaticSingleAssignment
-// import org.ucombinator.jade.util.Errors
-// import org.ucombinator.jade.util.Log
-// import org.ucombinator.jade.util.MyersList
-// import com.github.javaparser.ast.body.VariableDeclarator
-// import com.github.javaparser.ast.`type`.PrimitiveType
-// import com.github.javaparser.ast.`type`.{Type => JavaParserType}
-// import org.objectweb.asm.{Type => AsmType}
-// import org.objectweb.asm.tree.LabelNode
-// import org.ucombinator.jade.analysis.Var
-// import org.ucombinator.jade.analysis.ControlFlowGraph
-// import org.ucombinator.jade.classfile.Descriptor
-// import org.ucombinator.jade.util.JavaParser
-// import com.github.javaparser.ast.comments.BlockComment
+import com.github.javaparser.ast.body.VariableDeclarator
+import com.github.javaparser.ast.comments.BlockComment
+import com.github.javaparser.ast.expr.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.stmt.* // ktlint-disable no-wildcard-imports
 import com.github.javaparser.ast.stmt.BlockStmt
+import com.github.javaparser.ast.type.PrimitiveType
+import com.github.javaparser.ast.type.Type as JavaParserType
+import org.jgrapht.graph.* // ktlint-disable no-wildcard-imports
+import org.objectweb.asm.tree.LabelNode
+import org.objectweb.asm.Type as AsmType
 import org.ucombinator.jade.analysis.ControlFlowGraph
 import org.ucombinator.jade.analysis.StaticSingleAssignment
 import org.ucombinator.jade.analysis.Structure
+import org.ucombinator.jade.analysis.Var
+import org.ucombinator.jade.asm.Insn
+import org.ucombinator.jade.classfile.Descriptor
+import org.ucombinator.jade.decompile.* // ktlint-disable no-wildcard-imports
+import org.ucombinator.jade.javaparser.JavaParser
+import org.ucombinator.jade.util.Errors
+import org.ucombinator.jade.util.Log
+
 
 // TODO: rename to Statement
 object DecompileStatement {
@@ -38,28 +34,27 @@ object DecompileStatement {
    */
 
   fun apply(cfg: ControlFlowGraph, ssa: StaticSingleAssignment, structure: Structure): BlockStmt {
-  //   // TODO: check for SCCs with multiple entry points
-  //   // TODO: LocalClassDeclarationStmt
-  //   val jumpTargets = cfg.graph // TODO: rename to insnOfLabel
-  //     .vertexSet()
-  //     .asScala
-  //     .flatMap({ insn =>
-  //       insn.insn match {
-  //         case e: LabelNode => Set(e.getLabel -> insn)
-  //         case _ => Set()
-  //       }
-  //     })
-  //     .toMap
+    // TODO: check for SCCs with multiple entry points
+    // TODO: LocalClassDeclarationStmt
+    val jumpTargets = cfg.graph // TODO: rename to insnOfLabel
+      .vertexSet()
+      .flatMap { insn ->
+        when (val e = insn.insn) {
+          is LabelNode -> setOf(e.label to insn)
+          else -> setOf()
+        }
+      }
+      .toMap()
 
-  //   // TODO: remove back edges
-  //   val graph = new AsSubgraph(
-  //     new MaskSubgraph(cfg.graph, (_: Insn) => false, (e: ControlFlowGraph.Edge) => structure.backEdges(e))
-  //   )
+    // TODO: remove back edges
+    val graph = AsSubgraph(
+      MaskSubgraph(cfg.graph, { _: Insn -> false }, { e: ControlFlowGraph.Edge -> structure.backEdges.contains(e) })
+    )
 
-  //   def labelString(label: LabelNode): String = { "JADE_" + jumpTargets(label.getLabel()).index }
-  //   def insnLabelString(insn: Insn): String = { "JADE_" + insn.index } // TODO: overload with labelString
+    fun labelString(label: LabelNode): String = "JADE_" + jumpTargets.getValue(label.label).index()
+    fun insnLabelString(insn: Insn): String = "JADE_" + insn.index() // TODO: overload with labelString
 
-  //   def structuredBlock(head: Insn): (Statement, Set[Insn] /* pendingOutside */ ) = {
+    fun structuredBlock(head: Insn): Pair<Statement, Set<Insn> /* pendingOutside */ > {
   //     // do statements in instruction order if possible
   //     // constraints (loops *must* be together):
   //     // 1. Respect edges
@@ -178,17 +173,18 @@ object DecompileStatement {
   //     }
 
   //     return (currentStmt, pendingOutside)
-  //   }
+      TODO()
+    }
 
   //   val (stmt, pendingOutside) = structuredBlock(cfg.entry)
   //   if (!pendingOutside.isEmpty) { Errors.fatal(f"Non-empty pending ${pendingOutside}") }
   //   val variables = ssa.insnVars.values.map(_._1) ++ ssa.phiInputs.keys
   //   def decompileVarDecl(v: Var): Statement = {
   //     // TODO: modifiers
-  //     if (v.basicValue == null || v.basicValue.getType() == null) {
+  //     if (v.basicValue == null || v.basicValue.type == null) {
   //       JavaParser.noop(f"${v}")
   //     } else {
-  //       val t = Descriptor.fieldDescriptor(v.basicValue.getType().getDescriptor())
+  //       val t = Descriptor.fieldDescriptor(v.basicValue.type.descriptor)
   //       new ExpressionStmt(new VariableDeclarationExpr(t, v.name))
   //     }
   //   }

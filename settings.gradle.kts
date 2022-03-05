@@ -6,4 +6,4 @@
 
 // plugins {}
 
-rootProject.name = "Jade"
+rootProject.name = "jade"

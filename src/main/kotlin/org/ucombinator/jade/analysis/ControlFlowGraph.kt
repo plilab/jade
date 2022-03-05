@@ -30,7 +30,7 @@ data class ControlFlowGraph(
       }
       val analyzer = ControlFlowGraphAnalyzer(method, graph)
       val frames = analyzer.analyze(owner, method)
-      val entry = Insn(method, method.instructions.getFirst())
+      val entry = Insn(method, method.instructions.first)
       val g = DirectedPseudograph<Insn, Edge>(Edge::class.java)
       for (handler in method.tryCatchBlocks) {
         val s = Insn(method, handler.start)

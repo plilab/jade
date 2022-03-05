@@ -13,7 +13,7 @@ import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as Ol
 import org.slf4j.Logger as Slf4jLogger
 
 object Log {
-  fun logger(func: () -> Unit) = KotlinLogging.logger(func)
+  fun log(func: () -> Unit) = KotlinLogging.logger(func)
   val prefix = "org.ucombinator.jade." // TODO: autodetect
   fun getLog(name: String): LogbackLogger {
     val modifiedName = if (name.isEmpty()) { Slf4jLogger.ROOT_LOGGER_NAME } else { name }
@@ -78,7 +78,7 @@ class RelativeLoggerConverter : ClassicConverter() {
   }
 
   override fun convert(event: ILoggingEvent): String {
-    val name = event.getLoggerName()
+    val name = event.loggerName
     // if (name.startsWith(prefix)) { return name.removePrefix(prefix) }
     // else { return "." + name }
     if (name.startsWith(prefix)) {
@@ -97,7 +97,7 @@ class DynamicCallerConverter : ClassicConverter() {
 
   override fun convert(event: ILoggingEvent): String {
     var buf = StringBuilder()
-    var cda = event.getCallerData()
+    var cda = event.callerData
     if (cda != null && cda.size > depthStart) {
       val limit = if (depthEnd < cda.size) depthEnd else cda.size
 
@@ -117,7 +117,7 @@ class DynamicCallerConverter : ClassicConverter() {
 
 class HighlightingCompositeConverter : OldHighlightingCompositeConverter() {
   protected override fun getForegroundColorCode(event: ILoggingEvent): String =
-    when (event.getLevel().toInt()) {
+    when (event.level.toInt()) {
       Level.INFO_INT -> ANSIConstants.GREEN_FG
       Level.DEBUG_INT -> ANSIConstants.CYAN_FG
       Level.TRACE_INT -> ANSIConstants.MAGENTA_FG

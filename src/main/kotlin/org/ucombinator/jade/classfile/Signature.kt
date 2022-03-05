@@ -2,7 +2,7 @@ package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.SimpleName
-import com.github.javaparser.ast.`type`.* // ktlint-disable no-wildcard-imports
+import com.github.javaparser.ast.type.* // ktlint-disable no-wildcard-imports
 import org.antlr.v4.runtime.CommonToken
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ListTokenSource
@@ -163,9 +163,9 @@ object Signature {
     when (t) {
       is ClassOrInterfaceType -> t
       is TypeParameter -> {
-        assert(t.getTypeBound().isEmpty(), { "non-empty type bounds in $t" })
+        assert(t.typeBound.isEmpty(), { "non-empty type bounds in $t" })
         // TODO: mark this as a type parameter
-        ClassOrInterfaceType(null, t.getName(), null)
+        ClassOrInterfaceType(null, t.name, null)
       }
       else -> Errors.unmatchedType(t)
     }

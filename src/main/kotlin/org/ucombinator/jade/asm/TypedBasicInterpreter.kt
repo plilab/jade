@@ -10,10 +10,10 @@ import org.objectweb.asm.tree.analysis.BasicValue
  * types) or `BasicValue.INT_TYPE` (boolean, char, byte short, int).
  */
 object TypedBasicInterpreter : BasicInterpreter(Opcodes.ASM9) {
-  override fun newValue(`type`: Type?): BasicValue? =
-    when (`type`?.getSort()) {
+  override fun newValue(type: Type?): BasicValue? =
+    when (type?.sort) {
       null -> BasicValue.UNINITIALIZED_VALUE
       Type.VOID -> null
-      else -> BasicValue(`type`)
+      else -> BasicValue(type)
     }
 }

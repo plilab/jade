@@ -4,10 +4,10 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.ArrayCreationLevel
 import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.`type`.ArrayType
-import com.github.javaparser.ast.`type`.ClassOrInterfaceType
-import com.github.javaparser.ast.`type`.PrimitiveType
-import com.github.javaparser.ast.`type`.Type
+import com.github.javaparser.ast.type.ArrayType
+import com.github.javaparser.ast.type.ClassOrInterfaceType
+import com.github.javaparser.ast.type.PrimitiveType
+import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.comments.BlockComment
 import com.github.javaparser.ast.expr.* // ktlint-disable no-wildcard-imports
 import com.github.javaparser.ast.stmt.* // ktlint-disable no-wildcard-imports
@@ -79,7 +79,7 @@ object DecompileInsn {
       is DecompiledNew            -> JavaParser.noop("new ${insn.descriptor}")
       is DecompiledMonitorEnter   -> JavaParser.noop("Monitor Enter: ${insn.expression}")
       is DecompiledMonitorExit    -> JavaParser.noop("Monitor Exit: ${insn.expression}")
-      is DecompiledLabel          -> JavaParser.noop("Label: ${insn.node.getLabel()}")
+      is DecompiledLabel          -> JavaParser.noop("Label: ${insn.node.label}")
       is DecompiledFrame          -> JavaParser.noop("Frame: ${insn.node.local} ${insn.node.stack}")
       is DecompiledLineNumber     -> JavaParser.noop("Line number: ${insn.node.line}")
       is DecompiledUnsupported    -> JavaParser.noop("Unsupported: ${insn}")
@@ -106,7 +106,7 @@ object DecompileInsn {
     }
     return Pair(
       retVar,
-      when (node.getOpcode()) {
+      when (node.opcode) {
         // InsnNode
         Opcodes.NOP         -> DecompiledStatement(EmptyStmt())
         Opcodes.ACONST_NULL -> DecompiledExpression(NullLiteralExpr())
@@ -282,7 +282,7 @@ object DecompileInsn {
         Opcodes.NEW -> DecompiledNew(ClassName.classNameType((node as TypeInsnNode).desc)!!) // TODO: pair with <init>
         // IntInsnNode
         Opcodes.NEWARRAY -> {
-          val typ = when ((node as IntInsnNode).operand) {
+          val type = when ((node as IntInsnNode).operand) {
             Opcodes.T_BOOLEAN -> PrimitiveType.booleanType()
             Opcodes.T_CHAR    -> PrimitiveType.charType()
             Opcodes.T_FLOAT   -> PrimitiveType.floatType()
@@ -293,12 +293,12 @@ object DecompileInsn {
             Opcodes.T_LONG    -> PrimitiveType.longType()
             else              -> TODO()
           }
-          DecompiledExpression(ArrayCreationExpr(typ, NodeList(ArrayCreationLevel(args(0), NodeList())), null))
+          DecompiledExpression(ArrayCreationExpr(type, NodeList(ArrayCreationLevel(args(0), NodeList())), null))
         }
         // TypeInsnNode
         Opcodes.ANEWARRAY -> {
-          val typ = ClassName.classNameType((node as TypeInsnNode).desc)
-          DecompiledExpression(ArrayCreationExpr(typ, NodeList(ArrayCreationLevel(args(0), NodeList())), null))
+          val type = ClassName.classNameType((node as TypeInsnNode).desc)
+          DecompiledExpression(ArrayCreationExpr(type, NodeList(ArrayCreationLevel(args(0), NodeList())), null))
         }
         // InsnNode
         Opcodes.ARRAYLENGTH -> DecompiledExpression(FieldAccessExpr(args(0), NodeList(), SimpleName("length")))
@@ -313,22 +313,22 @@ object DecompileInsn {
         Opcodes.MULTIANEWARRAY -> {
           // TODO: use asm.Type functions
           val dims = (node as MultiANewArrayInsnNode).dims
-          fun unwrap(typ: Type): Pair<Type, Int> {
-            var t = typ
+          fun unwrap(type: Type): Pair<Type, Int> {
+            var t = type
             var levels = 0
             while (t is ArrayType) {
-              t = t.getComponentType()
+              t = t.componentType
               levels = levels + 1
             }
             return Pair(t, levels)
           }
-          val (typ, expectedDims) = unwrap(Descriptor.fieldDescriptor(node.desc))
+          val (type, expectedDims) = unwrap(Descriptor.fieldDescriptor(node.desc))
           val dimArgs =
             argsArray.toList().subList(0, dims).map {ArrayCreationLevel(it, NodeList())}
           val nonDimArgs =
             (dims..expectedDims).map { ArrayCreationLevel(null, NodeList()) }
           val levels = NodeList(dimArgs.plus(nonDimArgs))
-          DecompiledExpression(ArrayCreationExpr(typ, levels, /*TODO: initializer*/ null))
+          DecompiledExpression(ArrayCreationExpr(type, levels, /*TODO: initializer*/ null))
         }
         // JumpInsnNode
         Opcodes.IFNULL    -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), NullLiteralExpr(), BinaryExpr.Operator.EQUALS))
@@ -355,8 +355,8 @@ object DecompileInsn {
 
     fun decodeSimple(): LambdaExpr = {
       // Step 1: Find `interface`, which is the type of the closure returned by the lambda.
-      assert(e.getType.isInstanceOf[RefType])
-      val interface = e.getType.asInstanceOf[RefType].getSootClass
+      assert(e.type.isInstanceOf[RefType])
+      val interface = e.type.asInstanceOf[RefType].getSootClass
 
       // Step 2: Find the method in `interface` that the lambda corresponds to.
       // Unfortunately, this is not already computed so we find it manually.
@@ -369,15 +369,15 @@ object DecompileInsn {
       val returnType = types(types.length - 1)
 
       fun findMethod(klass: SootClass): SootMethod = {
-        val m = klass.getMethodUnsafe(e.getMethod.getName, paramTypes, returnType)
+        val m = klass.getMethodUnsafe(e.method.name, paramTypes, returnType)
         if (m != null) { return m }
 
         if (klass.hasSuperclass) {
-          val m = findMethod(klass.getSuperclass)
+          val m = findMethod(klass.superclass)
           if (m != null) { return m }
         }
 
-        for (i <- klass.getInterfaces.asScala) {
+        for (i <- klass.iterfaces.asScala) {
           val m = findMethod(i)
           if (m != null) { return m }
         }

@@ -6,7 +6,7 @@ import com.github.javaparser.ast.comments.Comment
 import com.github.javaparser.ast.stmt.EmptyStmt
 
 object JavaParser {
-  fun <A : Node> setComment(node: A, comment: Comment): A {
+  fun <A : Node> setComment(node: A, comment: Comment?): A {
     node.setComment(comment)
     return node
   }

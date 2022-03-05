@@ -69,8 +69,8 @@ class Jade : CliktCommand() {
     it.split(",").map {
       val r = it.split("=", limit = 2)
       when (r.size) {
-        1 -> LogSetting("", Level.toLevel(r.get(0)))
-        2 -> LogSetting(r.get(0), Level.toLevel(r.get(1)))
+        1 -> LogSetting("", Level.toLevel(r[0]))
+        2 -> LogSetting(r[0], Level.toLevel(r[1]))
         else -> TODO("impossible")
       }
     }

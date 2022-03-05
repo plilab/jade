@@ -191,10 +191,8 @@ private class SsaAnalyzer(val cfg: ControlFlowGraph, val interpreter: SsaInterpr
         method.tryCatchBlocks.any { it.handler === insn }
       ) {
         // We are at a join point
-        val cfgFrame = cfg.frames.get(insnIndex)
-        val frame =
-          this.frames.get(insnIndex)
-            ?: Frame<Var>(cfgFrame.locals, cfgFrame.maxStackSize)
+        val cfgFrame = cfg.frames[insnIndex]
+        val frame = this.frames[insnIndex] ?: Frame<Var>(cfgFrame.locals, cfgFrame.maxStackSize)
         // Note that Frame.returnValue is null until `frame.setReturn` later in this method
         for (i in 0..cfgFrame.locals) {
           assert((insnIndex == 0) == (frame.getLocal(i) != null))
@@ -211,7 +209,7 @@ private class SsaAnalyzer(val cfg: ControlFlowGraph, val interpreter: SsaInterpr
           this.interpreter.phiInputs(phiVar.change(), this.interpreter.originInsn, frame.getStack(i), true)
           frame.push(phiVar)
         }
-        this.frames.set(insnIndex, frame)
+        this.frames[insnIndex] = frame
       }
     }
 

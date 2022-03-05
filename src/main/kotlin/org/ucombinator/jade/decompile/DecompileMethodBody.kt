@@ -158,13 +158,13 @@ object DecompileMethodBody {
 
       this.log.debug("++++ frames: ${ssa.frames.size} ++++")
       for (i in 0 until method.instructions.size()) {
-        this.log.debug("frame($i): ${ssa.frames.get(i)}")
+        this.log.debug("frame($i): ${ssa.frames[i]}")
       }
 
       this.log.debug("++++ results and arguments ++++")
       for (i in 0 until method.instructions.size()) {
-        val insn = method.instructions.get(i)
-        this.log.debug("args($i): ${Insn.longString(method, insn)} --- ${ssa.insnVars.get(insn)}")
+        val insn = method.instructions[i]
+        this.log.debug("args($i): ${Insn.longString(method, insn)} --- ${ssa.insnVars[insn]}")
       }
 
       this.log.debug("++++ ssa map ++++")

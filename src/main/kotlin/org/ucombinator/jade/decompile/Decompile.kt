@@ -40,7 +40,7 @@ object Decompile {
 
     //     // Decompile method bodies
     //     for (typ <- compilationUnit.types.iterator().asScala) {
-    //       val members = typ.members.iterator().asScala.flatMap(x => Decompile.methods.get(x).map((_, x))).toList
+    //       val members = typ.members.iterator().asScala.flatMap(x => Decompile.methods[x].map((_, x))).toList
     //       for ((((classNode, methodNode), bodyDeclaration), methodIndex) <- members.zipWithIndex) {
     //         this.log.debug("!!!!!!!!!!!!")
     //         this.log.info(

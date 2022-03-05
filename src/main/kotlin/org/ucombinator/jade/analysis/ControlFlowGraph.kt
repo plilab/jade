@@ -46,8 +46,8 @@ private class ControlFlowGraphAnalyzer(
   val graph: DirectedPseudograph<Insn, ControlFlowGraph.Edge>
 ) : Analyzer<BasicValue>(TypedBasicInterpreter) {
   protected override fun newControlFlowEdge(insn: Int, successor: Int) {
-    val source = Insn(method, this.method.instructions.get(insn))
-    val target = Insn(method, this.method.instructions.get(successor))
+    val source = Insn(method, this.method.instructions[insn])
+    val target = Insn(method, this.method.instructions[successor])
     this.graph.addEdge(source, target, ControlFlowGraph.Edge(source, target))
   }
 }

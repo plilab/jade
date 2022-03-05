@@ -73,7 +73,7 @@ class RelativeLoggerConverter : ClassicConverter() {
   override fun start() {
     val x = getOptionList()
     assert(x.size == 1)
-    prefix = x.get(0)
+    prefix = x[0]
     super.start()
   }
 

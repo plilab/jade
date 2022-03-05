@@ -44,9 +44,9 @@ object DescriptorTest {
     @Test fun `non-void`() {
       val (params, result) = Descriptor.methodDescriptor("(ZJ[[Ljava/lang/Object;)[[Ljava/lang/Object;")
       expect(3) { params.size }
-      expect(PrimitiveType.Primitive.BOOLEAN) { params.get(0).asPrimitiveType().type }
-      expect(PrimitiveType.Primitive.LONG) { params.get(1).asPrimitiveType().type }
-      expect("java.lang.Object[][]") { params.get(2).asArrayType().toString() }
+      expect(PrimitiveType.Primitive.BOOLEAN) { params[0].asPrimitiveType().type }
+      expect(PrimitiveType.Primitive.LONG) { params[1].asPrimitiveType().type }
+      expect("java.lang.Object[][]") { params[2].asArrayType().toString() }
       expect("java.lang.Object[][]") { result.asArrayType().toString() }
     }
     @Test fun `void`() {

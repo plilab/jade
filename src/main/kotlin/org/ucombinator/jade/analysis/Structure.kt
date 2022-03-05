@@ -75,7 +75,7 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
       // //   if (!backEdgeSet.empty) {
       // //     // backEdges ++= backEdgeSet
       // //     def addBlock(insn: Insn): Set[Insn] = {
-      // //       highestBlock.get(insn) match {
+      // //       highestBlock[insn] match {
       // //         case None =>
       // //           // We are first ones here, so setup both highest and lowest
       // //           highestBlock(insn) = block

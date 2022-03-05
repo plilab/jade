@@ -41,7 +41,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
       // Ensure labels have the correct name
       if (insnList !== this.insnList) {
         this.insnList = insnList
-        this.labelNames = java.util.HashMap()
+        this.labelNames = mutableMapOf()
         for (insn in insnList) {
           if (insn is LabelNode) {
             this.labelNames.put(insn.label, "L${insnList.indexOf(insn)}")
@@ -84,7 +84,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
           it.type == Int::class.java && it.modifiers == (Modifier.FINAL or Modifier.PUBLIC or Modifier.STATIC)
         }
         .map {
-          val x = (it.get(null) as Integer).toInt()
+          val x = (it[null] as Integer).toInt()
           Pair<String, Int>(it.name, x)
         }
         .toMap()

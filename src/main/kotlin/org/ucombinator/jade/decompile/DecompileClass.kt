@@ -19,6 +19,7 @@ import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.Flags
 import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
+import org.ucombinator.jade.util.list.pairs
 import org.ucombinator.jade.util.list.tail
 import org.ucombinator.jade.util.list.zipAll
 import org.ucombinator.jade.util.tuple.*
@@ -56,9 +57,7 @@ object DecompileClass {
       else ->
         NormalAnnotationExpr(
           name,
-          NodeList<MemberValuePair>(
-            (0..vs.size step 2).map { MemberValuePair(vs.get(it) as String, decompileLiteral(vs.get(it + 1))) }
-          )
+          NodeList(vs.pairs().map { MemberValuePair(it.first as String, decompileLiteral(it.second)) })
         )
     }
   }

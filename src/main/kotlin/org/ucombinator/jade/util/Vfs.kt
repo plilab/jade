@@ -127,7 +127,7 @@ class Vfs {
       if (entry.isDirectory) { continue }
       val entryName = name + File(entry.name)
       // if (!match_entry(entryName.joinToString("\0"))) { continue; }
-      entries.set(entryName, ByteArrayInputStream(archive.readBytes()))
+      entries[entryName] = ByteArrayInputStream(archive.readBytes())
     }
 
     // Note that we do this only after we have read the entire archive because

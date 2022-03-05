@@ -97,7 +97,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
 
       // Iterate over nodes from bottom of DFS tree to top.
       for (i in (N - 1) downTo 0) { // TODO: check boundry conditions
-        val n = vertex.get(i)!!
+        val n = vertex[i]!!
         val p = parent.getValue(n)
         var s = p
 
@@ -130,12 +130,12 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
             samedom.put(v, y)
           }
         }
-        bucket.put(p, HashSet()) // TODO: not hash?
+        bucket.put(p, setOf())
       }
 
       // Iterate and assign idom based on samedom. Order guarantees idom will be defined in time.
       for (i in 0..N) {
-        val n = vertex.get(i)!!
+        val n = vertex[i]!!
         if (samedom.contains(n)) {
           idom.put(n, idom.getValue(samedom.getValue(n)))
         }

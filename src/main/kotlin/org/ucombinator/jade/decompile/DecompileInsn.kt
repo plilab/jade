@@ -112,7 +112,7 @@ object DecompileInsn {
   fun decompileInsn(node: AbstractInsnNode, ssa: StaticSingleAssignment): Pair<Var?, DecompiledInsn> {
     val (retVar, argVars) = ssa.insnVars.getOrElse(node, { Pair(null, listOf()) })
     val argsArray: Array<Expression> = argVars.map(::decompileVar).toTypedArray()
-    fun args(i: Int): Expression = argsArray.get(i)
+    fun args(i: Int): Expression = argsArray[i]
     fun call(node: AbstractInsnNode): Triple<MethodInsnNode, List<Type>, NodeList<Type>> {
       val insn = node as MethodInsnNode
       val (argumentTypes, _) = Descriptor.methodDescriptor(insn.desc)
@@ -121,19 +121,25 @@ object DecompileInsn {
     }
     fun instanceCall(node: AbstractInsnNode): DecompiledInsn {
       val (insn, argumentTypes, typeArguments) = call(node)
-      return DecompiledExpression(MethodCallExpr(
-        /*TODO: cast to insn.owner?*/ args(0),
-        typeArguments,
-        insn.name,
-        NodeList(argumentTypes.indices.map { args(it + 1) }))) // TODO: better way for this
+      return DecompiledExpression(
+        MethodCallExpr(
+          /*TODO: cast to insn.owner?*/ args(0),
+          typeArguments,
+          insn.name,
+          NodeList(argumentTypes.indices.map { args(it + 1) })
+        )
+      ) // TODO: better way for this
     }
     fun staticCall(node: AbstractInsnNode): DecompiledInsn {
       val (insn, argumentTypes, typeArguments) = call(node)
-      return DecompiledExpression(MethodCallExpr(
-        ClassName.classNameExpr(insn.owner),
-        typeArguments,
-        insn.name,
-        NodeList(argumentTypes.indices.map(::args))))
+      return DecompiledExpression(
+        MethodCallExpr(
+          ClassName.classNameExpr(insn.owner),
+          typeArguments,
+          insn.name,
+          NodeList(argumentTypes.indices.map(::args))
+        )
+      )
     }
     return Pair(
       retVar,

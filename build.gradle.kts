@@ -53,6 +53,10 @@ dependencies {
   // Omitting the JavaParser "parent" package as it is just metadata
   // Omitting the JavaParser "generator" and "metamodel" packages as they are just for building JavaParser
 
+  // Google Cloud Storage (for accessing the Maven mirror)
+  implementation(platform("com.google.cloud:libraries-bom:24.3.0"))
+  implementation("com.google.cloud:google-cloud-storage")
+
   // Logging (see also ch.qos.logback:logback-classic)
   implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
 
@@ -92,7 +96,10 @@ ktlint {
   verbose.set(true)
   ignoreFailures.set(true)
   enableExperimentalRules.set(true)
-  disabledRules.set(setOf("no-wildcard-import"))
+  disabledRules.set(setOf(
+    "experimental:argument-list-wrapping",
+    "no-wildcard-imports",
+  ))
 }
 
 // // https://github.com/analysis-dev/diktat/blob/master/diktat-gradle-plugin/src/main/kotlin/org/cqfn/diktat/plugin/gradle/DiktatExtension.kt
@@ -255,6 +262,15 @@ tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
     named("main") {
       includes.from("Module.md")
     }
+  }
+}
+
+listOf("runKtlintCheckOverMainSourceSet", "runKtlintCheckOverTestSourceSet").forEach { name ->
+  tasks.named(name).configure {
+    dependsOn(tasks.generateGrammarSource)
+    dependsOn(tasks.generateTestGrammarSource)
+    dependsOn(generateClassfileFlags)
+    dependsOn(generateBuildInfo)
   }
 }
 

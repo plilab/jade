@@ -21,12 +21,14 @@ object DescriptorTest {
         assertSame(p, Descriptor.fieldDescriptor(s).asPrimitiveType().type)
       }
     }
+
     @Test fun `Object type`() {
       expect(
         "java.lang.Object",
         { Descriptor.fieldDescriptor("Ljava/lang/Object;").asClassOrInterfaceType().toString() }
       )
     }
+
     @Test fun `array types`() {
       assertEquals(
         "boolean[][]",
@@ -49,6 +51,7 @@ object DescriptorTest {
       expect("java.lang.Object[][]") { params[2].asArrayType().toString() }
       expect("java.lang.Object[][]") { result.asArrayType().toString() }
     }
+
     @Test fun `void`() {
       val (params, result) = Descriptor.methodDescriptor("()V")
       assert(params.isEmpty())

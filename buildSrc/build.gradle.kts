@@ -6,9 +6,10 @@ plugins {
   kotlin("jvm") version "1.5.31"
   `kotlin-dsl` version "2.1.7"
 
-  id("com.diffplug.spotless") version "6.3.0" // Adds: ./gradlew -p buildSrc spotlessCheck
-
   id("com.github.ben-manes.versions") version "0.42.0" // Adds: ./gradlew -p buildSrc dependencyUpdates
+  id("io.gitlab.arturbosch.detekt").version("1.19.0") // Adds: ./gradlew -p buildSrc detekt
+  // id("org.cqfn.diktat.diktat-gradle-plugin") version "1.0.3" // Adds: ./gradlew -p buildSrc diktatCheck
+  id("org.jlleitschuh.gradle.ktlint") version "10.2.1" // Adds: ./gradlew -p buildSrc ktlintCheck (requires disabling diktat)
 }
 
 dependencies {
@@ -21,27 +22,26 @@ dependencies {
   implementation("org.jsoup:jsoup:1.14.3")
 }
 
-configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-  kotlin {
-    // ktfmt()
-    ktlint().userData(
-      mapOf(
-        "indent_size" to "2",
-        "continuation_indent_size" to "2"
-      )
-    )
-    // diktat()
-    // prettier()
-  }
-  kotlinGradle {
-    // ktfmt()
-    ktlint().userData(
-      mapOf(
-        "indent_size" to "2",
-        "continuation_indent_size" to "2",
-      )
-    )
-    // diktat()
-    // prettier()
-  }
+// ////////////////////////////////////////////////////////////////
+// Code Formatting
+
+// https://github.com/jlleitschuh/ktlint-gradle/blob/master/plugin/src/main/kotlin/org/jlleitschuh/gradle/ktlint/KtlintExtension.kt
+ktlint {
+  verbose.set(true)
+  ignoreFailures.set(true)
+  enableExperimentalRules.set(true)
+  disabledRules.set(setOf())
+}
+
+// // https://github.com/analysis-dev/diktat/blob/master/diktat-gradle-plugin/src/main/kotlin/org/cqfn/diktat/plugin/gradle/DiktatExtension.kt
+// diktat {
+//   ignoreFailures = true
+//   diktatConfigFile = File("../diktat-analysis.yml")
+// }
+
+// https://github.com/detekt/detekt/blob/main/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
+detekt {
+  ignoreFailures = true
+  buildUponDefaultConfig = true
+  allRules = true
 }

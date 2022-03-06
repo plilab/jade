@@ -20,9 +20,11 @@ object ClassName {
       }
     }!!
 
-  fun classNameType(string: String): ClassOrInterfaceType =
+  fun classNameType(string: String): ClassOrInterfaceType? =
     classNameType(className(string))
 
-  fun classNameType(name: Name): ClassOrInterfaceType =
-    ClassOrInterfaceType(classNameType(name.qualifier.orElse(null)), name.identifier)
+  fun classNameType(name: Name): ClassOrInterfaceType = classNameTypeOrNull(name)!!
+
+  fun classNameTypeOrNull(name: Name?): ClassOrInterfaceType? =
+    if (name === null) null else ClassOrInterfaceType(classNameTypeOrNull(name.qualifier.orElse(null)), name.identifier)
 }

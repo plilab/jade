@@ -11,24 +11,24 @@ plugins {
   kotlin("jvm") // version "1.5.31"
   application
 
-  // For parsing signatures
+  // For parsing Java class and type signatures
   antlr
 
   // Documentation
   id("org.jetbrains.dokka") version "1.5.31" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
 
-  // Code formatting
-  id("com.diffplug.spotless") version "6.3.0" // Adds: ./gradlew spotlessCheck
+  // Code Formatting
+  id("io.gitlab.arturbosch.detekt").version("1.19.0") // Adds: ./gradlew -p buildSrc detekt
+  // id("org.cqfn.diktat.diktat-gradle-plugin") version "1.0.3" // Adds: ./gradlew -p buildSrc diktatCheck
+  id("org.jlleitschuh.gradle.ktlint") version "10.2.1" // Adds: ./gradlew -p buildSrc ktlintCheck (requires disabling diktat)
 
-  // Code coverage
+  // Code Coverage
   id("jacoco") // Adds: ./gradlew jacocoTestReport
   id("org.jetbrains.kotlinx.kover") version "0.5.0" // Adds: ./gradlew koverMergedHtmlReport
 
-  // Licenses
-  id("com.github.jk1.dependency-license-report") version "2.1" // Adds: ./gradlew generateLicenseReport
-
-  // Dependency versions
+  // Dependency Versions and Licenses
   id("com.github.ben-manes.versions") version "0.42.0" // Adds: ./gradlew dependencyUpdates
+  id("com.github.jk1.dependency-license-report") version "2.1" // Adds: ./gradlew generateLicenseReport
 }
 
 dependencies {
@@ -75,6 +75,8 @@ dependencies {
   implementation("org.ow2.asm:asm-util:9.2")
 }
 
+// ////////////////////////////////////////////////////////////////
+// Application Setup / Meta-data
 application {
   mainClass.set("org.ucombinator.jade.main.MainKt")
 }
@@ -82,34 +84,32 @@ application {
 // version = "0.1.0" // Uncomment to manually set the version
 apply<GitVersionPlugin>()
 
-configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-  kotlin {
-    // ktfmt()
-    ktlint().userData(
-      mapOf(
-        "indent_size" to "2",
-        "continuation_indent_size" to "2",
-        // "disabled_rules" to "no-wildcard-imports",
-        // "verbose" to "true",
-        // TODO: "space_before_extend_colon" to "false",
-        // TODO: Unit return values
-      )
-    )
-    // diktat()
-    // prettier()
-  }
-  kotlinGradle {
-    // ktfmt()
-    ktlint().userData(
-      mapOf(
-        "indent_size" to "2",
-        "continuation_indent_size" to "2",
-      )
-    )
-    // diktat()
-    // prettier()
-  }
+// ////////////////////////////////////////////////////////////////
+// Code Formatting
+
+// https://github.com/jlleitschuh/ktlint-gradle/blob/master/plugin/src/main/kotlin/org/jlleitschuh/gradle/ktlint/KtlintExtension.kt
+ktlint {
+  verbose.set(true)
+  ignoreFailures.set(true)
+  enableExperimentalRules.set(true)
+  disabledRules.set(setOf())
 }
+
+// // https://github.com/analysis-dev/diktat/blob/master/diktat-gradle-plugin/src/main/kotlin/org/cqfn/diktat/plugin/gradle/DiktatExtension.kt
+// diktat {
+//   ignoreFailures = true
+//   diktatConfigFile = File("../diktat-analysis.yml")
+// }
+
+// https://github.com/detekt/detekt/blob/main/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
+detekt {
+  ignoreFailures = true
+  buildUponDefaultConfig = true
+  allRules = true
+}
+
+// ////////////////////////////////////////////////////////////////
+// Code Generation
 
 val antlrCharVocab by tasks.registering {
   doLast {
@@ -128,7 +128,7 @@ val antlrCharVocab by tasks.registering {
       w.write("'\\\"'=${0x0022}\n")
       w.write("'\\''=${0x0027}\n")
       w.write("'\\\\'=${0x005c}\n")
-      for (i in 0..127) {
+      for (i in 0 until 128) {
         w.write("CHAR_x${"%02X".format(i)}=$i\n")
         w.write("CHAR_u${"%04X".format(i)}=$i\n")
         if (i >= 32 && i <= 126 && i.toChar() != '\'' && i.toChar() != '\\') {
@@ -238,6 +238,9 @@ val generateBuildInfo by tasks.registering {
   }
 }
 
+// ////////////////////////////////////////////////////////////////
+// Generic Configuration
+
 tasks.withType<Test> {
   // Use JUnit Platform for unit tests.
   useJUnitPlatform()
@@ -253,13 +256,6 @@ tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
       includes.from("Module.md")
     }
   }
-}
-
-tasks.withType<org.jmailen.gradle.kotlinter.tasks.LintTask> {
-  dependsOn(tasks.generateGrammarSource)
-  dependsOn(tasks.generateTestGrammarSource)
-  dependsOn(generateClassfileFlags)
-  dependsOn(generateBuildInfo)
 }
 
 // For why we have to fully qualify KotlinCompile see:

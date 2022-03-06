@@ -134,7 +134,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
       }
 
       // Iterate and assign idom based on samedom. Order guarantees idom will be defined in time.
-      for (i in 0..N) {
+      for (i in 0 until N) {
         val n = vertex[i]!!
         if (samedom.contains(n)) {
           idom.put(n, idom.getValue(samedom.getValue(n)))

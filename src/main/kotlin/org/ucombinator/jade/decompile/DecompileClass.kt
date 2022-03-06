@@ -243,8 +243,8 @@ object DecompileClass {
         if (node.signature === null) {
           Triple(
             NodeList(),
-            if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
-            NodeList(node.interfaces.map { ClassName.classNameType(it) })
+            if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)!!),
+            NodeList(node.interfaces.map { ClassName.classNameType(it)!! })
           )
         } else {
           val s = Signature.classSignature(node.signature)

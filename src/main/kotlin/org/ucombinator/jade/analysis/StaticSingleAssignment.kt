@@ -194,7 +194,7 @@ private class SsaAnalyzer(val cfg: ControlFlowGraph, val interpreter: SsaInterpr
         val cfgFrame = cfg.frames[insnIndex]
         val frame = this.frames[insnIndex] ?: Frame<Var>(cfgFrame.locals, cfgFrame.maxStackSize)
         // Note that Frame.returnValue is null until `frame.setReturn` later in this method
-        for (i in 0..cfgFrame.locals) {
+        for (i in 0 until cfgFrame.locals) {
           assert((insnIndex == 0) == (frame.getLocal(i) != null))
           val phiVar = PhiVar(cfgFrame.getLocal(i), Insn(method, insn), i) // Note: not `.used`
           this.interpreter.phiInputs(phiVar.change(), this.interpreter.originInsn, frame.getLocal(i), true)
@@ -203,7 +203,7 @@ private class SsaAnalyzer(val cfg: ControlFlowGraph, val interpreter: SsaInterpr
         // Note that we use `push` instead of `setStack` as the `Frame` constructor
         // starts with an empty stack regardless of `stackSize`
         assert(frame.stackSize == 0)
-        for (i in 0..cfgFrame.stackSize) {
+        for (i in 0 until cfgFrame.stackSize) {
           assert((insnIndex == 0) == (frame.getStack(i) != null))
           val phiVar = PhiVar(cfgFrame.getStack(i), Insn(method, insn), i + frame.locals)
           this.interpreter.phiInputs(phiVar.change(), this.interpreter.originInsn, frame.getStack(i), true)

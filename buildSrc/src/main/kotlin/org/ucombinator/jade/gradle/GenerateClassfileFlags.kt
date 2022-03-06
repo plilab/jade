@@ -3,12 +3,13 @@ package org.ucombinator.jade.gradle
 import org.jsoup.Jsoup
 import java.net.URL
 
-fun <A> List<A>.pairs(): List<Pair<A, A>> = (0..this.size step 2).map { Pair(this[it], this[it + 1]) }
+fun <A> List<A>.pairs(): List<Pair<A, A>> = (0 until this.size step 2).map { Pair(this[it], this[it + 1]) }
 
 // Code for generating `Flags.txt` and `Flags.kt`
 object GenerateClassfileFlags {
+  const val MIN_JAVA_VERSION = 9
   fun javaSpec(spec: String, version: Int, chapter: Int): String {
-    if (version < 9) {
+    if (version < MIN_JAVA_VERSION) {
       throw Exception("The specified version must be at least 9, but version is $version.")
     }
     val url = "https://docs.oracle.com/javase/specs/$spec/se$version/html/$spec-$chapter.html"
@@ -56,10 +57,10 @@ object GenerateClassfileFlags {
       "Opens" to "opens_flags",
     )
     for ((kind, codeLiteral) in lists) {
-      val (list) = document
-        .select(
-          "dd:has(div[class=variablelist] dl) > p:matchesOwn(The value of the) > code[class=literal]:matchesOwn(^$codeLiteral$$)"
-        )
+      val (list) = document.select(
+        "dd:has(div[class=variablelist] dl) > p:matchesOwn(The value of the) " +
+          "> code[class=literal]:matchesOwn(^$codeLiteral$$)"
+      )
       val rows = list.parent()!!.nextElementSibling()!!.child(0).children().pairs()
       for ((row, description) in rows) {
         val regexMatch = """(0x[0-9]*) \(([A-Z_]*)\)""".toRegex().find(row.text())!!
@@ -82,15 +83,17 @@ object GenerateClassfileFlags {
     val description: String
   )
 
+  private const val HEX_BASE = 16
+  private const val NUM_COLUMNS = 5
   fun code(table: String): String {
     val flagInfos = table
       .lines()
       .filter { !it.matches("\\s*#.*".toRegex()) }
       .filter { !it.matches("\\s*".toRegex()) }
       .map {
-        val (kind, accName, value, keyword, description) = it.split(" +".toRegex(), 5)
+        val (kind, accName, value, keyword, description) = it.split(" +".toRegex(), NUM_COLUMNS)
         val k = if (keyword == "-") null else keyword
-        val intValue = value.substring(2).toInt(16)
+        val intValue = value.substring(2).toInt(HEX_BASE)
         FlagInfo(kind, accName, intValue, k, description)
       }
 
@@ -164,7 +167,8 @@ object GenerateClassfileFlags {
       builder.append("  private val ${kind}Mapping = listOf<Pair<Int, ${kind}Flag>>(\n")
       for (flagInfo in flagInfosForKind.sortedBy { it.value }) {
         builder.append(
-          "    /*0x${"%04x".format(flagInfo.value)}*/ ${flagInfo.accName}.value() to ${flagInfo.accName}, // ${flagInfo.description}\n"
+          "    /*0x${"%04x".format(flagInfo.value)}*/ ${flagInfo.accName}.value() " +
+            "to ${flagInfo.accName}, // ${flagInfo.description}\n"
         )
       }
       builder.append("  )\n")

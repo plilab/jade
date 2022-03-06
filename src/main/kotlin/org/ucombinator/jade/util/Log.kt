@@ -95,7 +95,7 @@ class DynamicCallerConverter : ClassicConverter() {
     if (cda != null && cda.size > depthStart) {
       val limit = if (depthEnd < cda.size) depthEnd else cda.size
 
-      for (i in depthStart..limit - 1) {
+      for (i in depthStart until limit) {
         buf.append("Caller+")
         buf.append(i)
         buf.append("\t at ")

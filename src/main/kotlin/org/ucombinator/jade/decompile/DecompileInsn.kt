@@ -364,7 +364,7 @@ object DecompileInsn {
           val dimArgs =
             argsArray.toList().subList(0, dims).map { ArrayCreationLevel(it, NodeList()) }
           val nonDimArgs =
-            (dims..expectedDims).map { ArrayCreationLevel(null, NodeList()) }
+            (dims until expectedDims).map { ArrayCreationLevel(null, NodeList()) }
           val levels = NodeList(dimArgs.plus(nonDimArgs))
           DecompiledExpression(ArrayCreationExpr(type, levels, /*TODO: initializer*/ null))
         }

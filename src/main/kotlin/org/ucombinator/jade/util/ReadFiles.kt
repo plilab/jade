@@ -49,8 +49,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 
-@Suppress("CLASS_NAME_INCORRECT")
-class Vfs {
+class ReadFiles {
   @Suppress("VARIABLE_NAME_INCORRECT_FORMAT")
   companion object {
     private val CLASS_SIGNATURE =

@@ -9,7 +9,7 @@ import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.*
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
-import org.ucombinator.jade.util.Vfs
+import org.ucombinator.jade.util.ReadFiles
 import java.io.File
 
 // import mu.KotlinLogging
@@ -180,11 +180,11 @@ class Decompile : CliktCommand(help = "Display information about how `jade` was 
 
   override fun run() {
     // TODO("implemenet decompile")
-    val vfs = Vfs()
+    val readFiles = ReadFiles()
     for (file in files) {
-      vfs.dir(file)
+      readFiles.dir(file)
     }
-    for ((k, _) in vfs.result) {
+    for ((k, _) in readFiles.result) {
       println("k $k")
     }
   }

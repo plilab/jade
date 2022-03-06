@@ -96,10 +96,12 @@ ktlint {
   verbose.set(true)
   ignoreFailures.set(true)
   enableExperimentalRules.set(true)
-  disabledRules.set(setOf(
-    "experimental:argument-list-wrapping",
-    "no-wildcard-imports",
-  ))
+  disabledRules.set(
+    setOf(
+      "experimental:argument-list-wrapping",
+      "no-wildcard-imports",
+    )
+  )
 }
 
 // // https://github.com/analysis-dev/diktat/blob/master/diktat-gradle-plugin/src/main/kotlin/org/cqfn/diktat/plugin/gradle/DiktatExtension.kt

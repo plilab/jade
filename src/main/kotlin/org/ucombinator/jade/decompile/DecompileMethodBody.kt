@@ -31,7 +31,7 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 object DecompileMethodBody {
-  private val log = Log.log {}
+  private val log = Log {}
   private fun stubBody(message: String, comment: BlockComment?): BlockStmt {
     val statements = NodeList<Statement>(
       JavaParser.setComment(

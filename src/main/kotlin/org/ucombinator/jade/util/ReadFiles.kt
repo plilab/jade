@@ -97,7 +97,7 @@ class ReadFiles {
     while (true) {
       try {
         input = BufferedInputStream(CompressorStreamFactory().createCompressorInputStream(input))
-      } catch (e: CompressorException) {
+      } catch (_: CompressorException) {
         break
       }
     }
@@ -113,7 +113,7 @@ class ReadFiles {
     }
     val archive = try {
       ArchiveStreamFactory().createArchiveInputStream(input)
-    } catch (e: ArchiveException) {
+    } catch (_: ArchiveException) {
       // TODO: log
       return
     }

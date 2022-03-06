@@ -3,7 +3,7 @@ package org.ucombinator.jade.classfile
 import com.github.javaparser.ast.type.Type
 import kotlin.test.*
 
-@Suppress("BACKTICKS_PROHIBITED", "LONG_LINE")
+@Suppress("BACKTICKS_PROHIBITED", "LONG_LINE", "MaxLineLength")
 object SignatureTest {
   @Suppress("WRONG_DECLARATIONS_ORDER")
   enum class Kind { TYPE, CLASS, METHOD }

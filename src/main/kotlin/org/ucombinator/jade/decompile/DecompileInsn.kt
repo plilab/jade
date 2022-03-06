@@ -88,7 +88,7 @@ object DecompileInsn {
       ExpressionStmt(AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN))
     }
 
-  @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE")
+  @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "MaxLineLength")
   fun decompileInsn(retVar: Var?, insn: DecompiledInsn): Statement =
     when (insn) {
       /* ktlint-disable no-multi-spaces */
@@ -108,7 +108,7 @@ object DecompileInsn {
       /* ktlint-enable no-multi-spaces */
     }
 
-  @Suppress("MORE_THAN_ONE_STATEMENT_PER_LINE", "TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE")
+  @Suppress("MORE_THAN_ONE_STATEMENT_PER_LINE", "TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "MaxLineLength")
   fun decompileInsn(node: AbstractInsnNode, ssa: StaticSingleAssignment): Pair<Var?, DecompiledInsn> {
     val (retVar, argVars) = ssa.insnVars.getOrElse(node, { Pair(null, listOf()) })
     val argsArray: Array<Expression> = argVars.map(::decompileVar).toTypedArray()
@@ -385,7 +385,8 @@ object DecompileInsn {
   }
 
   /*
-  //case class DecodedLambda(interface: SootClass, interfaceMethod: SootMethod, implementationMethod: SootMethod, captures: java.util.List[soot.Value])
+  //case class DecodedLambda(interface: SootClass, interfaceMethod: SootMethod,
+    implementationMethod: SootMethod, captures: java.util.List[soot.Value])
   // https://cr.openjdk.java.net/~briangoetz/lambda/lambda-translation.html
   fun decodeLambda(e: InvokeDynamicInsnNode): LambdaExpr = {
     // Arguments are the captured variables
@@ -430,7 +431,8 @@ object DecompileInsn {
       //   we look for the method manually.
       assert(e.bsmArgs(1).isInstanceOf[soot.jimple.MethodHandle])
       val implementationMethodRef = e.getBootstrapArg(1).asInstanceOf[soot.jimple.MethodHandle].getMethodRef
-      val implementationMethod = implementationMethodRef.declaringClass().getMethodUnsafe(implementationMethodRef.getSubSignature)
+      val implementationMethod = implementationMethodRef.declaringClass()
+        .getMethodUnsafe(implementationMethodRef.getSubSignature)
 
       // Step 4: Find the `captures` which are values that should be saved and passed
       //   to `implementationMethod` before any other arguments

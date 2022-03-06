@@ -13,7 +13,7 @@ import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as Ol
 import org.slf4j.Logger as Slf4jLogger
 
 object Log {
-  fun log(func: () -> Unit) = KotlinLogging.logger(func)
+  operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
   const val PREFIX = "org.ucombinator.jade." // TODO: autodetect
   fun getLog(name: String): LogbackLogger {
     val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name

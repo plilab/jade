@@ -119,7 +119,7 @@ class Jade : CliktCommand() {
 
 class TestLog : CliktCommand() {
   class Bar {
-    val log = Log.log {} // TODO: lazy?
+    val log = Log {} // TODO: lazy?
     fun f() {
       println(this.javaClass.name)
       log.error("error")

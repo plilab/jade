@@ -19,10 +19,13 @@ import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.Flags
 import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
-import org.ucombinator.jade.util.list.pairs
-import org.ucombinator.jade.util.list.tail
-import org.ucombinator.jade.util.list.zipAll
-import org.ucombinator.jade.util.tuple.*
+import org.ucombinator.jade.util.Lists.pairs
+import org.ucombinator.jade.util.Lists.tail
+import org.ucombinator.jade.util.Lists.zipAll
+import org.ucombinator.jade.util.Tuples.Fourple
+import org.ucombinator.jade.util.Tuples._1
+import org.ucombinator.jade.util.Tuples._2
+import org.ucombinator.jade.util.Tuples._3
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 object DecompileClass {

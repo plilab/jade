@@ -42,7 +42,7 @@ import org.apache.commons.compress.archivers.ArchiveException
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.compressors.CompressorException
 import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.ucombinator.jade.util.list.map
+import org.ucombinator.jade.util.Lists.map
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.File

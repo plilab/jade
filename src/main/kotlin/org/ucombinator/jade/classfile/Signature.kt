@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ListTokenSource
 import org.ucombinator.jade.classfile.SignatureParser.* // ktlint-disable no-unused-imports no-wildcard-imports
 import org.ucombinator.jade.util.Errors
-import org.ucombinator.jade.util.tuple.Fourple
+import org.ucombinator.jade.util.Tuples.Fourple
 
 object Signature {
   fun typeSignature(string: String): Type =

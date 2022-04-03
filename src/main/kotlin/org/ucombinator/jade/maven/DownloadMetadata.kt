@@ -1,21 +1,25 @@
 package org.ucombinator.jade.maven
 
+import kotlinx.coroutines.*
+import org.ucombinator.jade.util.Log
 import java.io.File
 
 object DownloadMetadata {
-  fun invoke(indexFile: File, destDir: File, authFile: File? = null) {
-    val regex = """\t\d+$""".toRegex()
+  private val log = Log {}
+  fun main(indexFile: File, destDir: File, authFile: File? = null) {
+    log.info("Reading index $indexFile")
     val files = indexFile.useLines { lines ->
+      val STR = "/maven-metadata.xml"
+      val STR_LEN = STR.length
       lines
-        .map { regex.replace(it, "") }
-        .filter { it.endsWith("/maven-metadata.xml") }
-    }.toList()
-
-    val bucket = MavenRepo.open(authFile)
-    val blobs = bucket.get(files)
-    for (blob in blobs) {
-      println(blob.name)
-      blob.downloadTo(destDir.toPath().resolve(blob.name))
+        .mapNotNull {
+          val end = it.lastIndexOf('\t')
+          if (it.regionMatches(end - STR_LEN, STR, 0, STR_LEN)) File(it.substring(0, end)) else null
+        }
+        // .take(100)
+        .toList()
     }
+
+    MavenRepo.download(files, destDir, authFile)
   }
 }

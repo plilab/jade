@@ -8,12 +8,15 @@ import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.pattern.color.ANSIConstants
 import mu.KotlinLogging
 import org.slf4j.LoggerFactory
+import org.ucombinator.jade.main.Jade
+import java.util.jar.JarFile
 import ch.qos.logback.classic.Logger as LogbackLogger
 import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as OldHighlightingCompositeConverter
 import org.slf4j.Logger as Slf4jLogger
 
 object Log {
   operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
+  private val log = Log {}
   const val PREFIX = "org.ucombinator.jade." // TODO: autodetect
   fun getLog(name: String): LogbackLogger {
     val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name
@@ -37,33 +40,26 @@ object Log {
 //     LoggerFactory.getLogger(modifiedName).asInstanceOf[LogbackLogger]
 //   }
 
-//   def listLogs(): Unit = {
-//     // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
-//     // Note: toURI is required in order to handle special characters
-//     val jar = new java.io.File(classOf[Main].getProtectionDomain.getCodeSource.getLocation.toURI).getPath
-//     this.log.debug(f"jar: ${jar}")
+  fun listLoggers() {
+    // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
+    // Note: toURI is required in order to handle special characters
+    val jar = java.io.File(Jade::class.java.protectionDomain.codeSource.location.toURI()).path
+    this.log.debug("jar: $jar")
 
-//     for (entry <- new JarFile(jar).entries().asScala) {
-//       if (entry.getName.endsWith(".class")) {
-//         try {
-//           Class.forName(entry.getName.replaceAll("\\.class$", "").replaceAll("/", "."))
-//         } catch {
-//           case _: Throwable => this.log.debug(f"skipping: ${entry.getName}") // TODO: show exception in message
-//         }
-//       }
-//     }
+    for (entry in JarFile(jar).entries()) {
+      if (entry.name.endsWith(".class")) {
+        try {
+          Class.forName(entry.name.replace("\\.class$", "").replace("/", "."))
+        } catch (_: Throwable) {
+          this.log.debug("skipping: ${entry.name}") // TODO: show exception in message
+        }
+      }
+    }
 
-//     for (
-//       l <- LoggerFactory
-//         .getLogger(Slf4jLogger.ROOT_LOGGER_NAME)
-//         .asInstanceOf[LogbackLogger]
-//         .getLoggerContext
-//         .getLoggerList
-//         .asScala
-//     ) {
-//       println(l.getName)
-//     }
-//   }
+    for (l in (LoggerFactory.getLogger(Slf4jLogger.ROOT_LOGGER_NAME)as LogbackLogger).loggerContext.loggerList) {
+      println(l.name)
+    }
+  }
 }
 
 class RelativeLoggerConverter : ClassicConverter() {

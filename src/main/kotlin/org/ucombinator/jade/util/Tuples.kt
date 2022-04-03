@@ -7,6 +7,9 @@ object Tuples {
   @Suppress("VARIABLE_NAME_INCORRECT_FORMAT", "ConstructorParameterNaming")
   data class Fiveple<out A, out B, out C, out D, out E>(val _1: A, val _2: B, val _3: C, val _4: D, val _5: E)
 
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT", "ConstructorParameterNaming")
+  data class Sixple<out A, out B, out C, out D, out E, out F>(val _1: A, val _2: B, val _3: C, val _4: D, val _5: E, val _6: F)
+
   @Suppress("FUNCTION_NAME_INCORRECT_CASE", "FunctionNaming")
   fun <A, B> Pair<A, B>._1(): A = this.first
 

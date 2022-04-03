@@ -8,7 +8,8 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.AnalyzerAdapter
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
-import java.nio.file.Path
+import org.ucombinator.jade.util.ReadFiles
+import java.io.File
 
 // import org.objectweb.asm.util.Textifier
 // import org.objectweb.asm.util.TraceClassVisitor
@@ -28,10 +29,14 @@ object Decompile {
   val classes = mutableMapOf<CompilationUnit, ClassNode>()
   val methods = mutableMapOf<BodyDeclaration<out BodyDeclaration<*>>, Pair<ClassNode, MethodNode>>()
 
-  fun main(paths: List<Path>) {
-    // for (path <- paths) {
-    //   VFS.get0(path)
-    // }
+  fun main(files: List<File>) {
+    val readFiles = ReadFiles()
+    for (file in files) {
+      readFiles.dir(file)
+    }
+    for ((k, _) in readFiles.result) {
+      println("k $k")
+    }
     // for (((name, readers), classIndex) <- VFS.classes.zipWithIndex) {
     //   for ((path, classReader) <- readers) { // TODO: pick "best" classReader
     //     // TODO: why don't we combine the class and method passes?

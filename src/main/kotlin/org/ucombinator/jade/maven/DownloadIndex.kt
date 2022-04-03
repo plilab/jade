@@ -6,16 +6,19 @@ import java.io.File
 import java.io.FileWriter
 import java.io.RandomAccessFile
 
+// TODO: repos/central/data is old version of maven2?
+// $ gsutil -o Credentials:gs_service_key_file=../smooth-splicer-342907-2a129f6f3cd4.json ls -l 'gs://maven-central/maven2/**'
+// TDOO: trailing commas
 object DownloadIndex {
-  const val FLUSH_FREQUENCY = 1000
-  fun download(
+  fun main(
     indexFile: File,
     authFile: File? = null,
     resume: Boolean = false,
     maxResults: Long = 0L,
     pageSize: Long = 0L,
     prefix: String? = null,
-    startOffset: String? = null
+    startOffset: String? = null,
+    flushFrequency: Long = 0L,
   ) {
     val trueStartOffset =
       if (resume) {
@@ -28,10 +31,9 @@ object DownloadIndex {
         if (indexFile.exists()) throw Exception("TODO")
         startOffset
       }
+    val trueFlushFrequency = if (flushFrequency == 0L) { 1L shl 14 } else { flushFrequency }
 
     FileWriter(indexFile, true).buffered().use { writer ->
-      var count = 0L
-
       val bucket = MavenRepo.open(authFile)
 
       var options = listOf(Storage.BlobListOption.fields(Storage.BlobField.NAME, Storage.BlobField.SIZE))
@@ -41,17 +43,17 @@ object DownloadIndex {
 
       val blobs = bucket.list(*options.toTypedArray()).iterateAll()
 
-      // val blobs = open(authFile, pageSize, prefix, trueStartOffset)
+      var count = 0L
       var checkStartOffset = resume
       for (blob in blobs) {
+        if (maxResults != 0L && count >= maxResults) break
         if (checkStartOffset && blob.name == trueStartOffset) {
           checkStartOffset = false
           continue
         }
         writer.write("${blob.name}\t${blob.size}\n")
         count++
-        if (count >= maxResults) break
-        if (count % FLUSH_FREQUENCY == 0L) writer.flush()
+        if (count % trueFlushFrequency == 0L) writer.flush()
       }
     }
   }

@@ -9,7 +9,6 @@ import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.*
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
-import org.ucombinator.jade.util.ReadFiles
 import java.io.File
 
 // import mu.KotlinLogging
@@ -36,7 +35,14 @@ fun main(args: Array<String>): Unit =
     Decompile(),
     Compile(),
     Diff(),
-    Logs(),
+    Loggers(),
+    DownloadIndex(),
+    DownloadMetadata(),
+    DownloadPoms(),
+    DownloadParents(),
+    DownloadDependencies(),
+    MavenAuto(),
+    DownloadPoms2(),
     CompletionCommand(),
     // classOf[ManPageGenerator],
   ).main(args)
@@ -82,6 +88,8 @@ class Jade : CliktCommand() {
     help = "Number of callers to print after log messages",
   ).int().default(0)
 
+  val ioThreads: Int? by option().int()
+
   val wait: Boolean by option(
     help = "Wait for input from user before running.  This allows time for a debugger to attach to this process."
   ).flag(
@@ -90,6 +98,8 @@ class Jade : CliktCommand() {
   )
 
   override fun run() {
+    if (ioThreads !== null) System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, ioThreads.toString())
+
     DynamicCallerConverter.depthEnd = logCallerDepth
 
     for ((name, lvl) in log) {
@@ -171,22 +181,13 @@ class Decompile : CliktCommand(help = "Display information about how `jade` was 
   // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
   // --filter=+dir=
 
-  // TODO: convert from File to Path (Path is more modern)
   val files: List<File> by argument(
     name = "PATH",
     help = "Files or directories to decompile",
   ).file(mustExist = true).multiple(required = true)
-  val op by option().int().required()
 
   override fun run() {
-    // TODO("implemenet decompile")
-    val readFiles = ReadFiles()
-    for (file in files) {
-      readFiles.dir(file)
-    }
-    for ((k, _) in readFiles.result) {
-      println("k $k")
-    }
+    org.ucombinator.jade.decompile.Decompile.main(files)
   }
 }
 
@@ -207,10 +208,121 @@ class Diff : CliktCommand(help = "Compare class files") {
   }
 }
 
-// TODO: rename to loggers?
-class Logs : CliktCommand(help = "Lists available logs") {
+class Loggers : CliktCommand(help = "Lists available loggers") {
   override fun run() {
-    // Log.listLogs()
-    TODO("implement list-logs")
+    Log.listLoggers()
+  }
+}
+
+class DownloadIndex : CliktCommand(help = "Lists available loggers") {
+  val indexFile: File by argument(
+    name = "INDEX"
+  ).file(canBeDir = false)
+
+  val authFile: File? by option(
+    metavar = "FILE"
+  ).file(canBeDir = false, mustBeReadable = true)
+
+  val resume: Boolean by option().flag(default = false)
+  val maxResults: Long by option().long().default(0)
+  val pageSize: Long by option().long().default(0)
+  val prefix: String? by option()
+  val startOffset: String? by option()
+  val flushFrequency: Long by option().long().default(0)
+
+  // val threads: Int by option().int().default(0)
+
+  // resume: Boolean = false,
+  // maxResults: Long = 0L,
+  // pageSize: Long = 0L,
+  // prefix: String? = null,
+  // startOffset: String? = null
+
+  override fun run() {
+    org.ucombinator.jade.maven.DownloadIndex.main(indexFile, authFile, resume, maxResults, pageSize, prefix, startOffset, flushFrequency)
+  }
+}
+
+class DownloadMetadata : CliktCommand(help = "Lists available loggers") {
+  val indexFile: File by argument(
+    name = "INDEX"
+  ).file(canBeDir = false, mustBeReadable = true)
+
+  val destDir: File by argument(
+    name = "DEST"
+  ).file(mustExist = true, canBeFile = false)
+
+  val authFile: File? by option(
+    metavar = "FILE"
+  ).file(canBeDir = false, mustBeReadable = true)
+
+  override fun run() {
+    org.ucombinator.jade.maven.DownloadMetadata.main(indexFile, destDir, authFile)
+  }
+}
+
+class DownloadPoms : CliktCommand(help = "Lists available loggers") {
+  val srcDir: File by argument()
+    .file(mustExist = true, canBeFile = false)
+
+  val dstDir: File by argument()
+    .file(mustExist = true, canBeFile = false)
+
+  val authFile: File? by option(
+    metavar = "FILE"
+  ).file(canBeDir = false, mustBeReadable = true)
+
+  override fun run() {
+    org.ucombinator.jade.maven.DownloadPoms.main(srcDir, dstDir, authFile)
+  }
+}
+
+class DownloadParents : CliktCommand(help = "Lists available loggers") {
+  val srcDir: File by argument()
+    .file(mustExist = true, canBeFile = false)
+
+  val dstDir: File by argument()
+    .file(mustExist = true, canBeFile = false)
+
+  val authFile: File? by option(
+    metavar = "FILE"
+  ).file(canBeDir = false, mustBeReadable = true)
+
+  override fun run() {
+    org.ucombinator.jade.maven.DownloadParents.main(srcDir, dstDir, authFile)
+  }
+}
+
+class DownloadDependencies : CliktCommand(help = "Lists available loggers") {
+  val srcDir: File by argument()
+    .file(mustExist = true, canBeFile = false)
+
+  val dstDir: File by argument()
+    .file(mustExist = true, canBeFile = false)
+
+  val authFile: File? by option(
+    metavar = "FILE"
+  ).file(canBeDir = false, mustBeReadable = true)
+
+  override fun run() {
+    org.ucombinator.jade.maven.DownloadDependencies.main(srcDir, dstDir, authFile)
+  }
+}
+
+class MavenAuto : CliktCommand(help = "Lists available loggers") {
+  override fun run() {
+    org.ucombinator.jade.maven.MavenAuto.main()
+  }
+}
+
+class DownloadPoms2 : CliktCommand(help = "Lists available loggers") {
+  val index: File by argument()
+    .file(mustExist = true, mustBeReadable = true, canBeDir = false)
+
+  val localRepo: File by argument()
+    .file(mustExist = true, canBeFile = false)
+
+  override fun run() {
+    org.ucombinator.jade.maven.DownloadPoms2.main(index, localRepo)
   }
 }

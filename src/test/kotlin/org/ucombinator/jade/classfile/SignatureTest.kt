@@ -320,6 +320,7 @@ object SignatureTest {
 
   // TODO: ktlint: <T: Type>
   fun <T : Type> resultsToString(r: List<T>): String = r.joinToString(",") { it.asString() }
+
   @Test fun `harvested signatures`() {
     for ((kind, signature, expectedResult) in harvestedTests) {
       expect(expectedResult) {

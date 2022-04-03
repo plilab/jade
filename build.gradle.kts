@@ -18,9 +18,9 @@ plugins {
   id("org.jetbrains.dokka") version "1.5.31" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
 
   // Code Formatting
-  id("io.gitlab.arturbosch.detekt").version("1.19.0") // Adds: ./gradlew -p buildSrc detekt
-  // id("org.cqfn.diktat.diktat-gradle-plugin") version "1.0.3" // Adds: ./gradlew -p buildSrc diktatCheck
-  id("org.jlleitschuh.gradle.ktlint") version "10.2.1" // Adds: ./gradlew -p buildSrc ktlintCheck (requires disabling diktat)
+  id("io.gitlab.arturbosch.detekt").version("1.19.0") // Adds: ./gradlew detekt
+  // id("org.cqfn.diktat.diktat-gradle-plugin") version "1.0.3" // Adds: ./gradlew diktatCheck
+  id("org.jlleitschuh.gradle.ktlint") version "10.2.1" // Adds: ./gradlew ktlintCheck (requires disabling diktat)
 
   // Code Coverage
   id("jacoco") // Adds: ./gradlew jacocoTestReport
@@ -63,6 +63,9 @@ dependencies {
   // Compressed files
   implementation("org.apache.commons:commons-compress:1.21")
 
+  // For parallelizing access to Google Cloud Storage
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+
   // Vertex and edge graphs
   implementation("org.jgrapht:jgrapht-core:1.5.1")
   implementation("org.jgrapht:jgrapht-ext:1.5.1")
@@ -77,6 +80,16 @@ dependencies {
   // implementation("org.ow2.asm:asm-test:9.2")
   implementation("org.ow2.asm:asm-tree:9.2")
   implementation("org.ow2.asm:asm-util:9.2")
+
+
+  implementation("org.apache.maven.resolver:maven-resolver-api:1.7.3")
+  implementation("org.apache.maven.resolver:maven-resolver-spi:1.7.3")
+  implementation("org.apache.maven.resolver:maven-resolver-util:1.7.3")
+  implementation("org.apache.maven.resolver:maven-resolver-impl:1.7.3")
+  implementation("org.apache.maven.resolver:maven-resolver-connector-basic:1.7.3")
+  implementation("org.apache.maven.resolver:maven-resolver-transport-file:1.7.3")
+  implementation("org.apache.maven.resolver:maven-resolver-transport-http:1.7.3")
+  implementation("org.apache.maven:maven-resolver-provider:3.8.5")
 }
 
 // ////////////////////////////////////////////////////////////////
@@ -107,7 +120,6 @@ ktlint {
 // // https://github.com/analysis-dev/diktat/blob/master/diktat-gradle-plugin/src/main/kotlin/org/cqfn/diktat/plugin/gradle/DiktatExtension.kt
 // diktat {
 //   ignoreFailures = true
-//   diktatConfigFile = File("../diktat-analysis.yml")
 // }
 
 // https://github.com/detekt/detekt/blob/main/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
@@ -153,13 +165,6 @@ tasks.generateGrammarSource {
 }
 
 fun generateSrc(fileName: String, code: String) {
-  // TODO: use spotless for formatting
-  // val scalafmt = org.scalafmt.interfaces.Scalafmt
-  //   .create(this.getClass.getClassLoader)
-  //   .withReporter(new ScalafmtSbtReporter(streamsValue.log, new java.io.OutputStreamWriter(streamsValue.binary()), true));
-  // if (flagsCode != scalafmt.format(scalafmtConfig.value.toPath(), sourceFile.toPath(), flagsCode)) {
-  //   streamsValue.log.warn(f"\nGenerated file isn't formatted properly: ${sourceFile}\n\n")
-  // }
   val generatedSrcDir = File(buildDir, "generated/sources/jade/src/main/kotlin")
   generatedSrcDir.mkdirs()
   kotlin.sourceSets["main"].kotlin.srcDir(generatedSrcDir)

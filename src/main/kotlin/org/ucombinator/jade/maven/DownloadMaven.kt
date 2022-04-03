@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.Collections
 import java.time.LocalDateTime
 
-object DownloadPoms2 {
+object DownloadMaven {
   private val log = Log {}
   var noRelease = AtomicInteger()
   val artifacts = Collections.synchronizedSet(mutableSetOf<Triple<String, String, String>>())

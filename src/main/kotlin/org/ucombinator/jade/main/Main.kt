@@ -37,12 +37,7 @@ fun main(args: Array<String>): Unit =
     Diff(),
     Loggers(),
     DownloadIndex(),
-    DownloadMetadata(),
-    DownloadPoms(),
-    DownloadParents(),
-    DownloadDependencies(),
-    MavenAuto(),
-    DownloadPoms2(),
+    DownloadMaven(),
     CompletionCommand(),
     // classOf[ManPageGenerator],
   ).main(args)
@@ -214,7 +209,7 @@ class Loggers : CliktCommand(help = "Lists available loggers") {
   }
 }
 
-class DownloadIndex : CliktCommand(help = "Lists available loggers") {
+class DownloadIndex : CliktCommand(help = "Download index of all files") {
   val indexFile: File by argument(
     name = "INDEX"
   ).file(canBeDir = false)
@@ -230,92 +225,12 @@ class DownloadIndex : CliktCommand(help = "Lists available loggers") {
   val startOffset: String? by option()
   val flushFrequency: Long by option().long().default(0)
 
-  // val threads: Int by option().int().default(0)
-
-  // resume: Boolean = false,
-  // maxResults: Long = 0L,
-  // pageSize: Long = 0L,
-  // prefix: String? = null,
-  // startOffset: String? = null
-
   override fun run() {
     org.ucombinator.jade.maven.DownloadIndex.main(indexFile, authFile, resume, maxResults, pageSize, prefix, startOffset, flushFrequency)
   }
 }
 
-class DownloadMetadata : CliktCommand(help = "Lists available loggers") {
-  val indexFile: File by argument(
-    name = "INDEX"
-  ).file(canBeDir = false, mustBeReadable = true)
-
-  val destDir: File by argument(
-    name = "DEST"
-  ).file(mustExist = true, canBeFile = false)
-
-  val authFile: File? by option(
-    metavar = "FILE"
-  ).file(canBeDir = false, mustBeReadable = true)
-
-  override fun run() {
-    org.ucombinator.jade.maven.DownloadMetadata.main(indexFile, destDir, authFile)
-  }
-}
-
-class DownloadPoms : CliktCommand(help = "Lists available loggers") {
-  val srcDir: File by argument()
-    .file(mustExist = true, canBeFile = false)
-
-  val dstDir: File by argument()
-    .file(mustExist = true, canBeFile = false)
-
-  val authFile: File? by option(
-    metavar = "FILE"
-  ).file(canBeDir = false, mustBeReadable = true)
-
-  override fun run() {
-    org.ucombinator.jade.maven.DownloadPoms.main(srcDir, dstDir, authFile)
-  }
-}
-
-class DownloadParents : CliktCommand(help = "Lists available loggers") {
-  val srcDir: File by argument()
-    .file(mustExist = true, canBeFile = false)
-
-  val dstDir: File by argument()
-    .file(mustExist = true, canBeFile = false)
-
-  val authFile: File? by option(
-    metavar = "FILE"
-  ).file(canBeDir = false, mustBeReadable = true)
-
-  override fun run() {
-    org.ucombinator.jade.maven.DownloadParents.main(srcDir, dstDir, authFile)
-  }
-}
-
-class DownloadDependencies : CliktCommand(help = "Lists available loggers") {
-  val srcDir: File by argument()
-    .file(mustExist = true, canBeFile = false)
-
-  val dstDir: File by argument()
-    .file(mustExist = true, canBeFile = false)
-
-  val authFile: File? by option(
-    metavar = "FILE"
-  ).file(canBeDir = false, mustBeReadable = true)
-
-  override fun run() {
-    org.ucombinator.jade.maven.DownloadDependencies.main(srcDir, dstDir, authFile)
-  }
-}
-
-class MavenAuto : CliktCommand(help = "Lists available loggers") {
-  override fun run() {
-    org.ucombinator.jade.maven.MavenAuto.main()
-  }
-}
-
-class DownloadPoms2 : CliktCommand(help = "Lists available loggers") {
+class DownloadMaven : CliktCommand(help = "Download Maven data") {
   val index: File by argument()
     .file(mustExist = true, mustBeReadable = true, canBeDir = false)
 
@@ -323,6 +238,6 @@ class DownloadPoms2 : CliktCommand(help = "Lists available loggers") {
     .file(mustExist = true, canBeFile = false)
 
   override fun run() {
-    org.ucombinator.jade.maven.DownloadPoms2.main(index, localRepo)
+    org.ucombinator.jade.maven.DownloadMaven.main(index, localRepo)
   }
 }

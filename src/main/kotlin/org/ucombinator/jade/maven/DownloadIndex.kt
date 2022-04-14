@@ -1,6 +1,7 @@
 package org.ucombinator.jade.maven
 
 import com.google.cloud.storage.Storage
+import org.ucombinator.jade.maven.googlecloudstorage.GcsBucket
 import java.io.EOFException
 import java.io.File
 import java.io.FileWriter
@@ -34,7 +35,7 @@ object DownloadIndex {
     val trueFlushFrequency = if (flushFrequency == 0L) { 1L shl 14 } else { flushFrequency }
 
     FileWriter(indexFile, true).buffered().use { writer ->
-      val bucket = MavenRepo.open(authFile)
+      val bucket = GcsBucket.open(authFile)
 
       var options = listOf(Storage.BlobListOption.fields(Storage.BlobField.NAME, Storage.BlobField.SIZE))
       if (pageSize != 0L) options += Storage.BlobListOption.pageSize(pageSize)

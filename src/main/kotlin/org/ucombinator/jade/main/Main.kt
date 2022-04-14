@@ -226,7 +226,8 @@ class DownloadIndex : CliktCommand(help = "Download index of all files") {
   val flushFrequency: Long by option().long().default(0)
 
   override fun run() {
-    org.ucombinator.jade.maven.DownloadIndex.main(indexFile, authFile, resume, maxResults, pageSize, prefix, startOffset, flushFrequency)
+    org.ucombinator.jade.maven.DownloadIndex.main(
+      indexFile, authFile, resume, maxResults, pageSize, prefix, startOffset, flushFrequency)
   }
 }
 
@@ -237,7 +238,10 @@ class DownloadMaven : CliktCommand(help = "Download Maven data") {
   val localRepo: File by argument()
     .file(mustExist = true, canBeFile = false)
 
+  val jarLists: File by argument()
+    .file(mustExist = true, canBeFile = false)
+
   override fun run() {
-    org.ucombinator.jade.maven.DownloadMaven.main(index, localRepo)
+    org.ucombinator.jade.maven.DownloadMaven(index, localRepo, jarLists).run()
   }
 }

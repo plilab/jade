@@ -84,57 +84,108 @@ import kotlin.random.Random
 // INFO  .org.apache.http.impl.execchain.RetryExec: I/O exception (java.net.SocketException) caught when processing request to {s}->https://maven-central-asia.storage-download.googleapis.com:443: Broken pipe (Write failed)
 // INFO  .org.apache.http.impl.execchain.RetryExec: Retrying request to {s}->https://maven-central-asia.storage-download.googleapis.com:443
 
+data class DollarInCoordinateException(val artifact: Artifact) : Exception("Dollar in coordinate ${artifact}")
+data class CaretInVersionException(val artifact: Artifact) : Exception("Caret in version for artifact ${artifact}")
+data class NoSuchVersionException(val artifact: Artifact) : Exception("No such version for artifact ${artifact}")
 data class DotInGroupIdException(val groupIdPath: String, val artifactId: String) : Exception("File path for groupId contains a dot: $groupIdPath (artifactId = $artifactId)")
 data class NoVersioningException(val groupId: String, val artifactId: String) : Exception("No <versioning> tag in POM for $groupId:$artifactId")
 data class NoVersionsException(val groupId: String, val artifactId: String) : Exception("No versions in POM for for $groupId:$artifactId")
 data class UnsolvableArtifactException(val groupId: String, val artifactId: String) : Exception("Skipped artifact with unsolvable dependencies: $groupId:$artifactId")
-data class WriteLockException(val groupId: String, val artifactId: String, val e: IllegalStateException) : Exception("Could not aquire write lock for $groupId:$artifactId", e)
+data class WriteLockException(val artifact: Artifact, val e: IllegalStateException) : Exception("Could not aquire write lock for ${artifact}", e)
 data class ModelParsingException(val file: File) : Exception("Could not parse POM file $file")
 data class SystemDependencyException(
   val rootGroupId: String, val rootArtifactId: String, val rootVersion: String,
   val dependencyGroupId: String, val dependencyArtifactId: String, val dependencyVersion: String) :
   Exception("Dependency on system provided artifact $dependencyGroupId:$dependencyArtifactId:$dependencyVersion by $rootGroupId:$rootArtifactId:$rootVersion")
-data class NoPomException(
-  val rootGroupId: String, val rootArtifactId: String, val rootVersion: String,
-  val dependencyGroupId: String, val dependencyArtifactId: String, val dependencyVersion: String,
-  val e: Throwable) : Exception(e)
-data class NoRootPomException(
-  val groupId: String, val artifactId: String, val version: String,
-  val e: Throwable) : Exception("No POM for $groupId:$artifactId:$version", e)
-
-// }
 
 class CachingArtifactResolver() : ArtifactResolver {
+  private val log = Log {}
+
   val cache = Collections.synchronizedMap(mutableMapOf<Artifact, ArtifactResolutionException>())
   override fun resolveArtifact(session: RepositorySystemSession, request: ArtifactRequest): ArtifactResult {
-    val ex = cache.get(request.artifact)
-    if (ex !== null) {
-      // println("**** $request $ex")
-      // ex.printStackTrace()
-      // println("----- $request")
-      throw ex
-    }
+    if (
+      request.artifact.groupId.contains("\${") ||
+      request.artifact.artifactId.contains("\${") ||
+      request.artifact.version.contains("\${") ||
+      request.artifact.classifier.contains("\${") ||
+      request.artifact.extension.contains("\${"))
+      throw DollarInCoordinateException(request.artifact)
 
-    try {
-      val r = defaultArtifactResolver!!.resolveArtifact(session, request)
-      // if (r.exceptions.isNotEmpty()) {
-      //   println("%%%% $request ${r.exceptions}")
-      // }
-      return r
-    } catch (e: ArtifactResolutionException) {
-      // e.printStackTrace()
-      // println("-----------")
-      cache.put(request.artifact, e)
-      // if (!(e is IllegalStateException)) { println("??? $request $e"); cache.put(request.artifact, e) }
-      throw e
+    if (request.artifact.version.startsWith('^')) throw CaretInVersionException(request.artifact)
+
+    if (setOf(
+      "org.fusesource.leveldbjni:leveldbjni-all:pom:1.8-odl", // no such version
+      "com.github.romix:java-concurrent-hash-trie-map:pom:0.2.23-ODL", // no such version
+      "equinoxSDK381:org.eclipse.osgi:pom:3.8.1.v20120830-144521", // no such artifact
+      "equinoxSDK381:javax.servlet:pom:3.0.0.v201112011016", // no such artifact
+
+      "cn.com.antcloud.api:antcloud-prod-api-provider-sdk:pom:2.3.0.20180705", // no such artifact
+      "com.baggonius.gson:guava-gson-serializers:pom:1.0.1", // no such artifact
+      "com.github.crykn:kryonet:pom:2.22.7", // to such artifact
+      "com.github.liaomengge:base-platform-bom:pom:1.0.3-SNAPSHOT", // no such version
+      "com.kenai.nbpwr:com-eaio-uuid:pom:2.1.5-201007271250", // http error 404
+      "com.palantir.atlasdb:atlasdb:pom:0.586.0", // no such artifact
+      "com.walterjwhite:parent:pom:0.0.15-SNAPSHOT", // no such version
+      "com.wudgaby.platform:basis-parent:pom:1.0.0", // no such artifact
+      "commons-jelly:commons-jelly:pom:SNAPSHOT", // no such version
+      "de.citec.csra:rta-lib:pom:1.4.0", // no such version
+      "io.flutter:flutter_embedding_release:pom:1.0.0-bdc9708d235e582483d299642ad8682826ebb90d", // no such version
+      "javax.transaction:javax.transaction-api:pom:1.2.1", // no such version
+      "javax.xml.bind:jaxb-api:pom:2.4.0", // no such version
+      "jline:jline:pom:0.9.95.20100209", // no such version
+      "org.activiti:activiti-dependencies:pom:7.0.0-SNAPSHOT", // no such version
+      "org.apache.kylin:kylin-shaded-guava:pom:3.1.0", // no such artifact
+      "org.apache.stratos:stratos-parent:pom:3.0.0-incubating", // no such version
+      "org.bithon.shaded:shaded-slf4j:pom:1.0-SNAPSHOT", // no such artifact
+      "org.eclipse:draw2d:pom:3.6.1", // no such version
+      "org.eclipse.app4mc.migration:plugins:pom:2.0.0", // no such artifact
+      "org.eclipse.core:org.eclipse.core.runtime:pom:3.11.1", // no such version
+      "org.eclipse.jdt:core:pom:3.3.0.771", // no such version
+      "org.eclipse.osgi:org.eclipse.osgi:pom:3.7.1.R37x_v20110808_1106", // no such version
+      "org.geotools:gt-api:pom:10.0", // http error 404
+      "org.glassfish.jersey:jersey-bom:pom:3.1.0-SNAPSHOT", // no such version
+      "org.glassfish.tyrus:tyrus-bom:pom:2.1.0-M2", // no such version
+      "org.oasis-open.sca.j:sca-caa-apis:pom:1.1-CD04", // no such artifact
+      "org.ogema.tools:ogema-tools:pom:2.2.1-SNAPSHOT", // no such version
+      "org.openidentityplatform.external.com.iplanet.jato:jato:pom:14.6.4", // no such artifact
+      "org.openjfx:javafx.base:jar:11.0.0-SNAPSHOT", // no such version
+      "org.restcomm.media:media-parent:pom:8.0.0-SNAPSHOT", // no such version
+      "org.semweb4j:rdf2go.api:pom:4.7.2", // no such version
+      "org.tinygroup:tiny:pom:3.4.9_1", // no such version
+      "vigna.dsi.unimi.it:jal:pom:20031117", // no such artifact
+    ).contains(
+      "${request.artifact.groupId}:${request.artifact.artifactId}:${request.artifact.extension}:${request.artifact.version}"
+    ))
+      throw NoSuchVersionException(request.artifact)
+
+    var i = 1
+    val maxTries = 30
+    while (true) {
+      val ex = cache.get(request.artifact)
+      if (ex !== null) throw ex
+
+      try {
+        return defaultArtifactResolver!!.resolveArtifact(session, request)
+      } catch (e: ArtifactResolutionException) {
+        cache.put(request.artifact, e)
+        throw e
+      } catch (e: IllegalStateException) {
+        if (!(e.message ?: "").startsWith("Could not acquire write lock for ")) throw e
+        if (i == maxTries) throw WriteLockException(request.artifact, e)
+        else {
+          if (i > 5) log.warn("Retrying ($i of $maxTries) artifact ${request.artifact}: ${request.trace}")
+          Thread.sleep(Random.nextLong(1_000, 3_000))
+          i += 1
+          continue
+        }
+      }
+      // TODO: mark as unreachable
     }
   }
 
   override fun resolveArtifacts(session: RepositorySystemSession, requests: MutableCollection<out ArtifactRequest>): List<ArtifactResult> =
     requests.map { resolveArtifact(session, it) }
-              
       // throws ArtifactResolutionException;
-  
   companion object {
     var defaultArtifactResolver: ArtifactResolver? = null
   }
@@ -143,13 +194,16 @@ class CachingArtifactResolver() : ArtifactResolver {
 class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir: File) {
   private val log = Log {}
 
-  val temporaryFails = Collections.synchronizedMap(mutableMapOf<String, Int>())
+  val cachedFails = Collections.synchronizedMap(mutableMapOf<String, Int>())
+  val fails = Collections.synchronizedMap(mutableMapOf<String, Int>())
+  val aborts = Collections.synchronizedMap(mutableMapOf<String, Int>())
   val running = Collections.synchronizedMap(mutableMapOf<Pair<String, String>, Long>())
 
-  val cached = AtomicInteger()
+  val cachedPass = AtomicInteger()
+  val cachedFail = AtomicInteger()
   val pass = AtomicInteger()
-  val permanentFail = AtomicInteger()
-  val temporaryFail = AtomicInteger()
+  val fail = AtomicInteger()
+  val abort = AtomicInteger()
 
   val locator = MavenRepositorySystemUtils.newServiceLocator()
 
@@ -159,9 +213,6 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     locator.addService(TransporterFactory::class.java, HttpTransporterFactory::class.java)
     // locator.addService(TransporterFactory::class.java, GcsTransporterFactory::class.java)
     CachingArtifactResolver.defaultArtifactResolver = locator.getService(ArtifactResolver::class.java)
-    // println("defaultArtifactResolver $defaultArtifactResolver")
-    
-
     locator.setService<ArtifactResolver>(ArtifactResolver::class.java, CachingArtifactResolver::class.java)
   }
 
@@ -189,26 +240,96 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     AuthenticationBuilder()
       .addHostnameVerifier(NoopHostnameVerifier())
       .build()
+  // 41k -> 34k (google) -> 31k (wso2) -> 28.2k (jboss) -> 26.0k (spring) -> 27.7k (no spring) -> 27.0k (ebi-public)
+  // 27.5k (reset) -> 26.9k (redhat-gc)
+  // (reset) -> (apache)
+
+//  133 org.eclipse.stp.sca.osoa.java:osoa-java-api:pom:2.0.1.2 (ow2-public: error 404)
+//  143 com.kenai.nbpwr:com-eaio-uuid:pom:2.1.5-201007271250 (tidalwave: error 404)
+
+//  101 org.tinygroup:tiny:pom:3.4.9_1 (no such version)
+//  101 org.wso2.carbon:org.wso2.carbon.core:pom:4.5.3 (wso2-releases)
+//  127 org.jboss.ws:jbossws-parent:pom:1.0.2.GA (jboss-releases/mulesoft)
+//  149 com.walterjwhite:parent:pom:0.0.15-SNAPSHOT (no such version)
+//  177 org.openjfx:javafx.base:jar:11.0.0-SNAPSHOT (no such version)
+//  188 com.entwinemedia.common:functional:pom:1.4.2 (no such server)
+//  206 org.glassfish.tyrus:tyrus-bom:pom:2.1.0-M2 (no such version)
+//  211 org.webjars.bower:github-com-webcomponents-shadycss:pom:^v1.1.0 (malformed version)
+//  321 org.eclipse.core:org.eclipse.core.runtime:pom:3.11.1 (too new)
+
 
   val remotes =
     listOf(
-      "google-maven-central" to "https://maven-central-asia.storage-download.googleapis.com/maven2", // 8.7M jars
-      "sonatype-releases" to "https://oss.sonatype.org/content/repositories/releases", // 2.1M jars
-      // "springio-plugins-release" to "https://repo.spring.io/plugins-release", // 1.4M jars; non-functional", redirects to jfrog
-      "springio-plugins-release" to "https://repo.spring.io/ui/native/plugins-release", // 1.4M jars
-      "jboss-releases" to "https://repository.jboss.org/nexus/content/repositories/releases", // 273k jars
-      "wso2-public" to "https://maven.wso2.org/nexus/content/repositories/public", // 227k jars
-      "redhat-ga" to "https://maven.repository.redhat.com/ga/org/", // 145k jars
-      "geomajas" to "http://maven.geomajas.org", // 120k jars
-      "icm" to "https://maven.icm.edu.pl/artifactory/repo", // 94k jars
-      "apache-releases" to "https://repository.apache.org/content/repositories/releases", // 92k jars
-      "mulesoft-public" to "https://repository.mulesoft.org/nexus/content/repositories/public", // 72k jars
-      "google" to "https://maven.google.com", // 32k jars
-      "netbeans" to "http://netbeans.apidesign.org/maven2", // 21k jars; Note that old netbeans repo was decommissioned
-      "typesafe-maven-releases" to "https://repo.typesafe.com/typesafe/maven-releases", // 8.2k jars
-      // "ow2-public" to "https://repository.ow2.org/nexus/content/repositories/public", // 3.8k jars
-      "ow2-public" to "https://repository.ow2.org/nexus/content/groups/public", // 3.8k jars
-      "titalwave-releases" to "http://services.tidalwave.it/nexus/content/repositories/releases", // 96 jars
+      "google-maven-central" to "https://maven-central-asia.storage-download.googleapis.com/maven2/", // 8.7M jars
+
+      "google" to "https://maven.google.com/", // 32k jars
+      //   // android/
+      //   // androidx/
+      //   // com/android/
+      //   // com/crashlytics/sdk/android/
+      //   // com/google/
+      //   // com/googlecode/
+      //   // io/fabric/sdk/android/
+      //   // org/chromium/
+
+      "wso2" to "http://dist.wso2.org/maven2/", // 30k jars
+      "wso2-releases" to "https://maven.wso2.org/nexus/content/repositories/releases/", // 270k jars
+      "wso2-public" to "https://maven.wso2.org/nexus/content/repositories/public/", // 227k jars
+      "wso2-thirdparty" to "https://maven.wso2.org/nexus/content/repositories/thirdparty/", // 19 jars
+
+      "jboss-releases" to "https://repository.jboss.org/nexus/content/repositories/releases/", // 273k jars
+      "jboss-thirdparty-releases" to "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/", // 6.4k jars
+
+      // See https://spring.io/blog/2020/10/29/notice-of-permissions-changes-to-repo-spring-io-fall-and-winter-2020
+      // // "springio-plugins-release" to "https://repo.spring.io/plugins-release/", // 1.4M jars
+      // // "spring-libs-milestone" to "https://repo.spring.io/libs-milestone/", // 1.3M jars
+
+      // // "ebi-public" to "https://www.ebi.ac.uk/intact/maven/nexus/content/repositories/public/", // 22k jars
+
+      // // "redhat-ga" to "https://maven.repository.redhat.com/ga/", // 145k jars
+
+      // // "apache-releases" to "https://repository.apache.org/content/repositories/releases/", // 92k jars
+      // // "apache-public" to "https://repository.apache.org/content/repositories/public/", // 17k jars
+
+      "osgeo-release" to "https://repo.osgeo.org/repository/release/", // 13k jars
+      "osgeo" to "https://download.osgeo.org/webdav/geotools/", // 22k jars
+
+      // // "seasar" to "https://www.seasar.org/maven/maven2/", // 3.7k jars
+
+      // // "netbeans" to "http://netbeans.apidesign.org/maven2/", // 21k jars; Note that old netbeans repo was decommissioned (see https://netbeans.apache.org/about/oracle-transition.html)
+
+      // // "sonatype-releases" to "https://oss.sonatype.org/content/repositories/releases/", // 2.1M jars
+
+      "geomajas" to "http://maven.geomajas.org/", // 120k jars
+
+      "eclipse-releases" to "https://repo.eclipse.org/content/groups/releases/", // 21k jars
+
+      // // "icm" to "http://maven.icm.edu.pl/artifactory/repo/", // 94k jars
+
+      // // "ow2-public" to "https://repository.ow2.org/nexus/content/repositories/public/", // 3.9k jars
+
+      // // "tidalwave-releases" to "http://services.tidalwave.it/nexus/content/repositories/releases/", // 96 jars
+      // // "typesafe-maven-releases" to "https://repo.typesafe.com/typesafe/maven-releases/", // 8.2k jars
+
+      "mulesoft-public" to "https://repository.mulesoft.org/nexus/content/repositories/public/", // 72k jars
+      "liferay-public" to "https://repository.liferay.com/nexus/content/repositories/public/", // 59k jars
+      // // "fusesource-releases" to "https://repo.fusesource.com/nexus/content/repositories/releases/", // 41k jars
+      // // "conjars" to "https://conjars.org/repo/", // 10k jars
+      // // (no server) "metova-public" to "http://repo.metova.com/nexus/content/groups/public/", // 3.9k jars
+      // // "geo-solutions" to "http://maven.geo-solutions.it/", // 3.6k jars
+      // // (no server) "entwine-releases" to "http://maven.entwinemedia.com/content/repositories/releases/", // 1.3k jars
+      "eclipse-paho" to "https://repo.eclipse.org/content/repositories/paho-releases/", // 67 jars
+      // "scalaz-releases" to "https://dl.bintray.com/scalaz/releases/", // 28 jars
+      // "tweetyproject" to "https://tweetyproject.org/mvn/", // 4 jars
+      "pentaho-omni" to "https://nexus.pentaho.org/content/groups/omni/", // 280k jars
+      "pustefix-framework" to "http://pustefix-framework.org/repository/maven/", // 1.2k jars
+      "twitter" to "https://maven.twttr.com/", // 9.0k jars
+      "edinburgh-ph" to "https://www2.ph.ed.ac.uk/maven2/", // 112 jars
+      "confluent-packages" to "https://packages.confluent.io/maven/", // 13k jars
+      // "atricore-m2-release-repository" to "http://repository.atricore.org/m2-release-repository/", // 1.9k jars
+      "nuxeo-public-releases" to "https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases/", // 142k jars
+      // "jspresso" to "http://repository.jspresso.org/maven2/", // 10k jars
+      "unidata-ucar-releases" to "https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/", // 1.4k jars
     ).map {
       RemoteRepository.Builder(it.first, "default", it.second)
         .setPolicy(RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL))
@@ -223,18 +344,33 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       object : Thread() {
         override fun run() {
           println()
-          println("cache $cached")
+          println("cached pass $cachedPass")
+          println("cached fail $cachedFail")
           println("pass  $pass")
-          println("fail  $permanentFail")
-          println("abort $temporaryFail")
+          println("fail  $fail")
+          println("abort $abort")
 
           println()
-          for ((key, value) in temporaryFails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+          println("Cached fails: ${cachedFails.toList().map(Pair<String, Int>::second).sum()}\n")
+          for ((key, value) in cachedFails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
             println("$value\t$key")
           }
 
           println()
-          println("Running:\n")
+          println("Fails: ${fails.toList().map(Pair<String, Int>::second).sum()}\n")
+          for ((key, value) in fails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+            println("$value\t$key")
+          }
+
+          println()
+          println("Aborts: ${aborts.toList().map(Pair<String, Int>::second).sum()}\n")
+          for ((key, value) in aborts.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+            if (key.contains("org.eclipse.aether.resolution.ArtifactResolutionException")) log.error { "$value\t$key" }
+            else println("$value\t$key")
+          }
+
+          println()
+          println("Running: ${running.size}\n")
           for ((name, startTime) in running.toList().sortedBy(Pair<Pair<String, String>, Long>::second).reversed()) {
             println("- ${time(startTime)}: ${name.first}:${name.second}")
           }
@@ -246,17 +382,29 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       runBlocking {
         val reorderedArtifacts = if (false) artifacts.shuffled() else artifacts
         for ((groupIdPath, artifactId) in reorderedArtifacts) {
-          // if (groupIdPath[0] != 'o') continue // e i m s t
-          if (groupIdPath.startsWith("com/")) continue
-          // if (!groupIdPath.startsWith("io/")) continue
-          // if (!groupIdPath.startsWith("net/")) continue
-          // if (!groupIdPath.startsWith("org/")) continue
-          // if (groupId.startsWith("org.webjars.")) continue
+          // if (groupIdPath[0] != 'o') continue
+          // if (!groupIdPath.startsWith("com/")) continue
+          // if (groupIdPath.startsWith("com/github/")) continue
+          // if (groupIdPath.startsWith("io/")) continue
+          // if (groupIdPath.startsWith("net/")) continue
+          // if (groupIdPath.startsWith("org/")) continue
+          if (groupIdPath == "org/integratedmodelling") continue
+          if (groupIdPath.startsWith("org/opendaylight/")) continue
+          if (groupIdPath == "me/phoboslabs/illuminati" && artifactId == "illuminati-processor") continue
 
           val jarListFile = jarListsDir.resolve(groupIdPath).resolve("$artifactId.jar-list")
           if (jarListFile.exists()) {
-            cached.incrementAndGet()
-            // println("cached $groupIdPath:$artifactId")
+            jarListFile.bufferedReader().use {
+              val line = it.readLine()
+              when {
+                line === null -> log.error("!!!! Empty cache file: $jarListFile")
+                line.startsWith('!') -> {
+                  cachedFail.incrementAndGet()
+                  cachedFails.merge(line.substring(1), 1, Int::plus)
+                }
+                else -> cachedPass.incrementAndGet()
+              }
+            }
             continue
           }
 
@@ -273,55 +421,31 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     val groupId = groupIdPath.replace('/', '.')
     val name = "$groupId:$artifactId"
     val startTime = System.nanoTime()
-    var i = 1
     try {
       running.put(Pair(groupIdPath, artifactId), startTime)
       println("running +${running.size}")
       if (groupIdPath.contains('.')) throw DotInGroupIdException(groupIdPath, artifactId) // Maven will incorrectly translate the '.' to a '/'
-      val maxTries = 30
       println("start   $name")
-      while (true) {
-        try {
-          // println("start  $i $name")
-          val version = getVersion(groupId, artifactId)
-          val artifactDescriptorResult = getArtifactDescriptor(groupId, artifactId, version)
-          val pomArtifactResult = //try {
-            getArtifact(groupId, artifactId, null, "pom", version)
-          // } catch (e: Throwable) {
-          //   throw NoRootPomException(groupId, artifactId, version, e)
-          // }
-          val model = getModel(pomArtifactResult.artifact.file)
-          val artifactResult = getArtifact(groupId, artifactId, artifactDescriptorResult.artifact.classifier, model.packaging, version)
-          artifactDescriptorResult.setArtifact(artifactResult.artifact)
-          artifactDescriptorResult.request.setArtifact(artifactResult.artifact)
-          val dependencyTree = getDependencyTree(artifactDescriptorResult)
-          val dependencyList = getDependencyList(dependencyTree)
-          val artifactResults = downloadDependencies(dependencyList)
-          writeJarList(startTime, artifactResults, jarListFile)
-          pass.incrementAndGet()
-          println("pass  $i ${time(startTime)} $name")
-          break
-        } catch (e: Throwable) {
-          when {
-            isA(
-              e,
-              java.lang.IllegalStateException::class,
-            ) && e.message!!.startsWith("Could not acquire write lock for ")
-            -> {
-              if (i == maxTries) throw WriteLockException(groupId, artifactId, e as IllegalStateException)
-              else { Thread.sleep(Random.nextLong(1_000, 3_000)); i += 1; continue }
-            }
-
-            else -> throw e
-          }
-        }
-        TODO("impossible case")
-      }
+      // println("start  $i $name")
+      val version = getVersion(groupId, artifactId)
+      val artifactDescriptorResult = getArtifactDescriptor(groupId, artifactId, version)
+      val pomArtifactResult = getArtifact(groupId, artifactId, null, "pom", version)
+      val model = getModel(pomArtifactResult.artifact.file)
+      val artifactResult = getArtifact(groupId, artifactId, artifactDescriptorResult.artifact.classifier, model.packaging, version)
+      artifactDescriptorResult.setArtifact(artifactResult.artifact)
+      artifactDescriptorResult.request.setArtifact(artifactResult.artifact)
+      val dependencyTree = getDependencyTree(artifactDescriptorResult)
+      val dependencyList = getDependencyList(dependencyTree)
+      val artifactResults = downloadDependencies(dependencyList)
+      writeJarList(startTime, artifactResults, jarListFile)
+      pass.incrementAndGet()
+      println("pass  ${time(startTime)} $name")
     } catch (e: Exception) {
       val t = time(startTime)
-      if (isPermanentFailure(e)) {
-        println("fail  $i $t $name")
-        permanentFail.incrementAndGet()
+      if (isfailure(e)) {
+        println("fail  $t $name")
+        fail.incrementAndGet()
+        fails.merge(exceptionName(e), 1, Int::plus)
         val stringWriter = StringWriter()
         val printWriter = PrintWriter(stringWriter)
         e.printStackTrace(printWriter)
@@ -336,32 +460,9 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
           log.error(e) { "Failed to write permanent errors to file $jarListFile" }
         }
       } else {
-        println("abort $i $t $name")
-        temporaryFail.incrementAndGet()
-        temporaryFails.merge(exceptionName(e), 1, Int::plus)
-        // log.error(e) { "Failed to get dependencies of $groupId:$artifactId" }
-        if (e is WriteLockException) {
-          println("WRITE LOCK maven2/${groupId.replace(".", "/")}/$artifactId/maven-metadata.xml\t0")
-        }
-        if (
-          isA(
-            e,
-            // org.eclipse.aether.resolution.ArtifactResolutionException::class,
-            org.eclipse.aether.transfer.ArtifactNotFoundException::class,
-          )
-        ) {
-          var ex: Throwable? = e
-          while (
-            ex is org.apache.maven.model.resolution.UnresolvableModelException ||
-            ex is org.eclipse.aether.collection.DependencyCollectionException ||
-            ex is org.eclipse.aether.resolution.ArtifactDescriptorException ||
-            ex is org.eclipse.aether.resolution.ArtifactResolutionException
-          ) {
-            ex = ex.cause
-          }
-          val x = ex as org.eclipse.aether.transfer.ArtifactNotFoundException
-          println("ARTIFACT NOT FOUND ${x.artifact}")
-        }
+        println("abort $t $name")
+        abort.incrementAndGet()
+        aborts.merge(exceptionName(e), 1, Int::plus)
         log.error(e) { "!!!!!!! $groupId:$artifactId" }
       }
     } finally {
@@ -370,12 +471,21 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     }
   }
 
-  fun isPermanentFailure(e: Throwable) =
-    isA(
-      e,
-      org.eclipse.aether.transfer.MetadataTransferException::class,
-      org.eclipse.aether.transfer.ChecksumFailureException::class,
-    ) ||
+  fun isfailure(e: Throwable) =
+    // isA(
+    //   e,
+    //   org.eclipse.aether.transfer.MetadataTransferException::class,
+    //   org.eclipse.aether.transfer.ChecksumFailureException::class,
+    // ) ||
+    // isA(
+    //   e,
+    //   org.eclipse.aether.transfer.ArtifactTransferException::class,
+    //   org.eclipse.aether.transfer.ChecksumFailureException::class,
+    // ) ||
+    // isA(
+    //   e,
+    //   org.eclipse.aether.transfer.ChecksumFailureException::class,
+    // ) ||
     isA(
       e,
       org.eclipse.aether.transfer.ArtifactTransferException::class,
@@ -399,23 +509,12 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     isA(
       e,
       org.eclipse.aether.transfer.ArtifactTransferException::class,
-      org.eclipse.aether.transfer.ChecksumFailureException::class,
-    ) ||
-    isA(
-      e,
-      org.eclipse.aether.transfer.ChecksumFailureException::class,
-    ) ||
-    isA(
-      e,
-      org.eclipse.aether.transfer.ArtifactTransferException::class,
       org.eclipse.aether.transfer.NoRepositoryConnectorException::class,
       org.eclipse.aether.transfer.NoRepositoryConnectorException::class,
       org.eclipse.aether.transfer.NoRepositoryLayoutException::class,
       org.eclipse.aether.transfer.NoRepositoryLayoutException::class,
     ) ||
     e is DotInGroupIdException ||
-    // e is NoPomException ||
-    e is NoRootPomException ||
     e is ModelParsingException ||
     e is NoVersioningException ||
     e is NoVersionsException ||
@@ -463,8 +562,36 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       extension == "pom" -> Pair(null, listOf(extension)) // TODO: null isn't technically correct (should be classifier)
       extension == "feature" -> Pair("features", listOf("xml"))
       extension == "tile" -> Pair(classifier, listOf("xml"))
-      classifier == "config" -> Pair("config", listOf("cfg"))
       extension == "eclipse-target-definition" -> Pair(classifier, listOf("target"))
+      classifier == "config" -> Pair(classifier, listOf("cfg", "xml"))
+      classifier == "plugin2asciidoc" -> Pair(classifier, listOf("xsl"))
+      classifier == "idmtool" -> Pair(classifier, listOf("py"))
+
+      classifier == "configuration" -> Pair(classifier, listOf("cfg"))
+      classifier == "countersconf" -> Pair(classifier, listOf("cfg"))
+      classifier == "datastore" -> Pair(classifier, listOf("cfg"))
+      classifier == "restconf" -> Pair(classifier, listOf("cfg"))
+
+      listOf(
+        "aaa-app-config",
+        "aaa-datastore-config",
+        "aaa-password-service-config",
+        "akkaconf",
+        "bgp-initial-config",
+        "factoryakkaconf",
+        "features-core",
+        "features",
+        "legacyConfig",
+        "moduleconf",
+        "moduleshardconf",
+        "network-topology-bgp-initial-config",
+        "network-topology-pcep-initial-config",
+        "odl-bmp-monitors-config",
+        "routing-policy-default-config",
+        "network-topology-initial-config",
+        "configstats",
+      ).contains(classifier)
+        -> Pair(classifier, listOf("xml"))
       else -> Pair(classifier, listOf(extension, "jar", "zip"))
     }
     // println("$groupId:$artifactId -> extension $extension classifier $classifier cls $cls extensions $extensions")
@@ -576,11 +703,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       }
 
       // println("packaging ${node.artifact} ${node.artifact.extension}")
-      val pomArtifactResult = //try {
-        getArtifact(node.artifact.groupId, node.artifact.artifactId, null, "pom", node.artifact.version)
-      // } catch (e: Throwable) {
-      //   throw NoPomException(root.artifact.groupId, root.artifact.artifactId, root.artifact.version, node.artifact.groupId, node.artifact.artifactId, node.artifact.version, e)
-      // }
+      val pomArtifactResult = getArtifact(node.artifact.groupId, node.artifact.artifactId, null, "pom", node.artifact.version)
       val model = getModel(pomArtifactResult.artifact.file)
       val art = Fiveple(node.artifact.groupId, node.artifact.artifactId, node.artifact.classifier, model.packaging, node.artifact.version)
       artifactRequests += art
@@ -853,26 +976,4 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
 
   fun unsolvable(groupId: String, artifactId: String): Boolean =
     groupId == "org.webjars.npm" && UNSOLVABLE_ORG_WEBJARS_NPM_ARTIFACTS.contains(artifactId)
-
-  fun skipArtifact(groupId: String, artifactId: String): Boolean {
-    // if (groupId.startsWith("com.")) return true
-    // if (!groupId.startsWith("org.")) return true
-    // if (!groupId.startsWith("io.")) return true
-    // if (groupId[0] != 'a') return true
-
-    // if (groupId != "org.apache.camel.quarkus") return true
-    // if (!groupId.startsWith("org.kie")) return true
-    // if (!groupId.startsWith("org.opendaylight.")) return true
-
-    // if (groupId != "org.integratedmodelling") return true
-      // listOf(
-      //   "klab-server",
-      //   "klab-node",
-      // ).contains(artifactId)
-
-    // if (groupId != "org.webjars.npm") return true
-    // if (groupId == "org.webjars.npm" && BAD_ORG_WEBJARS_NPM_ARTIFACTS.contains(artifactId)) return true
-
-    return false
-  }
 }

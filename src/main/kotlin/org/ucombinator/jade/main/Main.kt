@@ -241,7 +241,10 @@ class DownloadMaven : CliktCommand(help = "Download Maven data") {
   val jarLists: File by argument()
     .file(mustExist = true, canBeFile = false)
 
+  val reverse: Boolean by option().flag(default = false)
+  val shuffle: Boolean by option().flag(default = false)
+
   override fun run() {
-    org.ucombinator.jade.maven.DownloadMaven(index, localRepo, jarLists).run()
+    org.ucombinator.jade.maven.DownloadMaven(index, localRepo, jarLists, reverse, shuffle).run()
   }
 }

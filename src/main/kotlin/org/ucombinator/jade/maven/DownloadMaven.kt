@@ -2,10 +2,12 @@ package org.ucombinator.jade.maven
 
 import org.apache.http.conn.ssl.NoopHostnameVerifier
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
+import org.apache.maven.model.Model
 import org.apache.maven.model.building.DefaultModelBuilderFactory
 import org.apache.maven.model.building.ModelBuildingRequest
-import org.apache.maven.model.Model
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
+import org.eclipse.aether.RepositorySystem
+import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.artifact.DefaultArtifact
 import org.eclipse.aether.collection.CollectRequest
@@ -13,21 +15,23 @@ import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory
 import org.eclipse.aether.graph.DependencyNode
 import org.eclipse.aether.graph.Exclusion
 import org.eclipse.aether.impl.ArtifactResolver
+import org.eclipse.aether.impl.MetadataResolver
 import org.eclipse.aether.metadata.DefaultMetadata
 import org.eclipse.aether.metadata.Metadata
+import org.eclipse.aether.metadata.Metadata.Nature
 import org.eclipse.aether.repository.LocalRepository
 import org.eclipse.aether.repository.RemoteRepository
 import org.eclipse.aether.repository.RepositoryPolicy
-import org.eclipse.aether.RepositorySystem
-import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest
 import org.eclipse.aether.resolution.ArtifactDescriptorResult
 import org.eclipse.aether.resolution.ArtifactRequest
 import org.eclipse.aether.resolution.ArtifactResolutionException
 import org.eclipse.aether.resolution.ArtifactResult
 import org.eclipse.aether.resolution.MetadataRequest
+import org.eclipse.aether.resolution.MetadataResult
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
+import org.eclipse.aether.transfer.MetadataNotFoundException
 import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.util.artifact.JavaScopes
@@ -36,6 +40,14 @@ import org.eclipse.aether.util.version.GenericVersionScheme
 import org.ucombinator.jade.util.AtomicWriteFile
 import org.ucombinator.jade.util.Log
 import org.ucombinator.jade.util.Tuples.Fiveple
+import org.eclipse.aether.util.graph.transformer.ConflictResolver
+import org.eclipse.aether.util.graph.transformer.JavaScopeSelector
+import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector
+import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner
+
+import org.eclipse.aether.util.graph.transformer.NearestVersionSelector
 
 import java.io.File
 import java.io.FileInputStream
@@ -55,17 +67,109 @@ data class NoVersioningTagException(val groupId: String, val artifactId: String)
 data class NoVersionsInVersioningTagException(val groupId: String, val artifactId: String) : Exception("No versions in POM for for $groupId:$artifactId")
 data class UnsolvableArtifactException(val groupId: String, val artifactId: String) : Exception("Skipped artifact with unsolvable dependencies: $groupId:$artifactId")
 // data class VersionDoesNotExistException(val artifact: Artifact, val e: ArtifactResolutionException) : Exception("Artifact version does not exist: $artifact", e)
-data class WriteLockException(val artifact: Artifact, val e: IllegalStateException) : Exception("Could not aquire write lock for $artifact", e)
+data class ArtifactWriteLockException(val artifact: Artifact, val e: IllegalStateException) : Exception("Could not aquire write lock for $artifact", e)
+data class MetadataWriteLockException(val metadata: Metadata, val e: IllegalStateException) : Exception("Could not aquire write lock for $metadata", e)
 data class SystemDependencyException(val root: Artifact, val dependency: Artifact) : Exception("Dependency on system provided artifact $dependency by $root")
+
+data class CachedException(val name: String, val stackTrace: String) : Exception("CachedException: $name\n$stackTrace")
 
 // $ find ~/a/local/jade2/maven '(' -name \*.part -o -name \*.lock -o -size 0 ')' -type f -print0 | xargs -0 rm -v
 // $ find ~/a/local/jade2/jar-lists/ -size 0 -type f -print0 | xargs -0 rm -v
 
+object Exceptions {
+  fun name(exception: Throwable): String {
+    var e: Throwable? = exception
+    var l = listOf<String>()
+
+    while (e !== null) {
+      l += e::class.qualifiedName ?: "<anonymous>"
+      e = e.cause
+    }
+
+    return l.joinToString(":")
+  }
+
+  fun stackTrace(exception: Throwable): String {
+    val stringWriter = StringWriter()
+    val printWriter = PrintWriter(stringWriter)
+    exception.printStackTrace(printWriter)
+    printWriter.flush()
+    return stringWriter.toString()
+  }
+}
+
+// TODO: NearestVersionSelectorWrapper (DependencyNodeWrapper) https://kotlinlang.org/docs/delegation.html
+class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
+  private val log = Log {}
+
+  val cache = Collections.synchronizedMap(object : LinkedHashMap<Fiveple<String, String, String, String, Nature>, Pair<String, String>>(16, 0.75F, true) {
+    override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, Nature>, Pair<String, String>>): Boolean =
+      this.size > 100_000
+  })
+
+  override fun resolveMetadata(session: RepositorySystemSession, requests: MutableCollection<out MetadataRequest>): List<MetadataResult> =
+    requests.map { resolveMetadata(session, it) }
+
+  fun resolveMetadata(session: RepositorySystemSession, request: MetadataRequest): MetadataResult {
+    // log.error { "META: $request" }
+
+    val key = Fiveple(
+      request.metadata.groupId,
+      request.metadata.artifactId,
+      request.metadata.version,
+      request.metadata.type,
+      request.metadata.nature,
+    )
+
+    var i = 1
+    val maxTries = 10
+    while (true) {
+      val ex = cache.get(key)
+      if (ex !== null) throw CachedException(ex.first, ex.second)
+
+      try {
+        val results = defaultMetadataResolver!!.resolveMetadata(session, mutableListOf(request))
+        assert(results.size == 1)
+        return results[0]
+      } catch (e: IllegalStateException) {
+        if (!(e.message ?: "").startsWith("Could not acquire write lock for ")) throw e
+        if (i == maxTries) {
+          log.error("Failed after $i tries: metadata ${request.metadata}")
+          throw MetadataWriteLockException(request.metadata, e)
+        } else {
+          if (i >= 10) log.warn("Retrying ($i of $maxTries) metadata ${request.metadata}")
+          Thread.sleep(i * Random.nextLong(500, 1_000))
+          i += 1
+          continue
+        }
+      } catch (e: MetadataNotFoundException) {
+        // val stringWriter = StringWriter()
+        // val printWriter = PrintWriter(stringWriter)
+        // e.printStackTrace(printWriter)
+        // printWriter.flush()
+        // val content =
+        //   "!" + exceptionName(e) + "\n" +
+        //     stringWriter.toString()
+        cache.put(key, Pair(Exceptions.name(e), Exceptions.stackTrace(e)))
+        throw e
+      }
+      // TODO: mark as unreachable
+    }
+  }
+
+  companion object {
+    var defaultMetadataResolver: MetadataResolver? = null
+  }
+}
+
 class CachingArtifactResolver : ArtifactResolver {
   private val log = Log {}
 
-  val exists = Collections.synchronizedMap(mutableMapOf<Artifact, Boolean>())
-  val cache = Collections.synchronizedMap(mutableMapOf<Artifact, Exception>())
+  // val exists = Collections.synchronizedMap(mutableMapOf<Artifact, Boolean>())
+  val cache = Collections.synchronizedMap(object : LinkedHashMap<Fiveple<String, String, String, String, String>, Pair<String, String>>(16, 0.75F, true) {
+    override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, String>, Pair<String, String>>): Boolean =
+      this.size > 100_000
+  })
   override fun resolveArtifact(session: RepositorySystemSession, request: ArtifactRequest): ArtifactResult {
     if (
       request.artifact.groupId.contains("\${") ||
@@ -111,21 +215,30 @@ class CachingArtifactResolver : ArtifactResolver {
     }
     request.repositories = repositories
 
+    val key = Fiveple(
+      request.artifact.groupId,
+      request.artifact.artifactId,
+      request.artifact.baseVersion,
+      request.artifact.classifier,
+      request.artifact.extension,
+    )
+
     var i = 1
     val maxTries = 10
     while (true) {
-      val ex = cache.get(request.artifact)
-      if (ex !== null) throw ex
+      val ex = cache.get(key)
+      if (ex !== null) throw CachedException(ex.first, ex.second)
 
       try {
-        // TODO: implement MetadataResolver?
         return defaultArtifactResolver!!.resolveArtifact(session, request)
       } catch (e: IllegalStateException) {
         if (!(e.message ?: "").startsWith("Could not acquire write lock for ")) throw e
-        if (i == maxTries) throw WriteLockException(request.artifact, e)
-        else {
+        if (i == maxTries) {
+          log.error("Failed to get write lock after $i tries: artifact ${request.artifact}")
+          throw ArtifactWriteLockException(request.artifact, e)
+        } else {
           if (i >= 10) log.warn("Retrying ($i of $maxTries) artifact ${request.artifact}")
-          Thread.sleep(Random.nextLong(1_000, 2_000))
+          Thread.sleep(i * Random.nextLong(500, 1_000))
           i += 1
           continue
         }
@@ -140,7 +253,7 @@ class CachingArtifactResolver : ArtifactResolver {
         //   else exists.put(request.artifact, responseCode != HttpURLConnection.HTTP_NOT_FOUND)
         // }
         val ee = e // if (exists.getValue(request.artifact)) e else VersionDoesNotExistException(request.artifact, e)
-        cache.put(request.artifact, ee)
+        cache.put(key, Pair(Exceptions.name(e), Exceptions.stackTrace(e)))
         // <tr><th style="width: 12em;">Repositories</th><td><a class="b lic" href="/repos/icm">ICM</a></td></tr>
         throw ee
       }
@@ -178,6 +291,9 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     locator.addService(TransporterFactory::class.java, HttpTransporterFactory::class.java)
     CachingArtifactResolver.defaultArtifactResolver = locator.getService(ArtifactResolver::class.java)
     locator.setService<ArtifactResolver>(ArtifactResolver::class.java, CachingArtifactResolver::class.java)
+    CachingMetadataResolver.defaultMetadataResolver = locator.getService(MetadataResolver::class.java)
+    locator.setService<MetadataResolver>(MetadataResolver::class.java, CachingMetadataResolver::class.java)
+    locator.setService<MetadataResolver>(MetadataResolver::class.java, CachingMetadataResolver::class.java)
   }
 
   val system = locator.getService(RepositorySystem::class.java)
@@ -186,7 +302,11 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
   val session = MavenRepositorySystemUtils.newSession()
   val localRepo = LocalRepository(localRepoDir)
   init {
-    session.setLocalRepositoryManager(system.newLocalRepositoryManager(session, localRepo))
+    session.localRepositoryManager = system.newLocalRepositoryManager(session, localRepo)
+    val transformer = ConflictResolver(NearestVersionSelector(), JavaScopeSelector(),
+                            SimpleOptionalitySelector(), JavaScopeDeriver())
+    val t = ChainedDependencyGraphTransformer(transformer, JavaDependencyContextRefiner())
+    session.dependencyGraphTransformer = t
   }
 
   val remote = RemoteRepository
@@ -222,6 +342,9 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       /* 638  uses /  21k jars */ "netbeans" to "http://netbeans.apidesign.org/maven2/", // Note: https://netbeans.apache.org/about/oracle-transition.html
       /* 268  uses / 3.9k jars */ "ow2-public" to "https://repository.ow2.org/nexus/content/repositories/public/",
       /* 130  uses / 227k jars */ "wso2-public" to "https://maven.wso2.org/nexus/content/repositories/public/",
+
+      // TODO: maven.java.net
+      // TODO: Certificate for .. doesn't match any of the subject ...
 
       //////////////// broken but possibly fixable
 
@@ -340,14 +463,40 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
         val reorderedArtifacts = if (reverse) r.toList().reversed().asSequence() else r
         for ((groupIdPath, artifactId) in reorderedArtifacts) {
           // if (groupIdPath[0] != 'o') continue
+          // if (groupIdPath >= "com") continue
           // if (!groupIdPath.startsWith("com/")) continue
           // if (groupIdPath.startsWith("com/github/")) continue
           // if (groupIdPath.startsWith("io/")) continue
           // if (groupIdPath.startsWith("net/")) continue
-          // if (groupIdPath.startsWith("org/")) continue
-          if (groupIdPath == "org/integratedmodelling") continue
-          if (groupIdPath.startsWith("org/opendaylight/")) continue
-          if (groupIdPath == "me/phoboslabs/illuminati" && artifactId == "illuminati-processor") continue
+          // if (!groupIdPath.startsWith("org/")) continue
+          // if (groupIdPath == "org/integratedmodelling") continue
+          // if (groupIdPath >= "org/z") continue
+          // if (groupIdPath.startsWith("org/open")) continue // openidentity
+          // if (groupIdPath < "org/oj") continue
+          // if (!groupIdPath.startsWith("org/open")) continue
+          // if (groupIdPath.startsWith("org/open") && groupIdPath != "org/opencadc") continue
+          // if (artifactId == "cadc-test-uws") continue
+          // if (artifactId == "caom2-datalink-server") continue
+          // if (artifactId == "caom2-meta-server") continue
+          // if (artifactId == "caom2-pkg-server") continue
+          // if (artifactId == "caom2-search-server") continue
+          // if (artifactId == "caom2-soda-server") continue
+
+          // if (artifactId == "caom2harvester") continue
+
+          // if (groupIdPath.startsWith("org/open") && groupIdPath >= "org/opend") continue
+          // if (groupIdPath.startsWith("org/open") && groupIdPath >= "org/opencb") continue 
+          // if (groupIdPath.startsWith("org/o")) continue
+          // if (!groupIdPath.startsWith("org/p")) continue
+          // if (!groupIdPath.startsWith("org/q")) continue
+          // if (!groupIdPath.startsWith("org/r")) continue
+          // if (!groupIdPath.startsWith("org/s")) continue
+          // if (groupIdPath >= "org/o" && groupIdPath < "org/t") continue
+          // if (groupIdPath.startsWith("org/ow2/")) continue
+          // if (groupIdPath.startsWith("org/wso2/")) continue
+          // if (groupIdPath.startsWith("org/webjars/")) continue
+          // if (groupIdPath.startsWith("org/opendaylight/")) continue
+          // if (groupIdPath == "me/phoboslabs/illuminati" && artifactId == "illuminati-processor") continue
 
           val jarListFile = jarListsDir.resolve(groupIdPath).resolve("$artifactId.jar-list")
           if (jarListFile.exists()) {
@@ -389,8 +538,8 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       val pomArtifactResult = getArtifact(groupId, artifactId, null, "pom", version)
       val model = getModel(pomArtifactResult.artifact.file)
       val artifactResult = getArtifact(groupId, artifactId, artifactDescriptorResult.artifact.classifier, model.packaging, version)
-      artifactDescriptorResult.setArtifact(artifactResult.artifact)
-      artifactDescriptorResult.request.setArtifact(artifactResult.artifact)
+      artifactDescriptorResult.artifact = artifactResult.artifact
+      artifactDescriptorResult.request.artifact = artifactResult.artifact
       val dependencyTree = getDependencyTree(artifactDescriptorResult)
       val dependencyList = getDependencyList(dependencyTree)
       val artifactResults = downloadDependencies(dependencyList)
@@ -445,10 +594,10 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
         org.eclipse.aether.transfer.NoRepositoryConnectorException::class,
         org.eclipse.aether.transfer.NoTransporterException::class
       ) ||
-      isA(
-        e,
-        org.eclipse.aether.collection.UnsolvableVersionConflictException::class,
-      ) ||
+      // isA(
+      //   e,
+      //   org.eclipse.aether.collection.UnsolvableVersionConflictException::class,
+      // ) ||
       isA(
         e,
         org.eclipse.aether.resolution.VersionRangeResolutionException::class,
@@ -548,6 +697,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
         "routing-policy-default-config",
         "network-topology-initial-config",
         "configstats",
+        "config-He",
       ).contains(classifier)
       -> Pair(classifier, listOf("xml"))
 
@@ -562,6 +712,8 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
         return system.resolveArtifact(session, artifactRequest)
       } catch (e: org.eclipse.aether.resolution.ArtifactResolutionException) {
         firstException = firstException ?: e
+      } catch (e: CachedException) {
+        firstException = firstException ?: e
       }
     }
     throw firstException!!
@@ -574,10 +726,10 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
 
     val collectRequest = CollectRequest()
     // collectRequest.setRoot(Dependency(descriptorResult.artifact, JavaScopes.COMPILE))
-    collectRequest.setRootArtifact(descriptorResult.artifact)
-    collectRequest.setDependencies(descriptorResult.dependencies)
-    collectRequest.setManagedDependencies(descriptorResult.managedDependencies)
-    collectRequest.setRepositories(remotes)
+    collectRequest.rootArtifact = descriptorResult.artifact
+    collectRequest.dependencies = descriptorResult.dependencies
+    collectRequest.managedDependencies = descriptorResult.managedDependencies
+    collectRequest.repositories = remotes
     val collectResult = system.collectDependencies(session, collectRequest)
     // collectResult.getRoot().accept(ConsoleDependencyGraphDumper())
     return collectResult.getRoot()

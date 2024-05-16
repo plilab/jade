@@ -3,17 +3,17 @@ repositories {
 }
 
 plugins {
-  kotlin("jvm") version "1.5.31"
-  `kotlin-dsl` version "2.1.7"
+  kotlin("jvm") version "1.9.22"
+  `kotlin-dsl` version "4.3.0"
 
   id("com.github.ben-manes.versions") version "0.42.0" // Adds: ./gradlew -p buildSrc dependencyUpdates
-  id("io.gitlab.arturbosch.detekt").version("1.19.0") // Adds: ./gradlew -p buildSrc detekt
+  id("io.gitlab.arturbosch.detekt").version("1.23.6") // Adds: ./gradlew -p buildSrc detekt
   // id("org.cqfn.diktat.diktat-gradle-plugin") version "1.0.3" // Adds: ./gradlew -p buildSrc diktatCheck
   id("org.jlleitschuh.gradle.ktlint") version "10.2.1" // Adds: ./gradlew -p buildSrc ktlintCheck (requires disabling diktat)
 }
 
 dependencies {
-  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin") // :1.5.31
+  implementation("org.jetbrains.kotlin:kotlin-gradle-plugin") // version "1.9.24"
 
   // Git API (for `GitVersionsPlugin.kt`)
   implementation("org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r")

@@ -18,12 +18,12 @@ plugins {
   id("org.jetbrains.dokka") version "1.5.31" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
 
   // Code Formatting
-  id("io.gitlab.arturbosch.detekt").version("1.19.0") // Adds: ./gradlew detekt
+  // id("io.gitlab.arturbosch.detekt") version "1.23.6" // Adds: ./gradlew detekt
   // id("org.cqfn.diktat.diktat-gradle-plugin") version "1.0.3" // Adds: ./gradlew diktatCheck
   id("org.jlleitschuh.gradle.ktlint") version "10.2.1" // Adds: ./gradlew ktlintCheck (requires disabling diktat)
 
   // Code Coverage
-  id("jacoco") // Adds: ./gradlew jacocoTestReport
+  id("jacoco") // version "0.8.7" (built into Gradle) // Adds: ./gradlew jacocoTestReport
   id("org.jetbrains.kotlinx.kover") version "0.5.0" // Adds: ./gradlew koverMergedHtmlReport
 
   // Dependency Versions and Licenses
@@ -123,11 +123,11 @@ ktlint {
 // }
 
 // https://github.com/detekt/detekt/blob/main/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
-detekt {
-  ignoreFailures = true
-  buildUponDefaultConfig = true
-  allRules = true
-}
+// detekt { // TODO: uncomment and fix
+//   ignoreFailures = true
+//   buildUponDefaultConfig = true
+//   allRules = true
+// }
 
 // ////////////////////////////////////////////////////////////////
 // Code Generation

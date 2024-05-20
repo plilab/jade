@@ -48,7 +48,7 @@ dependencies {
   implementation("ch.qos.logback:logback-classic:1.5.6")
 
   // Command-line argument parsing
-  implementation("com.github.ajalt.clikt:clikt:3.4.0")
+  implementation("com.github.ajalt.clikt:clikt:4.4.0")
 
   // Abstract Syntax Trees for the Java language
   implementation("com.github.javaparser:javaparser-core:3.25.10") // Main library

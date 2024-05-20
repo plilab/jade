@@ -3,7 +3,7 @@ package org.ucombinator.jade.main
 import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.*
-import com.github.ajalt.clikt.output.CliktHelpFormatter
+import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.arguments.*
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.*
@@ -42,6 +42,8 @@ fun main(args: Array<String>): Unit =
     // classOf[ManPageGenerator],
   ).main(args)
 
+// TODO: optionalValue()
+// TODO: varargValues()
 //   commandLine.setAbbreviatedOptionsAllowed(true)
 //   commandLine.setAbbreviatedSubcommandsAllowed(true)
 //   commandLine.setOverwrittenOptionsAllowed(true)
@@ -51,10 +53,14 @@ class Jade : CliktCommand() {
   init {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
     context {
-      helpFormatter = CliktHelpFormatter(
-        showRequiredTag = true,
-        showDefaultValues = true,
-      )
+      // TODO: color and other formatting in help messages
+      helpFormatter = {
+        MordantHelpFormatter(
+          it,
+          showRequiredTag = true,
+          showDefaultValues = true, // TODO: check
+        )
+      }
     }
   }
 
@@ -65,7 +71,7 @@ class Jade : CliktCommand() {
       Set the logging level where LEVEL is a comma-seperated list of LVL or NAME=LVL.
       LVL is one of (case insensitive): off info warning error debug trace all.
       NAME is a qualified package or class name and is relative to `org.ucombinator.jade` unless prefixed with `.`.
-    """
+    """.trimIndent()
   ).convert {
     it.split(",").map {
       val r = it.split("=", limit = 2)
@@ -122,6 +128,7 @@ class Jade : CliktCommand() {
 // /////////////////////////////////////////////////////////////
 // Sub-commands
 
+// TODO: `hidden` parameter
 class TestLog : CliktCommand() {
   class Bar {
     val log = Log {} // TODO: lazy?
@@ -144,12 +151,12 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
   // TODO: --long --short
   override fun run() {
     with(BuildInformation) {
-      println(
-        """$versionMessage
-          |Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
-          |Build time: $buildTime
-          |Dependencies:
-        """.trimMargin()
+      println("""
+          $versionMessage
+          Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
+          Build time: $buildTime
+          Dependencies:
+        """.trimIndent()
       )
     }
     for (d in BuildInformation.dependencies) {

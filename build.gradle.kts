@@ -38,9 +38,9 @@ dependencies {
   // Testing
   testImplementation(kotlin("test"))
 
-  detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6") // TODO: replace with ktlint
-  // TODO: detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.6")
-  // TODO: detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.6")
+  // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
+  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.6")
+  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.6")
 
   // NOTE: these are sorted alphabetically
 
@@ -114,12 +114,6 @@ ktlint {
   verbose.set(true)
   ignoreFailures.set(true)
   enableExperimentalRules.set(true)
-  disabledRules.set(
-    setOf(
-      "experimental:argument-list-wrapping",
-      "no-wildcard-imports",
-    )
-  )
   filter {
     exclude { it.file.path.startsWith("$buildDir" + File.separator) } // Avoid generated files
   }

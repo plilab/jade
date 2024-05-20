@@ -12,3 +12,7 @@ insert_final_newline = true
 
 [*.md]
 trim_trailing_whitespace = false
+
+[*.{kt,kts}]
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_no-wildcard-imports = disabled

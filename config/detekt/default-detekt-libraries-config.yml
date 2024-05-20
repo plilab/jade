@@ -1,0 +1,13 @@
+# From https://github.com/detekt/detekt/blob/v1.23.6/detekt-rules-libraries/src/main/resources/config/config.yml
+libraries:
+  active: true
+  ForbiddenPublicDataClass:
+    active: true
+    ignorePackages:
+      - '*.internal'
+      - '*.internal.*'
+  LibraryCodeMustSpecifyReturnType:
+    active: true
+    allowOmitUnit: false
+  LibraryEntitiesShouldNotBePublic:
+    active: true

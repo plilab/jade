@@ -37,6 +37,7 @@ dependencies {
 
   // Testing
   testImplementation(kotlin("test"))
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
 
   // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
   detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.6")

@@ -8,88 +8,92 @@ repositories {
 }
 
 plugins {
-  kotlin("jvm") // version "1.5.31"
+  kotlin("jvm") // version matches buildSrc/build.gradle.kts
   application
 
   // For parsing Java class and type signatures
   antlr
 
   // Documentation
-  id("org.jetbrains.dokka") version "1.5.31" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
+  id("org.jetbrains.dokka") version "1.9.20" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
 
   // Code Formatting
-  // id("io.gitlab.arturbosch.detekt") version "1.23.6" // Adds: ./gradlew detekt
-  // id("org.cqfn.diktat.diktat-gradle-plugin") version "1.0.3" // Adds: ./gradlew diktatCheck
-  id("org.jlleitschuh.gradle.ktlint") version "10.2.1" // Adds: ./gradlew ktlintCheck (requires disabling diktat)
+  id("com.saveourtool.diktat") version "2.0.0" // Adds: ./gradlew diktatCheck
+  id("io.gitlab.arturbosch.detekt") version "1.23.6" // Adds: ./gradlew detekt
+  id("org.jlleitschuh.gradle.ktlint") version "12.1.1" // Adds: ./gradlew ktlintCheck (TODO: requires disabling diktat)
 
   // Code Coverage
-  id("jacoco") // version "0.8.7" (built into Gradle) // Adds: ./gradlew jacocoTestReport
-  id("org.jetbrains.kotlinx.kover") version "0.5.0" // Adds: ./gradlew koverMergedHtmlReport
+  id("jacoco") // version built into Gradle // Adds: ./gradlew jacocoTestReport
+  id("org.jetbrains.kotlinx.kover") version "0.8.0" // Adds: ./gradlew koverMergedHtmlReport
 
   // Dependency Versions and Licenses
-  id("com.github.ben-manes.versions") version "0.42.0" // Adds: ./gradlew dependencyUpdates
-  id("com.github.jk1.dependency-license-report") version "2.1" // Adds: ./gradlew generateLicenseReport
+  id("com.github.ben-manes.versions") version "0.51.0" // Adds: ./gradlew dependencyUpdates
+  id("com.github.jk1.dependency-license-report") version "2.7" // Adds: ./gradlew generateLicenseReport
 }
 
 dependencies {
   // For parsing signatures
-  antlr("org.antlr:antlr4:4.9.3")
+  antlr("org.antlr:antlr4:4.13.1")
 
   // Testing
   testImplementation(kotlin("test"))
 
+  detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6") // TODO: replace with ktlint
+  // TODO: detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.6")
+  // TODO: detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.6")
+
   // NOTE: these are sorted alphabetically
 
   // Logging (see also io.github.microutils:kotlin-logging-jvm)
-  implementation("ch.qos.logback:logback-classic:1.2.6")
+  implementation("ch.qos.logback:logback-classic:1.5.6")
 
   // Command-line argument parsing
   implementation("com.github.ajalt.clikt:clikt:3.4.0")
 
   // Abstract Syntax Trees for the Java language
-  implementation("com.github.javaparser:javaparser-core:3.24.0") // Main library
-  implementation("com.github.javaparser:javaparser-core-serialization:3.24.0") // Serialization to/from JSON
-  implementation("com.github.javaparser:javaparser-symbol-solver-core:3.24.0") // Resolving symbols and identifiers
+  implementation("com.github.javaparser:javaparser-core:3.25.10") // Main library
+  implementation("com.github.javaparser:javaparser-core-serialization:3.25.10") // Serialization to/from JSON
+  implementation("com.github.javaparser:javaparser-symbol-solver-core:3.25.10") // Resolving symbols and identifiers
   // Omitting the JavaParser "parent" package as it is just metadata
   // Omitting the JavaParser "generator" and "metamodel" packages as they are just for building JavaParser
 
   // Google Cloud Storage (for accessing the Maven mirror)
-  implementation(platform("com.google.cloud:libraries-bom:24.3.0"))
-  implementation("com.google.cloud:google-cloud-storage")
+  implementation(platform("com.google.cloud:libraries-bom:26.39.0"))
+  implementation("com.google.cloud:google-cloud-storage:2.38.0")
 
   // Logging (see also ch.qos.logback:logback-classic)
-  implementation("io.github.microutils:kotlin-logging-jvm:2.1.21")
+  implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
 
   // Compressed files
-  implementation("org.apache.commons:commons-compress:1.21")
+  implementation("org.apache.commons:commons-compress:1.26.1")
 
   // For parallelizing access to Google Cloud Storage
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 
   // Vertex and edge graphs
-  implementation("org.jgrapht:jgrapht-core:1.5.1")
-  implementation("org.jgrapht:jgrapht-ext:1.5.1")
-  // implementation("org.jgrapht:jgrapht-guava:1.5.1")
-  implementation("org.jgrapht:jgrapht-io:1.5.1")
-  implementation("org.jgrapht:jgrapht-opt:1.5.1")
+  implementation("org.jgrapht:jgrapht-core:1.5.2")
+  implementation("org.jgrapht:jgrapht-ext:1.5.2")
+  // implementation("org.jgrapht:jgrapht-guava:1.5.2")
+  implementation("org.jgrapht:jgrapht-io:1.5.2")
+  implementation("org.jgrapht:jgrapht-opt:1.5.2")
 
   // `.class` file parsing and analysis
-  implementation("org.ow2.asm:asm:9.2")
-  implementation("org.ow2.asm:asm-analysis:9.2")
-  implementation("org.ow2.asm:asm-commons:9.2")
-  // implementation("org.ow2.asm:asm-test:9.2")
-  implementation("org.ow2.asm:asm-tree:9.2")
-  implementation("org.ow2.asm:asm-util:9.2")
+  implementation("org.ow2.asm:asm:9.7")
+  implementation("org.ow2.asm:asm-analysis:9.7")
+  implementation("org.ow2.asm:asm-commons:9.7")
+  // implementation("org.ow2.asm:asm-test:9.7")
+  implementation("org.ow2.asm:asm-tree:9.7")
+  implementation("org.ow2.asm:asm-util:9.7")
 
-
-  implementation("org.apache.maven.resolver:maven-resolver-api:1.7.3")
-  implementation("org.apache.maven.resolver:maven-resolver-spi:1.7.3")
-  implementation("org.apache.maven.resolver:maven-resolver-util:1.7.3")
-  implementation("org.apache.maven.resolver:maven-resolver-impl:1.7.3")
-  implementation("org.apache.maven.resolver:maven-resolver-connector-basic:1.7.3")
-  implementation("org.apache.maven.resolver:maven-resolver-transport-file:1.7.3")
-  implementation("org.apache.maven.resolver:maven-resolver-transport-http:1.7.3")
-  implementation("org.apache.maven:maven-resolver-provider:3.8.5")
+  // Maven
+  implementation("org.apache.maven.resolver:maven-resolver-api:1.9.20")
+  implementation("org.apache.maven.resolver:maven-resolver-spi:1.9.20")
+  implementation("org.apache.maven.resolver:maven-resolver-util:1.9.20")
+  implementation("org.apache.maven.resolver:maven-resolver-impl:1.9.20")
+  implementation("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.20")
+  implementation("org.apache.maven.resolver:maven-resolver-transport-file:1.9.20")
+  implementation("org.apache.maven.resolver:maven-resolver-transport-http:1.9.20")
+  implementation("org.apache.maven:maven-resolver-provider:3.9.6")
 }
 
 // ////////////////////////////////////////////////////////////////
@@ -106,6 +110,7 @@ apply<GitVersionPlugin>()
 
 // https://github.com/jlleitschuh/ktlint-gradle/blob/master/plugin/src/main/kotlin/org/jlleitschuh/gradle/ktlint/KtlintExtension.kt
 ktlint {
+  version.set("1.2.1")
   verbose.set(true)
   ignoreFailures.set(true)
   enableExperimentalRules.set(true)
@@ -115,19 +120,22 @@ ktlint {
       "no-wildcard-imports",
     )
   )
+  filter {
+    exclude { it.file.path.startsWith("$buildDir" + File.separator) } // Avoid generated files
+  }
 }
 
-// // https://github.com/analysis-dev/diktat/blob/master/diktat-gradle-plugin/src/main/kotlin/org/cqfn/diktat/plugin/gradle/DiktatExtension.kt
-// diktat {
-//   ignoreFailures = true
-// }
+// https://github.com/analysis-dev/diktat/blob/master/diktat-gradle-plugin/src/main/kotlin/org/cqfn/diktat/plugin/gradle/DiktatExtension.kt
+diktat {
+  ignoreFailures = true
+}
 
 // https://github.com/detekt/detekt/blob/main/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
-// detekt { // TODO: uncomment and fix
-//   ignoreFailures = true
-//   buildUponDefaultConfig = true
-//   allRules = true
-// }
+detekt {
+  ignoreFailures = true
+  buildUponDefaultConfig = true
+  allRules = true
+}
 
 // ////////////////////////////////////////////////////////////////
 // Code Generation

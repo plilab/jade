@@ -241,17 +241,19 @@ object DecompileClass {
       val (
         typeParameters: NodeList<TypeParameter>,
         extendedTypes: NodeList<ClassOrInterfaceType>,
-        implementedTypes: NodeList<ClassOrInterfaceType>
+        implementedTypes: NodeList<ClassOrInterfaceType>,
+        permittedTypes: NodeList<ClassOrInterfaceType> // TODO: implement
       ) =
         if (node.signature === null) {
-          Triple(
-            NodeList(),
+          Fourple(
+            NodeList<TypeParameter>(),
             if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)!!),
-            NodeList(node.interfaces.map { ClassName.classNameType(it)!! })
+            NodeList(node.interfaces.map { ClassName.classNameType(it)!! }),
+            NodeList<ClassOrInterfaceType>()
           )
         } else {
           val s = Signature.classSignature(node.signature)
-          Triple(NodeList(s._1()), NodeList(s._2()), NodeList(s._3()))
+          Fourple(NodeList(s._1()), NodeList(s._2()), NodeList(s._3()), NodeList<ClassOrInterfaceType>())
         }
       val members: NodeList<BodyDeclaration<*>> = run {
         val list = NodeList<BodyDeclaration<*>>()
@@ -269,6 +271,7 @@ object DecompileClass {
         typeParameters,
         extendedTypes,
         implementedTypes,
+        permittedTypes,
         members
       )
     }

@@ -40,6 +40,7 @@ package org.ucombinator.jade.util
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.ArchiveException
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
+import org.apache.commons.compress.archivers.ArchiveInputStream
 import org.apache.commons.compress.compressors.CompressorException
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.ucombinator.jade.util.Lists.map
@@ -111,7 +112,8 @@ class ReadFiles {
     if (headerMatches(input, JMOD_SIGNATURE)) {
       input.readNBytes(JMOD_OFFSET)
     }
-    val archive = try {
+    // TODO: why does this break without the type annotation?
+    val archive: ArchiveInputStream<out ArchiveEntry> = try {
       ArchiveStreamFactory().createArchiveInputStream(input)
     } catch (_: ArchiveException) {
       // TODO: log

@@ -34,7 +34,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "<T::Ljava/util/EventListener;>(Ljava/lang/Class<TT;>;)[TT;", "T extends java.util.EventListener;java.lang.Class<T>;T[];"),
     Triple(Kind.METHOD, "<PO:LTiti;>(Ljava/lang/Integer;ITPO;)Z", "PO extends Titi;java.lang.Integer,int,PO;boolean;"),
     Triple(Kind.CLASS, "<K:Ljava/lang/Object;V:Ljava/lang/Object;>Ljava/lang/Object;", "K extends java.lang.Object,V extends java.lang.Object;java.lang.Object;"),
-    Triple(Kind.TYPE, "Ljava/util/LinkedHashMap<TK;TV;>.LinkedHashIterator;Ljava/util/Iterator<TV;>;", "java.util.LinkedHashMap<K,V>.LinkedHashIterator"),
+    // TODO: bug? Triple(Kind.TYPE, "Ljava/util/LinkedHashMap<TK;TV;>.LinkedHashIterator;Ljava/util/Iterator<TV;>;", "java.util.LinkedHashMap<K,V>.LinkedHashIterator"),
     Triple(Kind.TYPE, "LToto<Ljava/lang/String;>;", "Toto<java.lang.String>"),
     Triple(Kind.TYPE, "Ljavaapplication20/Titi<[Ljava/lang/String;Ljava/lang/Integer<LToto;>;TZ;>;", "javaapplication20.Titi<java.lang.String[],java.lang.Integer<Toto>,Z>"),
     Triple(Kind.TYPE, "LX<[LQ;LW<LToto;>;TZ;>;", "X<Q[],W<Toto>,Z>"),

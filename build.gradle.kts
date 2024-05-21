@@ -13,6 +13,7 @@ plugins {
 
   // For parsing Java class and type signatures
   antlr
+  id("org.javacc.javacc") version "3.0.2"
 
   // Documentation
   id("org.jetbrains.dokka") version "1.9.20" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}

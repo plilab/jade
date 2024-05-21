@@ -9,16 +9,60 @@ import org.antlr.v4.runtime.ListTokenSource
 import org.ucombinator.jade.classfile.SignatureParser.* // ktlint-disable no-unused-imports no-wildcard-imports
 import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Tuples.Fourple
+import org.objectweb.asm.util.TraceSignatureVisitor
+import org.objectweb.asm.signature.SignatureReader
 
 object Signature {
-  fun typeSignature(string: String): Type =
-    convert(parser(string).javaTypeSignature())
+  fun typeSignature(string: String): Type {
+    // println("+++++++++++++++++++++++++++++++")
+    // println("type: $string")
+    // val cont = TopCont()
+    // SignatureReader(string).acceptType(JadeSignatureVisitor(0, cont))
+    val r = convert(parser(string).javaTypeSignature())
+    // val tv = TypeSignatureReceiver()
+    // SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor(0, tv)))
+    // println("result: ${cont.result}")
+    // println("resul2: ${r}")
+    // println("resul3: ${tv.result}")
+    // if ("${cont.result}" != "${r}") println("difference1")
+    // if ("${tv.result}" != "${r}") println("difference2")
+    // println("-------------------------------")
+    return r
+  }
 
-  fun classSignature(string: String): Triple<List<TypeParameter>, ClassOrInterfaceType, List<ClassOrInterfaceType>> =
-    convert(parser(string).classSignature())
+  fun classSignature(string: String): Triple<List<TypeParameter>, ClassOrInterfaceType, List<ClassOrInterfaceType>> {
+    // println("+++++++++++++++++++++++++++++++")
+    // println("class: $string")
+    // val cont = TopCont()
+    // SignatureReader(string).accept(JadeSignatureVisitor(0, cont))
+    val r = convert(parser(string).classSignature())
+    // val csv = ClassSignatureVisitor(0)
+    // SignatureReader(string).accept(DelegatingSignatureVisitor(csv))
+    // val r3 = Triple(csv.typeParameters, csv.superclass, csv.interfaces)
+    // println("result: ${cont.result}")
+    // println("resul2: ${r}")
+    // println("resul3: ${r3}")
+    // if ("${r3}" != "${r}") println("difference2")
+    // println("-------------------------------")
+    return r
+  }
 
-  fun methodSignature(string: String): Fourple<List<TypeParameter>, List<Type>, Type, List<ReferenceType>> =
-    convert(parser(string).methodSignature())
+  fun methodSignature(string: String): Fourple<List<TypeParameter>, List<Type>, Type, List<ReferenceType>> {
+    // println("+++++++++++++++++++++++++++++++")
+    // println("method: $string")
+    // val cont = TopCont()
+    // SignatureReader(string).accept(JadeSignatureVisitor(0, cont))
+    val r = convert(parser(string).methodSignature())
+    // val msv = MethodSignatureVisitor(0)
+    // SignatureReader(string).accept(DelegatingSignatureVisitor(msv))
+    // val r3 = Fourple(msv.typeParameters, msv.parameterTypes, msv.returnType, msv.exceptionTypes)
+    // println("result: ${cont.result}")
+    // println("resul2: ${r}")
+    // println("resul3: ${r3}")
+    // if ("${r3}" != "${r}") println("difference2")
+    // println("-------------------------------")
+    return r
+  }
 
   private fun parser(string: String): SignatureParser =
     SignatureParser(CommonTokenStream(ListTokenSource(string.map { CommonToken(it.code, it.toString()) })))

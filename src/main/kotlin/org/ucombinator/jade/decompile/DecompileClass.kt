@@ -247,8 +247,8 @@ object DecompileClass {
         if (node.signature === null) {
           Fourple(
             NodeList<TypeParameter>(),
-            if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)!!),
-            NodeList(node.interfaces.map { ClassName.classNameType(it)!! }),
+            if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
+            NodeList(node.interfaces.map { ClassName.classNameType(it) }),
             NodeList<ClassOrInterfaceType>()
           )
         } else {

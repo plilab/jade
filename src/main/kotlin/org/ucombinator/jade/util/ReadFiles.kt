@@ -12,6 +12,7 @@ package org.ucombinator.jade.util
 // // TODO: caching
 // // TODO: http, https, ftp, sftp, scp, git
 // // TODO: gzip, tar, bzip2
+// TODO:    jar:file:///path/to/MyJar.jar!/mypkg/MyClass.class per javap
 
 // zip
 //   .apk

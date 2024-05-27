@@ -24,7 +24,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
         when (val size = edges.size) {
           0 -> false
           1 -> isDominator(tree, v1, tree.getEdgeTarget(edges.first()))
-          else -> Errors.impossibleValue(size)
+          else -> Errors.unmatchedValue(size)
         }
       }
 

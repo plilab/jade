@@ -317,7 +317,7 @@ object DecompileInsn {
         // InvokeDynamicInsnNode
         Opcodes.INVOKEDYNAMIC -> TODO() // TODO: lambda
         // TypeInsnNode
-        Opcodes.NEW -> DecompiledNew(ClassName.classNameType((node as TypeInsnNode).desc)!!) // TODO: pair with <init>
+        Opcodes.NEW -> DecompiledNew(ClassName.classNameType((node as TypeInsnNode).desc)) // TODO: pair with <init>
         // IntInsnNode
         Opcodes.NEWARRAY -> {
           val type = when ((node as IntInsnNode).operand) {

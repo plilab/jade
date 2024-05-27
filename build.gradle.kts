@@ -11,9 +11,6 @@ plugins {
   kotlin("jvm") // version matches buildSrc/build.gradle.kts
   application
 
-  // For parsing Java class and type signatures
-  antlr
-
   // Documentation
   id("org.jetbrains.dokka") version "1.9.20" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
 
@@ -32,9 +29,6 @@ plugins {
 }
 
 dependencies {
-  // For parsing signatures
-  antlr("org.antlr:antlr4:4.13.1")
-
   // Testing
   testImplementation(kotlin("test"))
   testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
@@ -135,40 +129,8 @@ detekt {
 // ////////////////////////////////////////////////////////////////
 // Code Generation
 
-val antlrCharVocab by tasks.registering {
-  doLast {
-    val antlr = tasks.generateGrammarSource
-    val dir = antlr.get().outputDirectory
-    dir.mkdirs()
-    val file = File(dir, "Character.tokens")
-
-    file.bufferedWriter().use { w ->
-      w.write("'\\0'=${0x0000}\n")
-      w.write("'\\b'=${0x0008}\n")
-      w.write("'\\t'=${0x0009}\n")
-      w.write("'\\n'=${0x000a}\n")
-      w.write("'\\f'=${0x000c}\n")
-      w.write("'\\r'=${0x000d}\n")
-      w.write("'\\\"'=${0x0022}\n")
-      w.write("'\\''=${0x0027}\n")
-      w.write("'\\\\'=${0x005c}\n")
-      for (i in 0 until 128) {
-        w.write("CHAR_x${"%02X".format(i)}=$i\n")
-        w.write("CHAR_u${"%04X".format(i)}=$i\n")
-        if (i >= 32 && i <= 126 && i.toChar() != '\'' && i.toChar() != '\\') {
-          w.write("'${i.toChar()}'=$i\n")
-        }
-      }
-    }
-  }
-}
-tasks.generateGrammarSource {
-  dependsOn(antlrCharVocab)
-  arguments.add("-no-listener")
-}
-
 fun generateSrc(fileName: String, code: String) {
-  val generatedSrcDir = File(buildDir, "generated/sources/jade/src/main/kotlin")
+  val generatedSrcDir = File(buildDir, "generated/sources/jade/src/main/kotlin") // TODO: move to generated-src
   generatedSrcDir.mkdirs()
   kotlin.sourceSets["main"].kotlin.srcDir(generatedSrcDir)
   val file = File(generatedSrcDir, fileName)
@@ -277,8 +239,6 @@ tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
 
 listOf("runKtlintCheckOverMainSourceSet", "runKtlintCheckOverTestSourceSet").forEach { name ->
   tasks.named(name).configure {
-    dependsOn(tasks.generateGrammarSource)
-    dependsOn(tasks.generateTestGrammarSource)
     dependsOn(generateClassfileFlags)
     dependsOn(generateBuildInfo)
   }
@@ -292,8 +252,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
   // be set to the same Java version.
   kotlinOptions { jvmTarget = project.java.targetCompatibility.toString() }
 
-  dependsOn(tasks.generateGrammarSource)
-  dependsOn(tasks.generateTestGrammarSource)
   dependsOn(generateClassfileFlags)
   dependsOn(generateBuildInfo)
 }

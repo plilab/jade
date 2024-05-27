@@ -9,22 +9,24 @@ import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 
 object ClassName {
-  fun className(string: String): Name =
-    string.split('/').fold<String, Name?>(null) { qualifier, identifier -> Name(qualifier, identifier) }!!
+  fun identifier(identifier: String): String = identifier.also { if (it.any { it in ".;[/<>:" }) TODO() }
+
+  fun identifiers(string: String): List<String> = string.split('/').map(::identifier)
+
+  fun className(string: String): Name = identifiers(string).fold(null, ::Name)!!
 
   fun classNameExpr(string: String): Expression =
-    string.split('/').fold(null) { qualifier, identifier ->
+    identifiers(string).map(::SimpleName).fold(null as Expression?) { qualifier, simpleName ->
       when (qualifier) {
-        null -> return NameExpr(SimpleName(identifier))
-        else -> return FieldAccessExpr(qualifier, /*TODO*/ NodeList(), SimpleName(identifier))
+        null -> NameExpr(simpleName)
+        else -> FieldAccessExpr(qualifier, /*TODO*/ NodeList(), simpleName)
       }
     }!!
 
-  fun classNameType(string: String): ClassOrInterfaceType? =
-    classNameType(className(string))
+  fun classNameType(string: String): ClassOrInterfaceType = classNameType(className(string))
 
   fun classNameType(name: Name): ClassOrInterfaceType = classNameTypeOrNull(name)!!
 
-  fun classNameTypeOrNull(name: Name?): ClassOrInterfaceType? =
+  private fun classNameTypeOrNull(name: Name?): ClassOrInterfaceType? =
     if (name === null) null else ClassOrInterfaceType(classNameTypeOrNull(name.qualifier.orElse(null)), name.identifier)
 }

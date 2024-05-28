@@ -23,7 +23,8 @@ object DownloadIndex {
     prefix: String? = null,
     startOffset: String? = null,
     flushFrequency: Long = 0L,
-  ) {
+  ): Unit {
+    // TODO: add auto-removal of indexFile
     val trueStartOffset =
       if (resume) {
         if (startOffset !== null) throw Exception("TODO")
@@ -35,6 +36,7 @@ object DownloadIndex {
         if (indexFile.exists()) throw Exception("TODO")
         startOffset
       }
+    // TODO: move this constant out
     val trueFlushFrequency = if (flushFrequency == 0L) { 1L shl 14 } else { flushFrequency }
 
     FileWriter(indexFile, true).buffered().use { writer ->
@@ -65,41 +67,17 @@ object DownloadIndex {
     }
   }
 
-  const val BUFSIZ = 8192
   fun lastFullLine(file: File): String {
     RandomAccessFile(file, "rw").use { input ->
-      var bytes = ByteArray(BUFSIZ)
-      fun findNewlineBefore(pos: Long): Long {
-        for (end in pos downTo 0 step bytes.size.toLong()) {
-          val start = end - bytes.size
-          input.seek(if (start < 0) 0 else start)
-          bytes.fill(0.toByte())
-          try {
-            input.readFully(bytes) // TODO: check count read, check if downTo goes to zero
-          } catch (_: EOFException) {}
-          val i = bytes.indexOf('\n'.code.toByte())
-          if (i >= 0) { // TODO: and not last byte
-            // read line starting from that '\n'
-            return start + i
-          }
-        }
-        return -1
-      }
+      fun newlineBefore(end: Long): Long? =
+        (end - 1 downTo 0).find { input.seek(it); input.readByte().toInt().toChar() == '\n' }
 
-      // Find the last '\n' (this is probably the last byte but we check in case an incomplete line was written)
-      val lastNewline = findNewlineBefore(input.length())
-      if (lastNewline < 0) return ""
-      // Find the second to last '\n'
-      val nextToLastNewline = findNewlineBefore(lastNewline)
-      if (nextToLastNewline < 0) return ""
+      // The last newline is probably the last byte but we check in case an incomplete line was written
+      val lastNewline = newlineBefore(input.length()) ?: return ""
+      val secondToLastNewline = newlineBefore(lastNewline) ?: return ""
 
-      input.seek(nextToLastNewline + 1L)
-      val lastLine = ByteArray((lastNewline - nextToLastNewline - 1L).toInt())
-      input.readFully(lastLine)
-
-      input.setLength(lastNewline + 1L)
-
-      return String(lastLine)
+      input.seek(secondToLastNewline + 1)
+      return input.readLine()
     }
   }
 }

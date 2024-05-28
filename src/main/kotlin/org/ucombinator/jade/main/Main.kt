@@ -27,6 +27,7 @@ import java.io.File
 // TODO: header/footer?
 // TODO: aliases, description, defaultValueProvider
 // TODO: have build generate documentation
+// TODO: throw ProgramResult(statusCode)
 
 fun main(args: Array<String>): Unit =
   Jade().subcommands(

@@ -2,6 +2,7 @@ package org.ucombinator.jade.maven
 
 import com.google.cloud.storage.Storage
 import org.ucombinator.jade.maven.googlecloudstorage.GcsBucket
+import org.ucombinator.jade.util.Log
 import java.io.EOFException
 import java.io.File
 import java.io.FileWriter
@@ -11,6 +12,8 @@ import java.io.RandomAccessFile
 // $ gsutil -o Credentials:gs_service_key_file=../smooth-splicer-342907-2a129f6f3cd4.json ls -l 'gs://maven-central/maven2/**'
 // TDOO: trailing commas
 object DownloadIndex {
+  private val log = Log {}
+
   fun main(
     indexFile: File,
     authFile: File? = null,
@@ -44,17 +47,20 @@ object DownloadIndex {
 
       val blobs = bucket.list(*options.toTypedArray()).iterateAll()
 
-      var count = 0L
       var checkStartOffset = resume
-      for (blob in blobs) {
-        if (maxResults != 0L && count >= maxResults) break
+      for ((index, blob) in blobs.withIndex()) {
+        if (maxResults != 0L && index >= maxResults) break
         if (checkStartOffset && blob.name == trueStartOffset) {
           checkStartOffset = false
           continue
         }
-        writer.write("${blob.name}\t${blob.size}\n")
-        count++
-        if (count % trueFlushFrequency == 0L) writer.flush()
+        val line = "${blob.name}\t${blob.size}"
+        log.debug { "writing line ${index}: ${line}" }
+        writer.write(line + "\n")
+        if (index % trueFlushFrequency == 0L) {
+          writer.flush()
+          log.info { "flushing line ${index}: ${line}" }
+        }
       }
     }
   }

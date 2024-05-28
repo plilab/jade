@@ -17,7 +17,7 @@ import org.slf4j.Logger as Slf4jLogger
 object Log {
   operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
   private val log = Log {}
-  const val PREFIX = "org.ucombinator.jade." // TODO: autodetect
+  const val PREFIX = "org.ucombinator.jade." // TODO: autodetect or take from BuildInfo
   fun getLog(name: String): LogbackLogger {
     val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name
     return LoggerFactory.getLogger(modifiedName) as LogbackLogger

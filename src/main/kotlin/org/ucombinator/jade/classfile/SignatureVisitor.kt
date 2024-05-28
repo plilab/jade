@@ -6,6 +6,8 @@ import org.objectweb.asm.signature.SignatureVisitor
 import org.objectweb.asm.Opcodes
 import org.ucombinator.jade.util.Errors
 
+// TODO: move code to Signature.kt
+
 // /////////////////////////////////////
 // Signature Visitors
 

@@ -21,8 +21,9 @@ object SignatureTest {
     Triple(Kind.TYPE, "L<;", null),
     Triple(Kind.TYPE, "L>;", null),
     Triple(Kind.TYPE, "L:;", null),
+    // TODO: test basic forms
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/LocalVariable/genericSignature/gensignature001.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/LocalVariable/genericSignature/gensignature001.java
     Triple(Kind.TYPE, "TT;", "T"),
     Triple(Kind.TYPE, "TN;", "N"),
     Triple(Kind.TYPE, "[TT;", "T[]"),
@@ -40,7 +41,7 @@ object SignatureTest {
     Triple(Kind.TYPE, "Ljava/util/List<+TT;>;", "java.util.List<? extends T>"),
     Triple(Kind.TYPE, "Ljava/util/List<+TN;>;", "java.util.List<? extends N>"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/ReferenceType/genericSignature/genericSignature001.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/ReferenceType/genericSignature/genericSignature001.java
     Triple(Kind.CLASS, "<T:Ljava/lang/Object;>Ljava/lang/Object;", "T extends java.lang.Object;java.lang.Object;"),
     Triple(Kind.CLASS, "<T1:Ljava/lang/Object;T2:Ljava/lang/Object;>Ljava/lang/Object;", "T1 extends java.lang.Object,T2 extends java.lang.Object;java.lang.Object;"),
     Triple(Kind.CLASS, "<T:Lnsk/jdi/ReferenceType/genericSignature/GS001_Class01;>Ljava/lang/Object;", "T extends nsk.jdi.ReferenceType.genericSignature.GS001_Class01;java.lang.Object;"),
@@ -48,7 +49,7 @@ object SignatureTest {
     Triple(Kind.CLASS, "<T1:Lnsk/jdi/ReferenceType/genericSignature/GS001_Class01;:Lnsk/jdi/ReferenceType/genericSignature/GS001_Interf01;T2:Lnsk/jdi/ReferenceType/genericSignature/GS001_Class02;:Lnsk/jdi/ReferenceType/genericSignature/GS001_Interf02;>Ljava/lang/Object;", "T1 extends nsk.jdi.ReferenceType.genericSignature.GS001_Class01&nsk.jdi.ReferenceType.genericSignature.GS001_Interf01,T2 extends nsk.jdi.ReferenceType.genericSignature.GS001_Class02&nsk.jdi.ReferenceType.genericSignature.GS001_Interf02;java.lang.Object;"),
     Triple(Kind.CLASS, "Lnsk/jdi/ReferenceType/genericSignature/GS001_Class06<Lnsk/jdi/ReferenceType/genericSignature/GS001_Class01;>;", ";nsk.jdi.ReferenceType.genericSignature.GS001_Class06<nsk.jdi.ReferenceType.genericSignature.GS001_Class01>;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/ReferenceType/genericSignature/genericSignature002.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/ReferenceType/genericSignature/genericSignature002.java
     Triple(Kind.CLASS, "<I:Ljava/lang/Object;>Ljava/lang/Object;", "I extends java.lang.Object;java.lang.Object;"),
     Triple(Kind.CLASS, "<I1:Ljava/lang/Object;I2:Ljava/lang/Object;>Ljava/lang/Object;", "I1 extends java.lang.Object,I2 extends java.lang.Object;java.lang.Object;"),
     Triple(Kind.CLASS, "<I::Lnsk/jdi/ReferenceType/genericSignature/GS002_Interf01;>Ljava/lang/Object;", "I extends nsk.jdi.ReferenceType.genericSignature.GS002_Interf01;java.lang.Object;"),
@@ -56,14 +57,14 @@ object SignatureTest {
     Triple(Kind.CLASS, "<I1:Lnsk/jdi/ReferenceType/genericSignature/GS002_Class00;:Lnsk/jdi/ReferenceType/genericSignature/GS002_Interf02;I2::Lnsk/jdi/ReferenceType/genericSignature/GS002_Interf02;>Ljava/lang/Object;", "I1 extends nsk.jdi.ReferenceType.genericSignature.GS002_Class00&nsk.jdi.ReferenceType.genericSignature.GS002_Interf02,I2 extends nsk.jdi.ReferenceType.genericSignature.GS002_Interf02;java.lang.Object;"),
     Triple(Kind.CLASS, "Ljava/lang/Object;Lnsk/jdi/ReferenceType/genericSignature/GS002_Interf03<Lnsk/jdi/ReferenceType/genericSignature/GS002_Class00;>;", ";java.lang.Object;nsk.jdi.ReferenceType.genericSignature.GS002_Interf03<nsk.jdi.ReferenceType.genericSignature.GS002_Class00>"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/genericSignature/genericSignature001.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/genericSignature/genericSignature001.java
     Triple(Kind.TYPE, "Lnsk/jdi/TypeComponent/genericSignature/GS001_Class06<Lnsk/jdi/TypeComponent/genericSignature/GS001_Class01;>;", "nsk.jdi.TypeComponent.genericSignature.GS001_Class06<nsk.jdi.TypeComponent.genericSignature.GS001_Class01>"),
     Triple(Kind.TYPE, "Lnsk/jdi/TypeComponent/genericSignature/GS001_Class07<Lnsk/jdi/TypeComponent/genericSignature/GS001_Class01;Lnsk/jdi/TypeComponent/genericSignature/GS001_Class02;>;", "nsk.jdi.TypeComponent.genericSignature.GS001_Class07<nsk.jdi.TypeComponent.genericSignature.GS001_Class01,nsk.jdi.TypeComponent.genericSignature.GS001_Class02>"),
     Triple(Kind.TYPE, "Lnsk/jdi/TypeComponent/genericSignature/GS001_Class08<Lnsk/jdi/TypeComponent/genericSignature/GS001_Class03;>;", "nsk.jdi.TypeComponent.genericSignature.GS001_Class08<nsk.jdi.TypeComponent.genericSignature.GS001_Class03>"),
     Triple(Kind.TYPE, "Lnsk/jdi/TypeComponent/genericSignature/GS001_Class09<Lnsk/jdi/TypeComponent/genericSignature/GS001_Class04;>;", "nsk.jdi.TypeComponent.genericSignature.GS001_Class09<nsk.jdi.TypeComponent.genericSignature.GS001_Class04>"),
     Triple(Kind.TYPE, "Lnsk/jdi/TypeComponent/genericSignature/GS001_Class10<Lnsk/jdi/TypeComponent/genericSignature/GS001_Class04;Lnsk/jdi/TypeComponent/genericSignature/GS001_Class05;>;", "nsk.jdi.TypeComponent.genericSignature.GS001_Class10<nsk.jdi.TypeComponent.genericSignature.GS001_Class04,nsk.jdi.TypeComponent.genericSignature.GS001_Class05>"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/genericSignature/genericSignature002.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/genericSignature/genericSignature002.java
     Triple(Kind.METHOD, "(Lnsk/jdi/TypeComponent/genericSignature/GS002_Class06<Lnsk/jdi/TypeComponent/genericSignature/GS002_Class01;>;)V", ";nsk.jdi.TypeComponent.genericSignature.GS002_Class06<nsk.jdi.TypeComponent.genericSignature.GS002_Class01>;void;"),
     Triple(Kind.METHOD, "(Lnsk/jdi/TypeComponent/genericSignature/GS002_Class06<Lnsk/jdi/TypeComponent/genericSignature/GS002_Class01;>;)Lnsk/jdi/TypeComponent/genericSignature/GS002_Class06<Lnsk/jdi/TypeComponent/genericSignature/GS002_Class01;>;", ";nsk.jdi.TypeComponent.genericSignature.GS002_Class06<nsk.jdi.TypeComponent.genericSignature.GS002_Class01>;nsk.jdi.TypeComponent.genericSignature.GS002_Class06<nsk.jdi.TypeComponent.genericSignature.GS002_Class01>;"),
     Triple(Kind.METHOD, "(Lnsk/jdi/TypeComponent/genericSignature/GS002_Class07<Lnsk/jdi/TypeComponent/genericSignature/GS002_Class01;Lnsk/jdi/TypeComponent/genericSignature/GS002_Class02;>;)V", ";nsk.jdi.TypeComponent.genericSignature.GS002_Class07<nsk.jdi.TypeComponent.genericSignature.GS002_Class01,nsk.jdi.TypeComponent.genericSignature.GS002_Class02>;void;"),
@@ -84,7 +85,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "<C1:Lnsk/jdi/TypeComponent/genericSignature/GS002_Class01;:Lnsk/jdi/TypeComponent/genericSignature/GS002_Interf01;C2:Lnsk/jdi/TypeComponent/genericSignature/GS002_Class02;:Lnsk/jdi/TypeComponent/genericSignature/GS002_Interf02;>(TC2;TC1;)V", "C1 extends nsk.jdi.TypeComponent.genericSignature.GS002_Class01&nsk.jdi.TypeComponent.genericSignature.GS002_Interf01,C2 extends nsk.jdi.TypeComponent.genericSignature.GS002_Class02&nsk.jdi.TypeComponent.genericSignature.GS002_Interf02;C2,C1;void;"),
     Triple(Kind.METHOD, "<C1:Lnsk/jdi/TypeComponent/genericSignature/GS002_Class01;:Lnsk/jdi/TypeComponent/genericSignature/GS002_Interf01;C2:Lnsk/jdi/TypeComponent/genericSignature/GS002_Class02;:Lnsk/jdi/TypeComponent/genericSignature/GS002_Interf02;>(TC2;TC1;)TC1;", "C1 extends nsk.jdi.TypeComponent.genericSignature.GS002_Class01&nsk.jdi.TypeComponent.genericSignature.GS002_Interf01,C2 extends nsk.jdi.TypeComponent.genericSignature.GS002_Class02&nsk.jdi.TypeComponent.genericSignature.GS002_Interf02;C2,C1;C1;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/signature/sign001.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/signature/sign001.java
     Triple(Kind.TYPE, "Z", "boolean"),
     Triple(Kind.TYPE, "[Z", "boolean[]"),
     Triple(Kind.TYPE, "[[Z", "boolean[][]"),
@@ -182,7 +183,7 @@ object SignatureTest {
     Triple(Kind.TYPE, "[Lnsk/jdi/TypeComponent/signature/ClassToCheck\$Inter;", "nsk.jdi.TypeComponent.signature.ClassToCheck\$Inter[]"),
     Triple(Kind.TYPE, "[[Lnsk/jdi/TypeComponent/signature/ClassToCheck\$Inter;", "nsk.jdi.TypeComponent.signature.ClassToCheck\$Inter[][]"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/signature/sign002.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/signature/sign002.java
     Triple(Kind.METHOD, "()V", ";;void;"),
     Triple(Kind.METHOD, "(Z[[S)Z", ";boolean,short[][];boolean;"),
     Triple(Kind.METHOD, "([ZZ)[Z", ";boolean[],boolean;boolean[];"),
@@ -298,7 +299,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "([Lnsk/jdi/TypeComponent/signature/sign002aClassToCheck\$Inter;)[Lnsk/jdi/TypeComponent/signature/sign002aClassToCheck\$Inter;", ";nsk.jdi.TypeComponent.signature.sign002aClassToCheck\$Inter[];nsk.jdi.TypeComponent.signature.sign002aClassToCheck\$Inter[];"),
     Triple(Kind.METHOD, "([[Lnsk/jdi/TypeComponent/signature/sign002aClassToCheck\$Inter;)[[Lnsk/jdi/TypeComponent/signature/sign002aClassToCheck\$Inter;", ";nsk.jdi.TypeComponent.signature.sign002aClassToCheck\$Inter[][];nsk.jdi.TypeComponent.signature.sign002aClassToCheck\$Inter[][];"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/signature/sign003.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdi/TypeComponent/signature/sign003.java
     Triple(Kind.METHOD, "()V", ";;void;"),
     Triple(Kind.METHOD, "(ID)V", ";int,double;void;"),
     Triple(Kind.METHOD, "([I[D)V", ";int[],double[];void;"),
@@ -310,7 +311,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "(Ljava/lang/Object;)V", ";java.lang.Object;void;"),
     Triple(Kind.METHOD, "([J)V", ";long[];void;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdwp/ReferenceType/SignatureWithGeneric/sigwithgeneric001.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jdwp/ReferenceType/SignatureWithGeneric/sigwithgeneric001.java
     Triple(Kind.CLASS, "<L:Ljava/lang/String;>Ljava/lang/Object;", "L extends java.lang.String;java.lang.Object;"),
     Triple(Kind.CLASS, "<A:Ljava/lang/Object;B:Ljava/lang/Integer;>Ljava/lang/Object;", "A extends java.lang.Object,B extends java.lang.Integer;java.lang.Object;"),
     Triple(Kind.CLASS, "<T:Ljava/lang/Object;>Ljava/lang/Object;Lnsk/jdwp/ReferenceType/SignatureWithGeneric/sigwithgeneric001if<TT;>;", "T extends java.lang.Object;java.lang.Object;nsk.jdwp.ReferenceType.SignatureWithGeneric.sigwithgeneric001if<T>"),
@@ -318,7 +319,7 @@ object SignatureTest {
     Triple(Kind.CLASS, "<E:Lnsk/jdwp/ReferenceType/SignatureWithGeneric/sigwithgeneric001e;:Lnsk/jdwp/ReferenceType/SignatureWithGeneric/sigwithgeneric001if;>Ljava/lang/Object;", "E extends nsk.jdwp.ReferenceType.SignatureWithGeneric.sigwithgeneric001e&nsk.jdwp.ReferenceType.SignatureWithGeneric.sigwithgeneric001if;java.lang.Object;"),
     Triple(Kind.CLASS, "<A1:Ljava/lang/Object;B1:Ljava/lang/Object;C1:Ljava/lang/Object;>Lnsk/jdwp/ReferenceType/SignatureWithGeneric/sigwithgeneric001d<TA1;>;Lnsk/jdwp/ReferenceType/SignatureWithGeneric/sigwithgeneric001if2<TA1;TB1;TC1;>;", "A1 extends java.lang.Object,B1 extends java.lang.Object,C1 extends java.lang.Object;nsk.jdwp.ReferenceType.SignatureWithGeneric.sigwithgeneric001d<A1>;nsk.jdwp.ReferenceType.SignatureWithGeneric.sigwithgeneric001if2<A1,B1,C1>"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jvmti/GetMethodName/methname003/methname003.cpp
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/hotspot/jtreg/vmTestbase/nsk/jvmti/GetMethodName/methname003/methname003.cpp
     Triple(Kind.METHOD, "(Lnsk/jvmti/GetMethodName/methname003b;)Lnsk/jvmti/GetMethodName/methname003b;", ";nsk.jvmti.GetMethodName.methname003b;nsk.jvmti.GetMethodName.methname003b;"),
     Triple(Kind.METHOD, "<L:Ljava/lang/String;>(Lnsk/jvmti/GetMethodName/methname003b<TL;>;)Lnsk/jvmti/GetMethodName/methname003b<Ljava/lang/String;>;", "L extends java.lang.String;nsk.jvmti.GetMethodName.methname003b<L>;nsk.jvmti.GetMethodName.methname003b<java.lang.String>;"),
     Triple(Kind.METHOD, "(Lnsk/jvmti/GetMethodName/methname003b;)Lnsk/jvmti/GetMethodName/methname003b;", ";nsk.jvmti.GetMethodName.methname003b;nsk.jvmti.GetMethodName.methname003b;"),
@@ -337,11 +338,11 @@ object SignatureTest {
     Triple(Kind.METHOD, "(Ljava/lang/Byte;Ljava/lang/Double;)V", ";java.lang.Byte,java.lang.Double;void;"),
     Triple(Kind.METHOD, "<A:Ljava/lang/Byte;B:Ljava/lang/Double;>(TA;TB;)V", "A extends java.lang.Byte,B extends java.lang.Double;A,B;void;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/reflect/Generics/TestBadSignatures.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/reflect/Generics/TestBadSignatures.java
     Triple(Kind.CLASS, "<T:Lfoo/tools/nsc/symtab/Names;Lfoo/tools/nsc/symtab/Symbols;", null),
     Triple(Kind.METHOD, "<E:Ljava/lang/Exception;>(TE;[Ljava/lang/RuntimeException;)V^[TE;", null),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/jdk/jfr/event/io/TestInstrumentation.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/jdk/jfr/event/io/TestInstrumentation.java
     Triple(Kind.METHOD, "(J)V", ";long;void;"),
     Triple(Kind.METHOD, "()I", ";;int;"),
     Triple(Kind.METHOD, "([B)I", ";byte[];int;"),
@@ -369,7 +370,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "(Ljava/nio/ByteBuffer;)I", ";java.nio.ByteBuffer;int;"),
     Triple(Kind.METHOD, "(Ljava/nio/ByteBuffer;)I", ";java.nio.ByteBuffer;int;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/jdk/classfile/SignaturesTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/jdk/classfile/SignaturesTest.java
     Triple(Kind.CLASS, "Ljava/util/LinkedHashMap<TK;TV;>.LinkedHashIterator;Ljava/util/Iterator<Ljava/util/Map\$Entry<TK;TV;>;>;", ";java.util.LinkedHashMap<K,V>.LinkedHashIterator;java.util.Iterator<java.util.Map\$Entry<K,V>>"),
     Triple(Kind.CLASS, "<K:Ljava/lang/Object;V:Ljava/lang/Object;>Ljava/util/AbstractMap<TK;TV;>;Ljava/util/concurrent/ConcurrentMap<TK;TV;>;Ljava/io/Serializable;", "K extends java.lang.Object,V extends java.lang.Object;java.util.AbstractMap<K,V>;java.util.concurrent.ConcurrentMap<K,V>,java.io.Serializable"),
     Triple(Kind.METHOD, "([BLjdk/internal/reflect/ConstantPool;Ljava/lang/Class<*>;[Ljava/lang/Class<+Ljava/lang/annotation/Annotation;>;)Ljava/util/Map<Ljava/lang/Class<+Ljava/lang/annotation/Annotation;>;Ljava/lang/annotation/Annotation;>;", ";byte[],jdk.internal.reflect.ConstantPool,java.lang.Class<?>,java.lang.Class<? extends java.lang.annotation.Annotation>[];java.util.Map<java.lang.Class<? extends java.lang.annotation.Annotation>,java.lang.annotation.Annotation>;"),
@@ -461,7 +462,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "<T::LA>()V", null),
     Triple(Kind.METHOD, "(TT;I)VI", null),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/tools/jlink/plugins/SignatureParserTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/tools/jlink/plugins/SignatureParserTest.java
     Triple(Kind.TYPE, "[Ljava/lang/String;", "java.lang.String[]"),
     Triple(Kind.TYPE, "[[[[[[[[[[Ljava/lang/String;", "java.lang.String[][][][][][][][][][]"),
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;:Ljava/lang/Comparable<-TT;>;>(Ljava/lang/String;Ljava/lang/Class<TT;>;TT;Ljava/lang/Comparable<-TT;>;Ljava/lang/Comparable<-TT;>;ZZ)V", "T extends java.lang.Object&java.lang.Comparable<? super T>;java.lang.String,java.lang.Class<T>,T,java.lang.Comparable<? super T>,java.lang.Comparable<? super T>,boolean,boolean;void;"),
@@ -504,7 +505,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>(TT;ILjava/lang/Long;)TT;^TT;", "T extends java.lang.Object;T,int,java.lang.Long;T;T"),
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>(TT;ILjava/lang/Long;)TT;^TT;^Ljava/lang/Exception;", "T extends java.lang.Object;T,int,java.lang.Long;T;T,java.lang.Exception"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/StringConcat/WellKnownTypeSignatures.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/StringConcat/WellKnownTypeSignatures.java
     Triple(Kind.METHOD, "(Ljava/lang/String;)Ljava/lang/String;", ";java.lang.String;java.lang.String;"),
     Triple(Kind.METHOD, "(Ljava/lang/Boolean;)Ljava/lang/String;", ";java.lang.Boolean;java.lang.String;"),
     Triple(Kind.METHOD, "(Ljava/lang/Character;)Ljava/lang/String;", ";java.lang.Character;java.lang.String;"),
@@ -523,7 +524,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "(D)Ljava/lang/String;", ";double;java.lang.String;"),
     Triple(Kind.METHOD, "(F)Ljava/lang/String;", ";float;java.lang.String;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/ConstructorTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/ConstructorTest.java
     Triple(Kind.CLASS, "<T:Ljava/lang/Object;>Ljava/lang/Object;", "T extends java.lang.Object;java.lang.Object;"),
     Triple(Kind.METHOD, "(TT;Z)V", ";T,boolean;void;"),
     Triple(Kind.METHOD, "(TT;B)V", ";T,byte;void;"),
@@ -554,11 +555,11 @@ object SignatureTest {
     Triple(Kind.METHOD, "<E::Ljava/lang/Runnable;>(TE;)V", "E extends java.lang.Runnable;E;void;"),
     Triple(Kind.METHOD, "<E:TT;>(TT;TE;)V", "E extends T;T,E;void;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/EnumTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/EnumTest.java
     Triple(Kind.CLASS, "Ljava/lang/Enum<LEnumTest;>;", ";java.lang.Enum<EnumTest>;"),
     Triple(Kind.METHOD, "()V", ";;void;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/ExceptionTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/ExceptionTest.java
     Triple(Kind.CLASS, "<Exc:Ljava/lang/RuntimeException;:Ljava/lang/Runnable;>Ljava/lang/Object;", "Exc extends java.lang.RuntimeException&java.lang.Runnable;java.lang.Object;"),
     Triple(Kind.METHOD, "<E:Ljava/lang/Exception;>()V^TE;", "E extends java.lang.Exception;;void;E"),
     Triple(Kind.METHOD, "<E:Ljava/lang/Exception;>(I)V^Ljava/io/IOException;^TE;^Ljava/io/IOError;", "E extends java.lang.Exception;int;void;java.io.IOException,E,java.io.IOError"),
@@ -572,7 +573,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "<E:Ljava/lang/Exception;>(J)V^Ljava/io/IOError;^TE;^Ljava/io/IOException;", "E extends java.lang.Exception;long;void;java.io.IOError,E,java.io.IOException"),
     Triple(Kind.METHOD, "<E:Ljava/lang/Exception;>(TE;)V", "E extends java.lang.Exception;E;void;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/FieldTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/FieldTest.java
     Triple(Kind.CLASS, "<T:Ljava/lang/Object;>Ljava/lang/Object;", "T extends java.lang.Object;java.lang.Object;"),
     Triple(Kind.TYPE, "Ljava/util/List<TT;>;", "java.util.List<T>"),
     Triple(Kind.TYPE, "Ljava/util/List<Ljava/util/Map<+TT;-TT;>;>;", "java.util.List<java.util.Map<? extends T,? super T>>"),
@@ -603,7 +604,7 @@ object SignatureTest {
     Triple(Kind.TYPE, "Ljava/util/Map<+[D-[D>;", "java.util.Map<? extends double[],? super double[]>"),
     Triple(Kind.TYPE, "Ljava/util/Map<+[Ljava/lang/Object;-[Ljava/lang/Object;>;", "java.util.Map<? extends java.lang.Object[],? super java.lang.Object[]>"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/InnerClassTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/InnerClassTest.java
     Triple(Kind.CLASS, "<T:Ljava/util/ArrayList<TT;>;:Ljava/lang/Runnable;>Ljava/lang/Object;", "T extends java.util.ArrayList<T>&java.lang.Runnable;java.lang.Object;"),
     Triple(Kind.CLASS, "LInnerClassTest\$1Local1;", ";InnerClassTest\$1Local1;"),
     Triple(Kind.CLASS, "LInnerClassTest\$1Local2<Ljava/util/ArrayList<TT;>;Ljava/util/Map<Ljava/util/ArrayList<TT;>;Ljava/util/ArrayList<TT;>;>;>;", ";InnerClassTest\$1Local2<java.util.ArrayList<T>,java.util.Map<java.util.ArrayList<T>,java.util.ArrayList<T>>>;"),
@@ -665,7 +666,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "()V^TE;", ";;void;E"),
     Triple(Kind.METHOD, "()TE;", ";;E;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/MethodParameterTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/MethodParameterTest.java
     Triple(Kind.CLASS, "<T:Ljava/lang/Object;>Ljava/lang/Object;", "T extends java.lang.Object;java.lang.Object;"),
     Triple(Kind.METHOD, "<E:TT;U::Ljava/util/List<TE;>;:Ljava/lang/Runnable;>(TT;Ljava/util/Set<-TE;>;Ljava/util/ArrayList<+Ljava/util/Set<TU;>;>;)V", "E extends T,U extends java.util.List<E>&java.lang.Runnable;T,java.util.Set<? super E>,java.util.ArrayList<? extends java.util.Set<U>>;void;"),
     Triple(Kind.METHOD, "<E:TT;U::Ljava/util/List<TE;>;:Ljava/lang/Runnable;>(TT;TU;Ljava/util/ArrayList<+Ljava/util/Set<TU;>;>;)V", "E extends T,U extends java.util.List<E>&java.lang.Runnable;T,U,java.util.ArrayList<? extends java.util.Set<U>>;void;"),
@@ -701,7 +702,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>(TT;[Ljava/lang/Object;)V", "T extends java.lang.Object;T,java.lang.Object[];void;"),
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>([TT;)V", "T extends java.lang.Object;T[];void;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/MethodTypeBoundTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/MethodTypeBoundTest.java
     Triple(Kind.CLASS, "<T:Ljava/lang/Object;>Ljava/lang/Object;", "T extends java.lang.Object;java.lang.Object;"),
     Triple(Kind.METHOD, "<E:Ljava/lang/String;:Ljava/lang/Runnable;:Ljava/util/Collection<+TT;>;>(TE;)TE;", "E extends java.lang.String&java.lang.Runnable&java.util.Collection<? extends T>;E;E;"),
     Triple(Kind.METHOD, "<E::Ljava/lang/Runnable;:Ljava/util/Collection<-TT;>;>(TE;)TE;", "E extends java.lang.Runnable&java.util.Collection<? super T>;E;E;"),
@@ -711,7 +712,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "<E:Ljava/util/LinkedList<TT;>;U:TE;>()V", "E extends java.util.LinkedList<T>,U extends E;;void;"),
     Triple(Kind.CLASS, "<T:Ljava/lang/Object;>Ljava/lang/Object;", "T extends java.lang.Object;java.lang.Object;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/ReturnTypeTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javac/classfiles/attributes/Signature/ReturnTypeTest.java
     Triple(Kind.CLASS, "<T:Ljava/awt/Frame;:Ljava/lang/Runnable;:Ljava/util/concurrent/Callable<[TT;>;>Ljava/lang/Object;", "T extends java.awt.Frame&java.lang.Runnable&java.util.concurrent.Callable<T[]>;java.lang.Object;"),
     Triple(Kind.METHOD, "(TT;)[B", ";T;byte[];"),
     Triple(Kind.METHOD, "(TT;)[S", ";T;short[];"),
@@ -785,7 +786,7 @@ object SignatureTest {
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>(TT;)D", "T extends java.lang.Object;T;double;"),
     Triple(Kind.METHOD, "<T:Ljava/lang/Object;>(TT;)Ljava/lang/Object;", "T extends java.lang.Object;T;java.lang.Object;"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javap/classfile/6888367/T6888367.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javap/classfile/6888367/T6888367.java
     Triple(Kind.TYPE, "LGenClss<LClss;>;", "GenClss<Clss>"),
     Triple(Kind.METHOD, "()LGenClss<LClss;>;", ";;GenClss<Clss>;"),
     Triple(Kind.METHOD, "()LGenClss<*>;", ";;GenClss<?>;"),

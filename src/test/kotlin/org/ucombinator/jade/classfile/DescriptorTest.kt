@@ -12,6 +12,13 @@ object DescriptorTest {
   val tests = listOf<Triple<Kind, String, String?>>( // ("descriptor type", "descriptor", "expected result" or null for invalid)
     Triple(Kind.FIELD, "", null),
     Triple(Kind.METHOD, "", null),
+    Triple(Kind.FIELD, "L.;", null),
+    Triple(Kind.FIELD, "L;;", null),
+    Triple(Kind.FIELD, "L[;", null),
+    Triple(Kind.FIELD, "L/;", null),
+    Triple(Kind.FIELD, "L<;", null),
+    Triple(Kind.FIELD, "L>;", null),
+    Triple(Kind.FIELD, "L:;", null),
     Triple(Kind.FIELD, "Z", "boolean"),
     Triple(Kind.FIELD, "C", "char"),
     Triple(Kind.FIELD, "B", "byte"),
@@ -26,7 +33,7 @@ object DescriptorTest {
     Triple(Kind.METHOD, "(ZJ[[Ljava/lang/Object;)[[Ljava/lang/Object;", "boolean,long,java.lang.Object[][];java.lang.Object[][]"),
     Triple(Kind.METHOD, "()V", ";void"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javap/classfile/6888367/T6888367.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/langtools/tools/javap/classfile/6888367/T6888367.java
     Triple(Kind.FIELD, "Z", "boolean"),
     Triple(Kind.FIELD, "B", "byte"),
     Triple(Kind.FIELD, "C", "char"),
@@ -66,13 +73,13 @@ object DescriptorTest {
     Triple(Kind.METHOD, "()V", ";void"),
     Triple(Kind.METHOD, "()V", ";void"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/access_test/pkg1/MethodTypeDescriptorAccessTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/access_test/pkg1/MethodTypeDescriptorAccessTest.java
     Triple(Kind.METHOD, "(Lpkg2/PublicClass;)Lpkg2/PublicClass;", "pkg2.PublicClass;pkg2.PublicClass"),
     Triple(Kind.METHOD, "()Lpkg2/NonPublicClass;", ";pkg2.NonPublicClass"),
     Triple(Kind.METHOD, "(Lpkg2/NonPublicClass;)I", "pkg2.NonPublicClass;int"),
     Triple(Kind.METHOD, "(Lpkg2/NonPublicClass;)I", "pkg2.NonPublicClass;int"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/boottest/java.base/java/lang/constant/ConstantUtilsTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/boottest/java.base/java/lang/constant/ConstantUtilsTest.java
     Triple(Kind.FIELD, ".", null),
     Triple(Kind.FIELD, ";", null),
     Triple(Kind.FIELD, "[", null),
@@ -81,7 +88,7 @@ object DescriptorTest {
     Triple(Kind.FIELD, ">", null),
     Triple(Kind.FIELD, "(V)V", null),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/ClassDescTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/ClassDescTest.java
     Triple(Kind.FIELD, "Ljava/lang/String;", "java.lang.String"),
     Triple(Kind.FIELD, "II", null),
     Triple(Kind.FIELD, "I;", null),
@@ -105,7 +112,7 @@ object DescriptorTest {
     Triple(Kind.FIELD, "java.lang.String", null),
     Triple(Kind.FIELD, "Ljava/lang/String;", "java.lang.String"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/DynamicCallSiteDescTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/DynamicCallSiteDescTest.java
     Triple(Kind.METHOD, "()I", ";int"),
     Triple(Kind.METHOD, "()I", ";int"),
     Triple(Kind.METHOD, "()I", ";int"),
@@ -116,7 +123,7 @@ object DescriptorTest {
     Triple(Kind.METHOD, "()I", ";int"),
     Triple(Kind.METHOD, "()I", ";int"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/MethodHandleDescTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/MethodHandleDescTest.java
     Triple(Kind.METHOD, "()Z", ";boolean"),
     Triple(Kind.METHOD, "()Z", ";boolean"),
     Triple(Kind.METHOD, "()Z", ";boolean"),
@@ -155,12 +162,12 @@ object DescriptorTest {
     Triple(Kind.METHOD, "()I", ";int"),
     Triple(Kind.METHOD, "()I", ";int"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/methodTypeDesc/ResolveConstantDesc.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/methodTypeDesc/ResolveConstantDesc.java
     Triple(Kind.METHOD, "()Ljdk/internal/misc/VM;", ";jdk.internal.misc.VM"),
     Triple(Kind.METHOD, "()Lsun/misc/Unsafe;", ";sun.misc.Unsafe"),
     Triple(Kind.METHOD, "()Ljdk/internal/access/SharedSecrets;", ";jdk.internal.access.SharedSecrets"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/MethodTypeDescTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/MethodTypeDescTest.java
     Triple(Kind.METHOD, "()II", null),
     Triple(Kind.METHOD, "()I;", null),
     Triple(Kind.METHOD, "(I;)", null),
@@ -173,10 +180,10 @@ object DescriptorTest {
     // Triple(Kind.METHOD, "(Ljava.lang.String;)V", null), // invalid descriptor but valid signature
     Triple(Kind.METHOD, "(java/lang/String)V", null),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/NameValidationTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/NameValidationTest.java
     Triple(Kind.METHOD, "()Z", ";boolean"),
 
-    // https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/SymbolicDescTest.java
+    // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/SymbolicDescTest.java
     Triple(Kind.FIELD, "Ljava/lang/String;", "java.lang.String"),
     Triple(Kind.FIELD, "Ljava/util/List;", "java.util.List"),
     Triple(Kind.FIELD, "I", "int"),

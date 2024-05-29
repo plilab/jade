@@ -9,7 +9,10 @@ import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 
 object ClassName {
-  fun identifier(identifier: String): String = identifier.also { if (it.any { it in ".;[/<>:" }) TODO() }
+  fun identifier(identifier: String): String = identifier.also {
+    if (it == "") throw IllegalArgumentException("Empty identifier")
+    if (it.any { it in ".;[/<>:" }) throw IllegalArgumentException("""Invalid identifier "${identifier}"""")
+  }
 
   fun identifiers(string: String): List<String> = string.split('/').map(::identifier)
 

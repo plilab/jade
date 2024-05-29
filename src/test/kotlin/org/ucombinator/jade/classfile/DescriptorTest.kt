@@ -3,13 +3,15 @@ package org.ucombinator.jade.classfile
 import com.github.javaparser.ast.type.PrimitiveType
 import com.github.javaparser.ast.type.Type
 import kotlin.test.*
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @Suppress("BACKTICKS_PROHIBITED")
 object DescriptorTest {
   // TODO: ktlint closing paren on same line
 
   enum class Kind { FIELD, METHOD }
-  val tests = listOf<Triple<Kind, String, String?>>( // ("descriptor type", "descriptor", "expected result" or null for invalid)
+  @JvmStatic fun tests() = listOf<Triple<Kind, String, String?>>( // ("descriptor type", "descriptor", "expected result" or null for invalid)
     Triple(Kind.FIELD, "", null),
     Triple(Kind.METHOD, "", null),
     Triple(Kind.FIELD, "L.;", null),
@@ -198,6 +200,7 @@ object DescriptorTest {
   )
 
   fun <T : Type> resultsToString(r: List<T>): String = r.joinToString(",") { it.asString() }
+
   fun parseDescriptor(kind: Kind, descriptor: String): String = when (kind) {
     Kind.FIELD -> Descriptor.fieldDescriptor(descriptor).asString()
     Kind.METHOD -> {
@@ -209,16 +212,6 @@ object DescriptorTest {
     }
   }
 
-  @Test fun `test descriptors`() {
-    for ((kind, descriptor, expectedResult) in tests) {
-      if (expectedResult == "") {
-        println("descriptor: $descriptor type: ${parseDescriptor(kind, descriptor)}")
-      } else if (expectedResult == null) {
-        // TODO: assertFailsWith<T> { parseDescriptor(kind, descriptor) }
-        assertFails { println("descriptor: $descriptor type: ${parseDescriptor(kind, descriptor)}") }
-      } else {
-        expect(expectedResult) { parseDescriptor(kind, descriptor) }
-      }
-    }
-  }
+  @ParameterizedTest @MethodSource("tests") fun `test descriptor`(test: Triple<Kind, String, String?>): Unit =
+    SignatureTest.test("descriptor", test, ::parseDescriptor)
 }

@@ -2,15 +2,15 @@ package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.type.Type
 import kotlin.test.*
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @Suppress("BACKTICKS_PROHIBITED", "LONG_LINE", "MaxLineLength")
 object SignatureTest {
-  @Suppress("WRONG_DECLARATIONS_ORDER")
-  enum class Kind { TYPE, CLASS, METHOD }
-
   // TODO: use "parameterized tests"
 
-  val tests = listOf<Triple<Kind, String, String?>>( // ("signature type", "signature", "expected result" or null for invalid)
+  enum class Kind { TYPE, CLASS, METHOD }
+  @JvmStatic fun tests() = listOf<Triple<Kind, String, String?>>( // ("signature type", "signature", "expected result" or null for invalid)
     Triple(Kind.TYPE, "", null),
     Triple(Kind.CLASS, "", null),
     Triple(Kind.METHOD, "", null),
@@ -814,8 +814,21 @@ object SignatureTest {
     Triple(Kind.TYPE, "LTest\$Y<TTY;>.S.S2<TTY;>;", "Test\$Y<TY>.S.S2<TY>"),
   )
 
+  fun <Kind> test(type: String, test: Triple<Kind, String, String?>, parse: (Kind, String) -> String): Unit {
+    val (kind, signature, expectedResult) = test
+    if (expectedResult == "") { // Don't run test; just print actual result
+      println("$type: $signature type: ${parse(kind, signature)}")
+    } else if (expectedResult == null) { // Expect an error
+      // NOTE: Printing the actual result if it doesn't fail to help with debugging the tests
+      assertFailsWith<IllegalArgumentException> { println("$type: $signature type: ${parse(kind, signature)}") }
+    } else {
+      expect(expectedResult) { parse(kind, signature) }
+    }
+  }
+
   // TODO: ktlint: <T: Type>
   fun <T : Type> resultsToString(r: List<T>): String = r.joinToString(",") { it.asString() }
+
   fun parseSignature(kind: Kind, signature: String): String = when (kind) {
     Kind.TYPE -> Signature.typeSignature(signature).asString()
     Kind.CLASS -> {
@@ -837,16 +850,6 @@ object SignatureTest {
     }
   }
 
-  @Test fun `test signatures`() {
-    for ((kind, signature, expectedResult) in tests) {
-      if (expectedResult == "") {
-        println("signature: $signature type: ${parseSignature(kind, signature)}")
-      } else if (expectedResult == null) {
-        // TODO: assertFailsWith<T> { parseSignature(kind, signature) }
-        assertFails { println("signature: $signature type: ${parseSignature(kind, signature)}") }
-      } else {
-        expect(expectedResult) { parseSignature(kind, signature) }
-      }
-    }
-  }
+  @ParameterizedTest @MethodSource("tests") fun `test signature`(test: Triple<Kind, String, String?>): Unit =
+    test("signature", test, ::parseSignature)
 }

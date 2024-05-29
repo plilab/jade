@@ -18,38 +18,39 @@ data class ClassSignature(val typeParameters: List<TypeParameter>, val superclas
 data class MethodSignature(val typeParameters: List<TypeParameter>, val parameterTypes: List<Type>, val returnType: Type, val exceptionTypes: List<ReferenceType>)
 
 object Signature {
-  fun typeSignature(string: String): Type {
-    // Check that SignatureReader parses to the end of the string
+  // TODO: document: Check that SignatureReader parses to the end of the string without error
+  private fun checkSignature(string: String, accept: (SignatureReader, SignatureWriter) -> Unit): Unit {
     val signatureWriter = SignatureWriter()
-    SignatureReader(string).acceptType(signatureWriter)
-    if (string != signatureWriter.toString()) TODO()
+    try {
+      accept(SignatureReader(string), signatureWriter)
+    } catch (e: StringIndexOutOfBoundsException) { throw IllegalArgumentException(e) }
+    val result = signatureWriter.toString()
+    if (!string.startsWith(result)) {
+      throw IllegalArgumentException("""Signature "${string}" reconstituted to "${result}"""")
+    } else if (result != string) {
+      throw IllegalArgumentException("""Unexpected characters "${string.removePrefix(result)}" at end of signature "${string}".""")
+    }
+  }
 
-    var result = null as Type? // TODO
-    SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor({ result = it; null })))
-    return result!!
+  fun typeSignature(string: String): Type {
+    checkSignature(string, SignatureReader::acceptType)
+    var type = null as Type?
+    SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor({ type = it; null })))
+    return type ?: throw IllegalArgumentException("""no type for signature "$string"""")
   }
 
   fun classSignature(string: String): Triple<List<TypeParameter>, ClassOrInterfaceType, List<ClassOrInterfaceType>> {
-    // Check that SignatureReader parses to the end of the string
-    val signatureWriter = SignatureWriter()
-    SignatureReader(string).accept(signatureWriter)
-    if (string != signatureWriter.toString()) TODO()
-
+    checkSignature(string, SignatureReader::accept)
     val visitor = ClassSignatureVisitor()
     SignatureReader(string).accept(DelegatingSignatureVisitor(visitor))
-    return Triple(visitor.typeParameters, visitor.superclass!!, visitor.interfaces)
+    return Triple(visitor.typeParameters, visitor.superclass ?: throw IllegalArgumentException("""no superclass for signature "$string""""), visitor.interfaces)
   }
 
   // TODO: rename arg to signature
   fun methodSignature(string: String): Fourple<List<TypeParameter>, List<Type>, Type, List<ReferenceType>> {
-    // Check that SignatureReader parses to the end of the string
-    val signatureWriter = SignatureWriter()
-    SignatureReader(string).accept(signatureWriter)
-    if (string != signatureWriter.toString()) TODO()
-
+    checkSignature(string, SignatureReader::accept)
     val visitor = MethodSignatureVisitor()
     SignatureReader(string).accept(DelegatingSignatureVisitor(visitor))
-    return Fourple(visitor.typeParameters, visitor.parameterTypes, visitor.returnType!!, visitor.exceptionTypes)
+    return Fourple(visitor.typeParameters, visitor.parameterTypes, visitor.returnType ?: throw IllegalArgumentException("""no return type for signature "$string""""), visitor.exceptionTypes)
   }
-  // TODO: ktlint: allow /////////////////
 }

@@ -7,6 +7,7 @@ import org.objectweb.asm.Opcodes
 import org.ucombinator.jade.util.Errors
 
 // TODO: move code to Signature.kt
+// TODO: ktlint: allow /////////////////
 
 // /////////////////////////////////////
 // Signature Visitors
@@ -36,22 +37,22 @@ data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) :
 // Delegate visitors
 
 open class DelegateSignatureVisitor {
-  open fun visitFormalTypeParameter(name: String): DelegateSignatureVisitor? { TODO() }
-  open fun visitClassBound(): DelegateSignatureVisitor? { TODO() }
-  open fun visitInterfaceBound(): DelegateSignatureVisitor? { TODO() }
-  open fun visitSuperclass(): DelegateSignatureVisitor? { TODO() }
-  open fun visitInterface(): DelegateSignatureVisitor? { TODO() }
-  open fun visitParameterType(): DelegateSignatureVisitor? { TODO() }
-  open fun visitReturnType(): DelegateSignatureVisitor? { TODO() }
-  open fun visitExceptionType(): DelegateSignatureVisitor? { TODO() }
-  open fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? { TODO() }
-  open fun visitTypeVariable(name: String): DelegateSignatureVisitor? { TODO() }
-  open fun visitArrayType(): DelegateSignatureVisitor? { TODO() }
-  open fun visitClassType(name: String): DelegateSignatureVisitor? { TODO() }
-  open fun visitInnerClassType(name: String): DelegateSignatureVisitor? { TODO() }
-  open fun visitTypeArgument(): DelegateSignatureVisitor? { TODO() }
-  open fun visitTypeArgument(wildcard: Char): DelegateSignatureVisitor? { TODO() }
-  open fun visitEnd(): DelegateSignatureVisitor? { TODO() }
+  open fun visitFormalTypeParameter(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitClassBound(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitInterfaceBound(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitSuperclass(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitInterface(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitParameterType(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitReturnType(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitExceptionType(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitTypeVariable(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitArrayType(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitClassType(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitInnerClassType(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitTypeArgument(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitTypeArgument(wildcard: Char): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitEnd(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
 }
 
 typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
@@ -70,7 +71,7 @@ abstract class FormalTypeParameterVisitor : DelegateSignatureVisitor() {
   override fun visitClassBound(): DelegateSignatureVisitor? =
     TypeSignatureVisitor { this.apply { typeParameters.last().getTypeBound().add(toTypeParameter(it)) } }
   override fun visitInterfaceBound(): DelegateSignatureVisitor? =
-    TypeSignatureVisitor { this.apply { typeParameters.last().getTypeBound().add(it as ClassOrInterfaceType) } }
+    TypeSignatureVisitor { this.apply { typeParameters.last().getTypeBound().add(it.cast<ClassOrInterfaceType>("non-interface in interface bound")) } }
 }
 
 // TODO: wrap in checked visitor and catch exceptions to detect malformed signatures (and add these to tests)
@@ -79,9 +80,9 @@ class ClassSignatureVisitor : FormalTypeParameterVisitor() {
   val interfaces = mutableListOf<ClassOrInterfaceType>()
 
   override fun visitSuperclass(): DelegateSignatureVisitor? =
-    TypeSignatureVisitor { this.apply { superclass = it as ClassOrInterfaceType } }
+    TypeSignatureVisitor { this.apply { superclass = it.cast<ClassOrInterfaceType>("non-class in superclass") } }
   override fun visitInterface(): DelegateSignatureVisitor? =
-    TypeSignatureVisitor { this.apply { interfaces.add(it as ClassOrInterfaceType) } }
+    TypeSignatureVisitor { this.apply { interfaces.add(it.cast<ClassOrInterfaceType>("non-class in interface")) } }
 }
 
 class MethodSignatureVisitor : FormalTypeParameterVisitor() {
@@ -90,11 +91,11 @@ class MethodSignatureVisitor : FormalTypeParameterVisitor() {
   val exceptionTypes = mutableListOf<ReferenceType>()
 
   override fun visitParameterType(): DelegateSignatureVisitor? =
-    TypeSignatureVisitor { this.apply { if (it is VoidType) TODO(); parameterTypes.add(it) } }
+    TypeSignatureVisitor { this.apply { if (it is VoidType) throw IllegalArgumentException("void in parameter type"); parameterTypes.add(it) } }
   override fun visitReturnType(): DelegateSignatureVisitor? =
     TypeSignatureVisitor { this.apply { returnType = it } }
   override fun visitExceptionType(): DelegateSignatureVisitor? =
-    TypeSignatureVisitor { this.apply { if (it is ArrayType) TODO(); exceptionTypes.add(it as ReferenceType) } }
+    TypeSignatureVisitor { this.apply { if (it is ArrayType) throw IllegalArgumentException("array in exception type"); exceptionTypes.add(it.cast<ReferenceType>("non-reference type in exception type")) } }
 }
 
 // TODO: TypeReceiver -> ClassOrInterfaceTypeReceiver??
@@ -113,6 +114,8 @@ class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSigna
 
 // /////////////////////////////////////
 // Helper functions
+
+private inline fun <reified T> Any.cast(message: String): T = this as? T ?: throw IllegalArgumentException(message)
 
 private fun descriptorToType(descriptor: Char): Type = when (descriptor) {
   'B' -> PrimitiveType.byteType()
@@ -143,8 +146,8 @@ private fun toTypeArgument(): Type = WildcardType()
 
 private fun toTypeArgument(wildcard: Char, type: Type): Type = when (wildcard) {
   // TODO: remove need for casts
-  SignatureVisitor.EXTENDS -> WildcardType(type as ReferenceType)
-  SignatureVisitor.SUPER -> WildcardType(null, type as ReferenceType, NodeList())
+  SignatureVisitor.EXTENDS -> WildcardType(type.cast<ReferenceType>("non-reference type in type parameter bound"))
+  SignatureVisitor.SUPER -> WildcardType(null, type.cast<ReferenceType>("non-reference type in type parameter bound"), NodeList())
   SignatureVisitor.INSTANCEOF -> type // TODO: this may be wrong
   else -> Errors.unmatchedValue(wildcard)
 }

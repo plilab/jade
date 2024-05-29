@@ -834,18 +834,18 @@ object SignatureTest {
     Kind.CLASS -> {
       val s = Signature.classSignature(signature)
       listOf(
-        resultsToString(s.first),
-        s.second.asString(),
-        resultsToString(s.third),
+        resultsToString(s.typeParameters),
+        s.superclass.asString(),
+        resultsToString(s.interfaces),
       ).joinToString(";")
     }
     Kind.METHOD -> {
       val s = Signature.methodSignature(signature) // TODO: destruct
       listOf(
-        resultsToString(s._1),
-        resultsToString(s._2),
-        s._3.asString(),
-        resultsToString(s._4),
+        resultsToString(s.typeParameters),
+        resultsToString(s.parameterTypes),
+        s.returnType.asString(),
+        resultsToString(s.exceptionTypes),
       ).joinToString(";")
     }
   }

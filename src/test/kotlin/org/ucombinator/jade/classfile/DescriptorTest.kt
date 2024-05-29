@@ -206,8 +206,8 @@ object DescriptorTest {
     Kind.METHOD -> {
       val s = Descriptor.methodDescriptor(descriptor)
       listOf(
-        resultsToString(s.first),
-        s.second.asString(),
+        resultsToString(s.parameterTypes),
+        s.returnType.asString(),
       ).joinToString(";")
     }
   }

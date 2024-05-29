@@ -18,6 +18,7 @@ import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.Flags
 import org.ucombinator.jade.classfile.Signature
+import org.ucombinator.jade.classfile.MethodSignature
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Lists.pairs
 import org.ucombinator.jade.util.Lists.tail
@@ -146,28 +147,28 @@ object DecompileClass {
       node.visibleTypeAnnotations,
       node.invisibleTypeAnnotations
     )
-    val descriptor: Pair<List<Type>, Type> = Descriptor.methodDescriptor(node.desc)
-    val sig = // : Fourple<List<TypeParameter>, List<Type>, Type, out List<ReferenceType>> =
+    val descriptor = Descriptor.methodDescriptor(node.desc)
+    val sig =
       if (node.signature === null) {
-        Fourple(listOf(), descriptor.first, descriptor.second, node.exceptions.map(ClassName::classNameType))
+        MethodSignature(listOf(), descriptor.parameterTypes, descriptor.returnType, node.exceptions.map(ClassName::classNameType))
       } else {
         Signature.methodSignature(node.signature)
       }
     val parameterNodes = nullToSeq(node.parameters)
-    if (node.parameters != null && sig._2.size != node.parameters.size) {
+    if (node.parameters != null && sig.parameterTypes.size != node.parameters.size) {
       // TODO: check if always in an enum
     }
-    val typeParameters: NodeList<TypeParameter> = NodeList(sig._1)
+    val typeParameters: NodeList<TypeParameter> = NodeList(sig.typeParameters)
     val ps =
       zipAll(
-        parameterTypes(descriptor._1(), sig._2, parameterNodes),
+        parameterTypes(descriptor.parameterTypes, sig.parameterTypes, parameterNodes),
         parameterNodes,
         nullToSeq(node.visibleParameterAnnotations.toList()),
         nullToSeq(node.invisibleParameterAnnotations.toList())
       ).withIndex()
-    val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig._2.size, it) })
-    val type: Type = sig._3
-    val thrownExceptions: NodeList<ReferenceType> = NodeList(sig._4)
+    val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig.parameterTypes.size, it) })
+    val type: Type = sig.returnType
+    val thrownExceptions: NodeList<ReferenceType> = NodeList(sig.exceptionTypes)
     val name: SimpleName = SimpleName(node.name)
     val body: BlockStmt = DecompileMethodBody.decompileBodyStub(node)
     val receiverParameter: ReceiverParameter? = null // TODO
@@ -245,6 +246,7 @@ object DecompileClass {
         permittedTypes: NodeList<ClassOrInterfaceType> // TODO: implement
       ) =
         if (node.signature === null) {
+          // TODO: maybe change Fourple to MethodSignature
           Fourple(
             NodeList<TypeParameter>(),
             if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
@@ -253,7 +255,7 @@ object DecompileClass {
           )
         } else {
           val s = Signature.classSignature(node.signature)
-          Fourple(NodeList(s._1()), NodeList(s._2()), NodeList(s._3()), NodeList<ClassOrInterfaceType>())
+          Fourple(NodeList(s.typeParameters), NodeList(s.superclass), NodeList(s.interfaces), NodeList<ClassOrInterfaceType>())
         }
       val members: NodeList<BodyDeclaration<*>> = run {
         val list = NodeList<BodyDeclaration<*>>()

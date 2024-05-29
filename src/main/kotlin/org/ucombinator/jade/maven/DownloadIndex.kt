@@ -57,11 +57,11 @@ object DownloadIndex {
           continue
         }
         val line = "${blob.name}\t${blob.size}"
-        log.debug { "writing line ${index}: ${line}" }
+        log.trace { "writing line ${index}: ${line}" }
         writer.write(line + "\n")
         if (index % trueFlushFrequency == 0L) {
           writer.flush()
-          log.info { "flushing line ${index}: ${line}" }
+          log.debug { "flushing line ${index}: ${line}" }
         }
       }
     }

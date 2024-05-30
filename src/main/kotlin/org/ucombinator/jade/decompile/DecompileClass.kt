@@ -1,6 +1,7 @@
 package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.DataKey
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.PackageDeclaration
@@ -30,6 +31,8 @@ import org.ucombinator.jade.util.Tuples._3
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 object DecompileClass {
+  val CLASS_NODE = object: DataKey<ClassNode>() {}
+  val METHOD_NODE = object: DataKey<MethodNode>() {}
   // TODO: ktlint: "${foo}"
 
   fun decompileLiteral(node: Any?): Expression? =
@@ -131,6 +134,7 @@ object DecompileClass {
 
   fun <A> nullToSeq(x: List<A>?): List<A> = if (x === null) listOf() else x
 
+  // TODO: rename node to methodNode
   fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
     // attr (ignore?)
     // instructions
@@ -163,8 +167,8 @@ object DecompileClass {
       zipAll(
         parameterTypes(descriptor.parameterTypes, sig.parameterTypes, parameterNodes),
         parameterNodes,
-        nullToSeq(node.visibleParameterAnnotations.toList()),
-        nullToSeq(node.invisibleParameterAnnotations.toList())
+        nullToSeq(node.visibleParameterAnnotations?.toList()), // TODO: combine ?. with nullToSeq
+        nullToSeq(node.invisibleParameterAnnotations?.toList())
       ).withIndex()
     val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig.parameterTypes.size, it) })
     val type: Type = sig.returnType
@@ -199,6 +203,7 @@ object DecompileClass {
           receiverParameter
         )
     }
+    bodyDeclaration.setData(METHOD_NODE, node)
     // TODO: Decompile.methods.add(bodyDeclaration to ((classNode, node)))
     return bodyDeclaration
   }
@@ -283,6 +288,8 @@ object DecompileClass {
       classOrInterfaceDeclaration.setImplementedTypes(NodeList())
     }
 
+    classOrInterfaceDeclaration.setData(CLASS_NODE, node)
+
     val types = NodeList<TypeDeclaration<*>>()
     types.add(classOrInterfaceDeclaration)
 
@@ -293,6 +300,7 @@ object DecompileClass {
     // TODO: ModuleRequireNode
     val module = null // TODO node.module
 
+    // TODO: maybe move CompilationUnit out of this function
     val compilationUnit = CompilationUnit(packageDeclaration, imports, types, module)
     JavaParser.setComment(compilationUnit, comment)
     Decompile.classes += compilationUnit to node

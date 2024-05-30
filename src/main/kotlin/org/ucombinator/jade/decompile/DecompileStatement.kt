@@ -182,12 +182,15 @@ object DecompileStatement {
     if (pendingOutside.isNotEmpty()) { Errors.fatal("Non-empty pending $pendingOutside") }
     val variables = ssa.insnVars.values.map(Pair<Var, List<Var>>::first) + ssa.phiInputs.keys
     fun decompileVarDecl(v: Var): Statement =
-      // TODO: modifiers
-      if (v.basicValue == null || v.basicValue.type == null) {
-        JavaParser.noop(v.toString())
-      } else {
-        val t = Descriptor.fieldDescriptor(v.basicValue.type.descriptor)
-        ExpressionStmt(VariableDeclarationExpr(t, v.name))
+      // TODO: handle the mutability and nullability of v.basicValue in a better way
+      v.basicValue.let { basicValue ->
+        // TODO: modifiers
+        if (basicValue == null || basicValue.type == null) {
+          JavaParser.noop(v.toString())
+        } else {
+          val t = Descriptor.fieldDescriptor(basicValue.type.descriptor)
+          ExpressionStmt(VariableDeclarationExpr(t, v.name))
+        }
       }
     val declarations = variables.map(::decompileVarDecl)
 

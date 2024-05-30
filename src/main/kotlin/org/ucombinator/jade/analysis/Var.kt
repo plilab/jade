@@ -5,8 +5,8 @@ import org.objectweb.asm.tree.analysis.Value
 import org.ucombinator.jade.asm.Insn
 
 sealed class Var(val name: String) : Value {
-  abstract val basicValue: BasicValue
-  override fun getSize(): Int = basicValue.size
+  abstract val basicValue: BasicValue?
+  override fun getSize(): Int = basicValue?.size ?: 0
 }
 
 // TODO: improve variable names (also use jvm bytecode debug info for variable names)
@@ -21,7 +21,7 @@ data class ReturnVar     (override val basicValue: BasicValue) :
   Var("returnVar") // TODO: used only for "expected" return type
 data class ExceptionVar  (override val basicValue: BasicValue, val insn: Insn) :
   Var("exceptionVar${insn.index()}")
-data class InstructionVar(override val basicValue: BasicValue, val insn: Insn) :
+data class InstructionVar(override val basicValue: BasicValue?, val insn: Insn) :
   Var("insnVar${insn.index()}")
 data class CopyVar       (override val basicValue: BasicValue, val insn: Insn, val version: Int) :
   Var("copyVar${insn.index()}_${version}")

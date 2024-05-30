@@ -87,7 +87,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
         if (!dfnum.contains(n)) {
           dfnum.put(n, N)
           vertex.set(N, n)
-          parent.put(n, p!!)
+          if (p != null) parent.put(n, p)
           N += 1
           for (w in successors(n)) {
             stack.add(Pair(n, w))
@@ -96,7 +96,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
       }
 
       // Iterate over nodes from bottom of DFS tree to top.
-      for (i in (N - 1) downTo 0) { // TODO: check boundry conditions
+      for (i in (N - 1) downTo 1) { // Do not include 0 because that is the root
         val n = vertex[i]!!
         val p = parent.getValue(n)
         var s = p

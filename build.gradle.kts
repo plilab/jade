@@ -17,7 +17,7 @@ plugins {
   // Code Formatting
   id("com.saveourtool.diktat") version "2.0.0" // Adds: ./gradlew diktatCheck
   id("io.gitlab.arturbosch.detekt") version "1.23.6" // Adds: ./gradlew detekt
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.1" // Adds: ./gradlew ktlintCheck (TODO: requires disabling diktat)
+  id("org.jlleitschuh.gradle.ktlint") version "12.1.1" // Adds: ./gradlew ktlintCheck
 
   // Code Coverage
   id("jacoco") // version built into Gradle // Adds: ./gradlew jacocoTestReport
@@ -104,27 +104,27 @@ apply<GitVersionPlugin>()
 // ////////////////////////////////////////////////////////////////
 // Code Formatting
 
-// https://github.com/jlleitschuh/ktlint-gradle/blob/master/plugin/src/main/kotlin/org/jlleitschuh/gradle/ktlint/KtlintExtension.kt
-ktlint {
-  version.set("1.2.1")
-  verbose.set(true)
-  ignoreFailures.set(true)
-  enableExperimentalRules.set(true)
-  filter {
-    exclude { it.file.path.startsWith("$buildDir" + File.separator) } // Avoid generated files
-  }
-}
-
-// https://github.com/analysis-dev/diktat/blob/master/diktat-gradle-plugin/src/main/kotlin/org/cqfn/diktat/plugin/gradle/DiktatExtension.kt
+// See https://github.com/saveourtool/diktat/blob/v2.0.0/diktat-gradle-plugin/src/main/kotlin/com/saveourtool/diktat/plugin/gradle/DiktatExtension.kt
 diktat {
   ignoreFailures = true
 }
 
-// https://github.com/detekt/detekt/blob/main/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
+// See https://github.com/detekt/detekt/blob/v1.23.6/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
 detekt {
   ignoreFailures = true
-  buildUponDefaultConfig = true
   allRules = true
+  buildUponDefaultConfig = true
+}
+
+// See https://github.com/JLLeitschuh/ktlint-gradle/blob/v12.1.1/plugin/src/main/kotlin/org/jlleitschuh/gradle/ktlint/KtlintExtension.kt
+ktlint {
+  version = "1.2.1"
+  verbose = true
+  ignoreFailures = true
+  enableExperimentalRules = true
+  filter {
+    exclude { it.file.path.startsWith("$buildDir" + File.separator) } // Avoid generated files
+  }
 }
 
 // ////////////////////////////////////////////////////////////////

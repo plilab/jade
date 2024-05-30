@@ -1,10 +1,8 @@
 package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.*
 import org.ucombinator.jade.util.Errors
-import org.ucombinator.jade.util.Tuples.Fourple
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureWriter
@@ -25,11 +23,8 @@ object Signature {
       accept(SignatureReader(string), signatureWriter)
     } catch (e: StringIndexOutOfBoundsException) { throw IllegalArgumentException(e) }
     val result = signatureWriter.toString()
-    if (!string.startsWith(result)) {
-      throw IllegalArgumentException("""Signature "${string}" reconstituted to "${result}"""")
-    } else if (result != string) {
-      throw IllegalArgumentException("""Unexpected characters "${string.removePrefix(result)}" at end of signature "${string}".""")
-    }
+    require(string.startsWith(result)) { """Signature "${string}" reconstituted to "${result}"""" }
+    require(string == result) { """Unexpected "${string.removePrefix(result)}" at end of signature "${string}".""" }
   }
 
   fun typeSignature(string: String): Type {
@@ -63,7 +58,7 @@ object Signature {
 // TODO: wrap in checked visitor and catch exceptions to detect malformed signatures (and add these to tests)
 // TODO: document: we use this so we can dynamically change what visitor is running
 data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : SignatureVisitor(Opcodes.ASM9) {
-  override fun visitFormalTypeParameter(name: String): Unit { delegate = delegate!!.visitFormalTypeParameter(name) }
+  override fun visitFormalTypeParameter(name: String) { delegate = delegate!!.visitFormalTypeParameter(name) }
   override fun visitClassBound(): SignatureVisitor { delegate = delegate!!.visitClassBound(); return this }
   override fun visitInterfaceBound(): SignatureVisitor { delegate = delegate!!.visitInterfaceBound(); return this }
   override fun visitSuperclass(): SignatureVisitor { delegate = delegate!!.visitSuperclass(); return this }
@@ -71,19 +66,20 @@ data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) :
   override fun visitParameterType(): SignatureVisitor { delegate = delegate!!.visitParameterType(); return this }
   override fun visitReturnType(): SignatureVisitor { delegate = delegate!!.visitReturnType(); return this }
   override fun visitExceptionType(): SignatureVisitor { delegate = delegate!!.visitExceptionType(); return this }
-  override fun visitBaseType(descriptor: Char): Unit { delegate = delegate!!.visitBaseType(descriptor) }
-  override fun visitTypeVariable(name: String): Unit { delegate = delegate!!.visitTypeVariable(name) }
+  override fun visitBaseType(descriptor: Char) { delegate = delegate!!.visitBaseType(descriptor) }
+  override fun visitTypeVariable(name: String) { delegate = delegate!!.visitTypeVariable(name) }
   override fun visitArrayType(): SignatureVisitor { delegate = delegate!!.visitArrayType(); return this }
-  override fun visitClassType(name: String): Unit { delegate = delegate!!.visitClassType(name) }
-  override fun visitInnerClassType(name: String): Unit { delegate = delegate!!.visitInnerClassType(name) }
-  override fun visitTypeArgument(): Unit { delegate = delegate!!.visitTypeArgument() }
+  override fun visitClassType(name: String) { delegate = delegate!!.visitClassType(name) }
+  override fun visitInnerClassType(name: String) { delegate = delegate!!.visitInnerClassType(name) }
+  override fun visitTypeArgument() { delegate = delegate!!.visitTypeArgument() }
   override fun visitTypeArgument(wildcard: Char): SignatureVisitor { delegate = delegate!!.visitTypeArgument(wildcard); return this }
-  override fun visitEnd(): Unit { delegate = delegate!!.visitEnd() }
+  override fun visitEnd() { delegate = delegate!!.visitEnd() }
 }
 
 // /////////////////////////////////////
 // Delegate visitors
 
+@Suppress("ThrowingExceptionsWithoutMessageOrCause")
 open class DelegateSignatureVisitor {
   open fun visitFormalTypeParameter(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
   open fun visitClassBound(): DelegateSignatureVisitor? { throw IllegalArgumentException() }

@@ -4,7 +4,7 @@ import java.io.File
 
 object AtomicWriteFile {
   fun write(file: File, string: String, mkdirs: Boolean = false) {
-    if (mkdirs) { file.parentFile.mkdirs() }
+    if (mkdirs) file.parentFile.mkdirs()
     val tmpFile = File.createTempFile(file.name + ".part-", "", file.parentFile)
     try {
       tmpFile.writeText(string)

@@ -11,7 +11,9 @@ object DescriptorTest {
   // TODO: ktlint closing paren on same line
 
   enum class Kind { FIELD, METHOD }
-  @JvmStatic fun tests() = listOf<Triple<Kind, String, String?>>( // ("descriptor type", "descriptor", "expected result" or null for invalid)
+  // Triple("descriptor type", "descriptor", "expected result" or null for invalid)
+  @Suppress("MaxLineLength")
+  @JvmStatic fun tests() = listOf<Triple<Kind, String, String?>>(
     Triple(Kind.FIELD, "", null),
     Triple(Kind.METHOD, "", null),
     Triple(Kind.FIELD, "L.;", null),
@@ -202,7 +204,7 @@ object DescriptorTest {
   fun <T : Type> resultsToString(r: List<T>): String = r.joinToString(",") { it.asString() }
 
   fun parseDescriptor(kind: Kind, descriptor: String): String = when (kind) {
-    Kind.FIELD -> Descriptor.fieldDescriptor(descriptor).asString()
+    Kind.FIELD -> { Descriptor.fieldDescriptor(descriptor).asString() }
     Kind.METHOD -> {
       val s = Descriptor.methodDescriptor(descriptor)
       listOf(
@@ -212,6 +214,6 @@ object DescriptorTest {
     }
   }
 
-  @ParameterizedTest @MethodSource("tests") fun `test descriptor`(test: Triple<Kind, String, String?>): Unit =
+  @ParameterizedTest @MethodSource("tests") fun `test descriptor`(test: Triple<Kind, String, String?>) =
     SignatureTest.test("descriptor", test, ::parseDescriptor)
 }

@@ -814,7 +814,7 @@ object SignatureTest {
     Triple(Kind.TYPE, "LTest\$Y<TTY;>.S.S2<TTY;>;", "Test\$Y<TY>.S.S2<TY>"),
   )
 
-  fun <Kind> test(type: String, test: Triple<Kind, String, String?>, parse: (Kind, String) -> String): Unit {
+  fun <Kind> test(type: String, test: Triple<Kind, String, String?>, parse: (Kind, String) -> String) {
     val (kind, signature, expectedResult) = test
     if (expectedResult == "") { // Don't run test; just print actual result
       println("$type: $signature type: ${parse(kind, signature)}")

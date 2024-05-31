@@ -11,9 +11,6 @@ import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
 import java.io.File
 
-// import mu.KotlinLogging
-// import org.ucombinator.jade.main.BuildInformation
-
 // TODO: analysis to ensure using only the canonical constructor (helps with
 // detecting forward version changes) (as a compiler plugin?)
 

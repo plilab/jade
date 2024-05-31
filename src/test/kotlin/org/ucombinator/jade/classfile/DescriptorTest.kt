@@ -1,19 +1,19 @@
 package org.ucombinator.jade.classfile
 
-import com.github.javaparser.ast.type.PrimitiveType
 import com.github.javaparser.ast.type.Type
-import kotlin.test.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import kotlin.test.*
 
 @Suppress("BACKTICKS_PROHIBITED")
 object DescriptorTest {
   // TODO: ktlint closing paren on same line
 
   enum class Kind { FIELD, METHOD }
-  // Triple("descriptor type", "descriptor", "expected result" or null for invalid)
-  @Suppress("MaxLineLength")
+
+  @Suppress("ktlint:standard:max-line-length", "ktlint:standard:argument-list-wrapping")
   @JvmStatic fun tests() = listOf<Triple<Kind, String, String?>>(
+    // Triple(descriptor kind, descriptor, expected result or null for invalid)
     Triple(Kind.FIELD, "", null),
     Triple(Kind.METHOD, "", null),
     Triple(Kind.FIELD, "L.;", null),
@@ -204,7 +204,7 @@ object DescriptorTest {
   fun <T : Type> resultsToString(r: List<T>): String = r.joinToString(",") { it.asString() }
 
   fun parseDescriptor(kind: Kind, descriptor: String): String = when (kind) {
-    Kind.FIELD -> { Descriptor.fieldDescriptor(descriptor).asString() }
+    Kind.FIELD -> Descriptor.fieldDescriptor(descriptor).asString()
     Kind.METHOD -> {
       val s = Descriptor.methodDescriptor(descriptor)
       listOf(

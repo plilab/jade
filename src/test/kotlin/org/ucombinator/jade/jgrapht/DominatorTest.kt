@@ -1,13 +1,10 @@
 package org.ucombinator.jade.jgrapht
 
-import org.jgrapht.Graph
 import org.jgrapht.graph.SimpleDirectedGraph
-import com.github.javaparser.ast.type.Type
 import kotlin.test.*
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 typealias V = Char
+
 object DominatorTest {
   @Test fun test() {
     val graph = SimpleDirectedGraph<V, Pair<V, V>>(Pair::class.java as Class<Pair<V, V>>)

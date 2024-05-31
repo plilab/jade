@@ -1,16 +1,23 @@
 package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.type.Type
-import kotlin.test.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import kotlin.test.*
 
-@Suppress("BACKTICKS_PROHIBITED", "LONG_LINE", "MaxLineLength")
+@Suppress("BACKTICKS_PROHIBITED")
 object SignatureTest {
   // TODO: use "parameterized tests"
 
   enum class Kind { TYPE, CLASS, METHOD }
-  @JvmStatic fun tests() = listOf<Triple<Kind, String, String?>>( // ("signature type", "signature", "expected result" or null for invalid)
+
+  @Suppress(
+    "ktlint:standard:argument-list-wrapping",
+    "ktlint:standard:max-line-length",
+    "MaxLineLength",
+  )
+  @JvmStatic fun tests() = listOf<Triple<Kind, String, String?>>(
+    // Triple(signature kind, signature, expected result or null for invalid)
     Triple(Kind.TYPE, "", null),
     Triple(Kind.CLASS, "", null),
     Triple(Kind.METHOD, "", null),

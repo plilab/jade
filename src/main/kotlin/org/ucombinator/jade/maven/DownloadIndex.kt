@@ -7,6 +7,7 @@ import java.io.File
 import java.io.FileWriter
 import java.io.RandomAccessFile
 
+// TODO: can this be parallelized?
 // TODO: repos/central/data is old version of maven2?
 // $ gsutil -o Credentials:gs_service_key_file=../smooth-splicer-342907-2a129f6f3cd4.json ls -l 'gs://maven-central/maven2/**'
 // TDOO: trailing commas

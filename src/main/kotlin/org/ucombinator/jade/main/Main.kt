@@ -195,11 +195,17 @@ class Decompile : CliktCommand(help = "Display information about how `jade` was 
 }
 
 class Compile : CliktCommand(help = "Compile a java file") {
+  // TODO: factor common parameters with Decompile
+  val files: List<File> by argument(
+    name = "PATH",
+    help = "Files or directories to compile",
+  ).file(mustExist = true).multiple(required = true)
+
   override fun run() {
     // TODO: Use a JavaAgent of a nested compiler to test whether the code compiles
     // TODO: Test whether it compiles under different Java versions
     // TODO: Back-off if compilation fails
-    TODO("implement compile")
+    org.ucombinator.jade.compile.Compile.main(files)
   }
 }
 

@@ -208,7 +208,7 @@
     # Is newline at the end of a file needed
     newlineAtEnd: true
     # If true: in parameter list when parameters are split by newline they are indented with two indentations instead of one
-    extendedIndentOfParameters: true
+    extendedIndentOfParameters: false
     # If true: if first parameter in parameter list is on the same line as opening parenthesis, then other parameters can be aligned with it
     alignedParameters: true
     # If true, expression bodies which begin on a separate line are indented
@@ -218,7 +218,7 @@
     # ij_kotlin_continuation_indent_for_expression_bodies in .editorconfig.
     extendedIndentForExpressionBodies: false
     # If true: if expression is split by newline after operator like +/-/`*`, then the next line is indented with two indentations instead of one
-    extendedIndentAfterOperators: true
+    extendedIndentAfterOperators: false
     # If true: when dot qualified expression starts on a new line, this line will be indented with two indentations instead of one
     extendedIndentBeforeDot: false
     # The indentation size for each file
@@ -247,9 +247,9 @@
   enabled: true
   configuration:
     # If the number of parameters on one line is more than this threshold, all parameters will be placed on separate lines.
-    maxParametersInOneLine: 10
+    maxParametersInOneLine: 1000 # Large value so it has no effect
     # 3 by default.
-    maxCallsInOneLine: 10
+    maxCallsInOneLine: 1000 # Large value so it has no effect
 # Checks trailing comma
 - name: TRAILING_COMMA
   enabled: true

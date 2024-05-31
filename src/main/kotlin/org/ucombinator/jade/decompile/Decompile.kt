@@ -9,7 +9,6 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.AnalyzerAdapter
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
-import org.ucombinator.jade.util.ReadFiles
 import org.ucombinator.jade.util.Log
 import java.io.File
 
@@ -40,18 +39,15 @@ object Decompile {
     val compilationUnit = decompileClassFile(file.toString(), file.toString(), classReader, 0)
     for (type in compilationUnit.types) {
       log.debug("type: ${type.javaClass}")
-      when (type) {
-        is ClassOrInterfaceDeclaration -> {
-          val classNode = type.getData(DecompileClass.CLASS_NODE)!!
-          // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
-          for (callable in type.constructors + type.methods) {
-            val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
-            DecompileMethodBody.decompileBody(classNode, methodNode, callable)
-            log.debug("method: $callable")
-          }
+      if (type is ClassOrInterfaceDeclaration) {
+        val classNode = type.getData(DecompileClass.CLASS_NODE)!!
+        // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
+        for (callable in type.constructors + type.methods) {
+          val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
+          DecompileMethodBody.decompileBody(classNode, methodNode, callable)
+          log.debug("method: $callable")
         }
-        else -> { TODO() }
-      }
+      } else { TODO() }
     }
 
     // val readFiles = ReadFiles()

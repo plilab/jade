@@ -149,7 +149,7 @@ object GenerateClassfileFlags {
     )
 
     for (flagsInfo in uniqueFlagInfos) {
-      val keyword = if (flagsInfo.keyword === null) null else "Modifier.Keyword.${flagsInfo.keyword.toUpperCase()}"
+      val keyword = if (flagsInfo.keyword === null) null else "Modifier.Keyword.${flagsInfo.keyword.uppercase()}"
       val extensions = flagExtensions.getValue(flagsInfo.accName).joinToString(", ") { "${it}Flag" }
 
       builder.append(
@@ -176,7 +176,7 @@ object GenerateClassfileFlags {
     builder.append("\n")
 
     for ((kind, _) in flagInfoGroups) {
-      val name = "${kind.substring(0, 1).toLowerCase()}${kind.substring(1)}Flags"
+      val name = "${kind.substring(0, 1).lowercase()}${kind.substring(1)}Flags"
       builder.append("  val $name: (Int) -> List<${kind}Flag> = fromInt(${kind}Mapping)\n")
     }
     builder.append("}\n")

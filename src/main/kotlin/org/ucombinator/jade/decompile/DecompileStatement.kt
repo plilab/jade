@@ -44,12 +44,7 @@ object DecompileStatement {
     // TODO: LocalClassDeclarationStmt
     val jumpTargets = cfg.graph // TODO: rename to insnOfLabel
       .vertexSet()
-      .flatMap { insn ->
-        when (val node = insn.insn) {
-          is LabelNode -> setOf(node.label to insn)
-          else -> setOf()
-        }
-      }
+      .flatMap { if (it.insn is LabelNode) setOf(it.insn.label to it) else setOf() }
       .toMap()
 
     // TODO: remove back edges
@@ -187,7 +182,7 @@ object DecompileStatement {
     }
 
     val (stmt, pendingOutside) = structuredBlock(cfg.entry)
-    if (pendingOutside.isNotEmpty()) { Errors.fatal("Non-empty pending $pendingOutside") }
+    if (pendingOutside.isNotEmpty()) Errors.fatal("Non-empty pending $pendingOutside")
     val variables = ssa.insnVars.values.map(Pair<Var, List<Var>>::first) + ssa.phiInputs.keys
     fun decompileVarDecl(v: Var): Statement =
       // TODO: handle the mutability and nullability of v.basicValue in a better way

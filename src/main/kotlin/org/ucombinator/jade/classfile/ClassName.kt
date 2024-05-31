@@ -9,9 +9,9 @@ import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 
 object ClassName {
-  fun identifier(identifier: String): String = identifier.also {
-    if (it == "") throw IllegalArgumentException("Empty identifier")
-    if (it.any { it in ".;[/<>:" }) throw IllegalArgumentException("""Invalid identifier "${identifier}"""")
+  fun identifier(identifier: String): String = identifier.apply {
+    require(this.isNotEmpty()) { "Empty identifier" }
+    require(!this.any { it in ".;[/<>:" }) { """Invalid identifier "${this}"""" }
   }
 
   fun identifiers(string: String): List<String> = string.split('/').map(::identifier)
@@ -20,10 +20,7 @@ object ClassName {
 
   fun classNameExpr(string: String): Expression =
     identifiers(string).map(::SimpleName).fold(null as Expression?) { qualifier, simpleName ->
-      when (qualifier) {
-        null -> NameExpr(simpleName)
-        else -> FieldAccessExpr(qualifier, /*TODO*/ NodeList(), simpleName)
-      }
+      if (qualifier == null) NameExpr(simpleName) else FieldAccessExpr(qualifier, /*TODO*/ NodeList(), simpleName)
     }!!
 
   fun classNameType(string: String): ClassOrInterfaceType = classNameType(className(string))

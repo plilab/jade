@@ -101,7 +101,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
       }
 
       // Iterate over nodes from bottom of DFS tree to top.
-      for (i in (num - 1) downTo 1) { // Do not include 0 because that is the root
+      for (i in num - 1 downTo 1) { // Do not include 0 because that is the root
         val n = vertex[i]!!
         val p = parent.getValue(n)
         var s = p

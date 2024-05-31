@@ -49,8 +49,8 @@ object Signature {
   fun typeSignature(string: String): Type {
     checkSignature(string, SignatureReader::acceptType)
     var type = null as Type?
-    SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor({ type = it; null })))
-    return type ?: throw IllegalArgumentException("""no type for signature "$string"""")
+    SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor { type = it; null }))
+    return requireNotNull(type) { """no type for signature "$string"""" }
   }
 
   fun classSignature(string: String): ClassSignature {
@@ -59,7 +59,7 @@ object Signature {
     SignatureReader(string).accept(DelegatingSignatureVisitor(visitor))
     return ClassSignature(
       visitor.typeParameters,
-      visitor.superclass ?: throw IllegalArgumentException("""no superclass for signature "$string""""),
+      requireNotNull(visitor.superclass) { """no superclass for signature "$string"""" },
       visitor.interfaces
     )
   }
@@ -72,7 +72,7 @@ object Signature {
     return MethodSignature(
       visitor.typeParameters,
       visitor.parameterTypes,
-      visitor.returnType ?: throw IllegalArgumentException("""no return type for signature "$string""""),
+      requireNotNull(visitor.returnType) { """no return type for signature "$string"""" },
       visitor.exceptionTypes
     )
   }
@@ -85,7 +85,7 @@ object Signature {
 
 // TODO: wrap in checked visitor and catch exceptions to detect malformed signatures (and add these to tests)
 // TODO: document: we use this so we can dynamically change what visitor is running
-@Suppress("ktlint:standard:blank-line-before-declaration", "ktlint:standard:statement-wrapping")
+@Suppress("ktlint:standard:blank-line-before-declaration", "ktlint:standard:statement-wrapping", "MaxLineLength")
 data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : SignatureVisitor(Opcodes.ASM9) {
   override fun visitFormalTypeParameter(name: String) { delegate = delegate!!.visitFormalTypeParameter(name) }
   override fun visitClassBound(): SignatureVisitor { delegate = delegate!!.visitClassBound(); return this }
@@ -129,10 +129,11 @@ open class DelegateSignatureVisitor {
 }
 
 typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
+@Suppress("LONG_LINE", "MaxLineLength")
 class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisitor() {
   override fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? = receiver(descriptorToType(descriptor))
   override fun visitTypeVariable(name: String): DelegateSignatureVisitor? = receiver(TypeParameter(ClassName.identifier(name)))
-  override fun visitArrayType(): DelegateSignatureVisitor? = TypeSignatureVisitor({ receiver(ArrayType(it)) })
+  override fun visitArrayType(): DelegateSignatureVisitor? = TypeSignatureVisitor { receiver(ArrayType(it)) }
   override fun visitClassType(name: String): DelegateSignatureVisitor? = ClassTypeVisitor(receiver, name)
 }
 
@@ -188,7 +189,7 @@ class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSigna
 // /////////////////////////////////////
 // Helper functions
 
-private inline fun <reified T> Any.cast(message: String): T = this as? T ?: throw IllegalArgumentException(message)
+private inline fun <reified T> Any.cast(message: String): T = requireNotNull(this as? T) { message }
 
 private fun descriptorToType(descriptor: Char): Type = when (descriptor) {
   'B' -> PrimitiveType.byteType()

@@ -59,19 +59,31 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
-data class CaretInVersionException(val artifact: Artifact) : Exception("Caret in version for artifact $artifact")
-data class DollarInCoordinateException(val artifact: Artifact) : Exception("Dollar in coordinate $artifact")
-data class DotInGroupIdException(val groupIdPath: String, val artifactId: String) : Exception("File path for groupId contains a dot: $groupIdPath (artifactId = $artifactId)")
-data class ModelParsingException(val file: File) : Exception("Could not parse POM file $file")
-data class NoVersioningTagException(val groupId: String, val artifactId: String) : Exception("No <versioning> tag in POM for $groupId:$artifactId")
-data class NoVersionsInVersioningTagException(val groupId: String, val artifactId: String) : Exception("No versions in POM for for $groupId:$artifactId")
-data class UnsolvableArtifactException(val groupId: String, val artifactId: String) : Exception("Skipped artifact with unsolvable dependencies: $groupId:$artifactId")
-// data class VersionDoesNotExistException(val artifact: Artifact, val e: ArtifactResolutionException) : Exception("Artifact version does not exist: $artifact", e)
-data class ArtifactWriteLockException(val artifact: Artifact, val e: IllegalStateException) : Exception("Could not aquire write lock for $artifact", e)
-data class MetadataWriteLockException(val metadata: Metadata, val e: IllegalStateException) : Exception("Could not aquire write lock for $metadata", e)
-data class SystemDependencyException(val root: Artifact, val dependency: Artifact) : Exception("Dependency on system provided artifact $dependency by $root")
+data class CaretInVersionException(val artifact: Artifact) :
+  Exception("Caret in version for artifact $artifact")
+data class DollarInCoordinateException(val artifact: Artifact) :
+  Exception("Dollar in coordinate $artifact")
+data class DotInGroupIdException(val groupIdPath: String, val artifactId: String) :
+  Exception("File path for groupId contains a dot: $groupIdPath (artifactId = $artifactId)")
+data class ModelParsingException(val file: File) :
+  Exception("Could not parse POM file $file")
+data class NoVersioningTagException(val groupId: String, val artifactId: String) :
+  Exception("No <versioning> tag in POM for $groupId:$artifactId")
+data class NoVersionsInVersioningTagException(val groupId: String, val artifactId: String) :
+  Exception("No versions in POM for for $groupId:$artifactId")
+data class UnsolvableArtifactException(val groupId: String, val artifactId: String) :
+  Exception("Skipped artifact with unsolvable dependencies: $groupId:$artifactId")
+// data class VersionDoesNotExistException(val artifact: Artifact, val e: ArtifactResolutionException) :
+//   Exception("Artifact version does not exist: $artifact", e)
+data class ArtifactWriteLockException(val artifact: Artifact, val e: IllegalStateException) :
+  Exception("Could not aquire write lock for $artifact", e)
+data class MetadataWriteLockException(val metadata: Metadata, val e: IllegalStateException) :
+  Exception("Could not aquire write lock for $metadata", e)
+data class SystemDependencyException(val root: Artifact, val dependency: Artifact) :
+  Exception("Dependency on system provided artifact $dependency by $root")
 
-data class CachedException(val name: String, val stackTrace: String) : Exception("CachedException: $name\n$stackTrace")
+data class CachedException(val name: String, val stackTrace: String) :
+  Exception("CachedException: $name\n$stackTrace")
 
 // $ find ~/a/local/jade2/maven '(' -name \*.part -o -name \*.lock -o -size 0 ')' -type f -print0 | xargs -0 rm -v
 // $ find ~/a/local/jade2/jar-lists/ -size 0 -type f -print0 | xargs -0 rm -v
@@ -102,10 +114,12 @@ object Exceptions {
 class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
   private val log = Log {}
 
-  val cache = Collections.synchronizedMap(object : LinkedHashMap<Fiveple<String, String, String, String, Nature>, Pair<String, String>>(16, 0.75F, true) {
-    override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, Nature>, Pair<String, String>>): Boolean =
-      this.size > 100_000
-  })
+  val cache = Collections.synchronizedMap(
+    object : LinkedHashMap<Fiveple<String, String, String, String, Nature>, Pair<String, String>>(16, 0.75F, true) {
+      override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, Nature>, Pair<String, String>>): Boolean =
+        this.size > 100_000
+    }
+  )
 
   override fun resolveMetadata(
     session: RepositorySystemSession,
@@ -168,10 +182,12 @@ class CachingArtifactResolver : ArtifactResolver {
   private val log = Log {}
 
   // val exists = Collections.synchronizedMap(mutableMapOf<Artifact, Boolean>())
-  val cache = Collections.synchronizedMap(object : LinkedHashMap<Fiveple<String, String, String, String, String>, Pair<String, String>>(16, 0.75F, true) {
-    override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, String>, Pair<String, String>>): Boolean =
-      this.size > 100_000
-  })
+  val cache = Collections.synchronizedMap(
+    object : LinkedHashMap<Fiveple<String, String, String, String, String>, Pair<String, String>>(16, 0.75F, true) {
+      override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, String>, Pair<String, String>>): Boolean =
+        this.size > 100_000
+    }
+  )
   override fun resolveArtifact(session: RepositorySystemSession, request: ArtifactRequest): ArtifactResult {
     if (
       request.artifact.groupId.contains("\${") ||
@@ -246,12 +262,14 @@ class CachingArtifactResolver : ArtifactResolver {
         }
       } catch (e: ArtifactResolutionException) {
         // if (!exists.containsKey(request.artifact)) {
-        //   val url = URL("https://mvnrepository.com/artifact/${request.artifact.groupId}/${request.artifact.artifactId}/${request.artifact.version}")
+        //   val url = URL("https://mvnrepository.com/artifact/${request.artifact.groupId}/" +
+        //     "${request.artifact.artifactId}/${request.artifact.version}")
         //   val connection = url.openConnection() as HttpURLConnection
         //   connection.setRequestMethod("HEAD")
         //   connection.setRequestProperty("User-Agent", "Mozilla/5.0")
         //   val responseCode = connection.responseCode
-        //   if (responseCode == HttpURLConnection.HTTP_FORBIDDEN) log.error { "MVNREPOSITORY FORBIDDEN: ${request.artifact} $url" }
+        //   if (responseCode == HttpURLConnection.HTTP_FORBIDDEN)
+        //     log.error { "MVNREPOSITORY FORBIDDEN: ${request.artifact} $url" }
         //   else exists.put(request.artifact, responseCode != HttpURLConnection.HTTP_NOT_FOUND)
         // }
         val ee = e // if (exists.getValue(request.artifact)) e else VersionDoesNotExistException(request.artifact, e)
@@ -672,10 +690,9 @@ class DownloadMaven(
     // TODO: try local first then log if having to hit remote
   }
 
-  fun getModel(file: File): Model {
-    return modelBuilder.buildRawModel(file, ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL, false).get()
+  fun getModel(file: File): Model =
+    modelBuilder.buildRawModel(file, ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL, false).get()
       ?: throw ModelParsingException(file)
-  }
 
   // TODO: rename extension to packaging
   fun getArtifact(
@@ -820,9 +837,8 @@ class DownloadMaven(
     return artifactRequests
   }
 
-  fun downloadDependencies(artifactRequests: List<Fiveple<String, String, String, String, String>>): List<ArtifactResult> {
-    return artifactRequests.map { getArtifact(it._1, it._2, it._3, it._4, it._5) }
-  }
+  fun downloadDependencies(artifactRequests: List<Fiveple<String, String, String, String, String>>): List<ArtifactResult> =
+    artifactRequests.map { getArtifact(it._1, it._2, it._3, it._4, it._5) }
 
   fun writeJarList(artifactResults: List<ArtifactResult>, jarListFile: File) {
     val builder = StringBuilder()
@@ -860,8 +876,7 @@ class DownloadMaven(
     }
 
     for (c in classes) {
-      if (e === null) { return false }
-      if (!c.isInstance(e)) { return false }
+      if (e === null || !c.isInstance(e)) return false
       e = e.cause
     }
     return e === null

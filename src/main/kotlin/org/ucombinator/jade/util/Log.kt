@@ -15,9 +15,9 @@ import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as Ol
 import org.slf4j.Logger as Slf4jLogger
 
 object Log {
-  operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
-
   private val log = Log {}
+
+  operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
 
   fun getLog(name: String): LogbackLogger {
     val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name
@@ -32,13 +32,6 @@ object Log {
   // }
   // fun childLog(name: String): ScalaLogger = {
   //   ScalaLogger(LoggerFactory.getLogger(log.underlying.getName + "." + name))
-  // }
-
-  // def getLog(name: String): LogbackLogger = {
-  //   val modifiedName =
-  //     if (name.isEmpty) { Slf4jLogger.ROOT_LOGGER_NAME }
-  //     else { name }
-  //   LoggerFactory.getLogger(modifiedName).asInstanceOf[LogbackLogger]
   // }
 
   fun listLoggers() {

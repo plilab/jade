@@ -11,7 +11,7 @@ object DescriptorTest {
 
   enum class Kind { FIELD, METHOD }
 
-  @Suppress("ktlint:standard:max-line-length", "ktlint:standard:argument-list-wrapping")
+  @Suppress("ktlint:standard:max-line-length", "ktlint:standard:argument-list-wrapping", "MaxLineLength")
   @JvmStatic fun tests() = listOf<Triple<Kind, String, String?>>(
     // Triple(descriptor kind, descriptor, expected result or null for invalid)
     Triple(Kind.FIELD, "", null),

@@ -319,7 +319,7 @@ object DecompileInsn {
         Opcodes.TABLESWITCH -> {
           val insn = node as TableSwitchInsnNode
           assert(insn.labels.size == insn.max - insn.min)
-          DecompiledSwitch((insn.labels.mapIndexed { i, l -> insn.min + i to l }).toMap(), insn.dflt)
+          DecompiledSwitch(insn.labels.mapIndexed { i, l -> insn.min + i to l }.toMap(), insn.dflt)
         }
         // LookupSwitch
         Opcodes.LOOKUPSWITCH -> {

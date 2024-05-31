@@ -1,7 +1,14 @@
 package org.ucombinator.jade.classfile
 
 import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.type.*
+import com.github.javaparser.ast.type.ArrayType
+import com.github.javaparser.ast.type.ClassOrInterfaceType
+import com.github.javaparser.ast.type.PrimitiveType
+import com.github.javaparser.ast.type.ReferenceType
+import com.github.javaparser.ast.type.Type
+import com.github.javaparser.ast.type.TypeParameter
+import com.github.javaparser.ast.type.VoidType
+import com.github.javaparser.ast.type.WildcardType
 import org.ucombinator.jade.util.Errors
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.signature.SignatureReader

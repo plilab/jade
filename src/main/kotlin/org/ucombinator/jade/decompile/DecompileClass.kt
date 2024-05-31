@@ -50,14 +50,11 @@ import org.ucombinator.jade.util.Lists.pairs
 import org.ucombinator.jade.util.Lists.tail
 import org.ucombinator.jade.util.Lists.zipAll
 import org.ucombinator.jade.util.Tuples.Fourple
-import org.ucombinator.jade.util.Tuples._1
-import org.ucombinator.jade.util.Tuples._2
-import org.ucombinator.jade.util.Tuples._3
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 object DecompileClass {
-  val CLASS_NODE = object: DataKey<ClassNode>() {}
-  val METHOD_NODE = object: DataKey<MethodNode>() {}
+  val CLASS_NODE = object : DataKey<ClassNode>() {}
+  val METHOD_NODE = object : DataKey<MethodNode>() {}
   // TODO: ktlint: "${foo}"
 
   fun decompileLiteral(node: Any?): Expression? =
@@ -141,19 +138,15 @@ object DecompileClass {
 
   fun parameterTypes(desc: List<Type>, sig: List<Type>, params: List<ParameterNode>): List<Type> =
     when {
-      desc.isNotEmpty() &&
-        params.isNotEmpty() && (
+      desc.isNotEmpty() && params.isNotEmpty() && (
         Flags.parameterFlags(params.first().access).contains(Flags.ACC_SYNTHETIC) ||
           Flags.parameterFlags(params.first().access).contains(Flags.ACC_MANDATED)
-        )
-      // TODO: Flags.checkParameter(access, Modifier)
-      -> listOf(desc.first()) + parameterTypes(desc.tail(), sig, params.tail())
-      desc.isNotEmpty() &&
-        sig.isNotEmpty() &&
-        params.isNotEmpty()
-      -> listOf(sig.first()) + parameterTypes(desc.tail(), sig.tail(), params.tail())
-      params.isEmpty()
-      -> sig
+      ) ->
+        // TODO: Flags.checkParameter(access, Modifier)
+        listOf(desc.first()) + parameterTypes(desc.tail(), sig, params.tail())
+      desc.isNotEmpty() && sig.isNotEmpty() && params.isNotEmpty() ->
+        listOf(sig.first()) + parameterTypes(desc.tail(), sig.tail(), params.tail())
+      params.isEmpty() -> sig
       else -> throw Exception("failed to construct parameter types: $desc, $sig, $params")
     }
 
@@ -179,7 +172,12 @@ object DecompileClass {
     val descriptor = Descriptor.methodDescriptor(node.desc)
     val sig =
       if (node.signature === null) {
-        MethodSignature(listOf(), descriptor.parameterTypes, descriptor.returnType, node.exceptions.map(ClassName::classNameType))
+        MethodSignature(
+          listOf(),
+          descriptor.parameterTypes,
+          descriptor.returnType,
+          node.exceptions.map(ClassName::classNameType)
+        )
       } else {
         Signature.methodSignature(node.signature)
       }
@@ -209,7 +207,7 @@ object DecompileClass {
           modifiers,
           annotations,
           typeParameters,
-          SimpleName(ClassName.className(classNode.name).identifier) /*TODO*/,
+          SimpleName(ClassName.className(classNode.name).identifier), // TODO
           parameters,
           thrownExceptions,
           body,
@@ -252,8 +250,8 @@ object DecompileClass {
 
     val fullClassName: Name = ClassName.className(node.name)
 
-    val packageDeclaration =
-      PackageDeclaration(NodeList<AnnotationExpr>() /*TODO*/, fullClassName.qualifier.orElse(Name()))
+    // TODO: NodeList<AnnotationExpr>()
+    val packageDeclaration = PackageDeclaration(NodeList<AnnotationExpr>(), fullClassName.qualifier.orElse(Name()))
     val imports = NodeList<ImportDeclaration>() // TODO
 
     val classOrInterfaceDeclaration = run {
@@ -285,7 +283,12 @@ object DecompileClass {
           )
         } else {
           val s = Signature.classSignature(node.signature)
-          Fourple(NodeList(s.typeParameters), NodeList(s.superclass), NodeList(s.interfaces), NodeList<ClassOrInterfaceType>())
+          Fourple(
+            NodeList(s.typeParameters),
+            NodeList(s.superclass),
+            NodeList(s.interfaces),
+            NodeList<ClassOrInterfaceType>()
+          )
         }
       val members: NodeList<BodyDeclaration<*>> = run {
         val list = NodeList<BodyDeclaration<*>>()

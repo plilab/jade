@@ -32,6 +32,7 @@ import java.io.StringWriter
 
 object DecompileMethodBody {
   private val log = Log {}
+
   private fun stubBody(message: String, comment: BlockComment?): BlockStmt {
     val statements = NodeList<Statement>(
       JavaParser.setComment(
@@ -92,11 +93,7 @@ object DecompileMethodBody {
     }
   }
 
-  fun decompileBody(
-    classNode: ClassNode,
-    method: MethodNode,
-    declaration: BodyDeclaration<out BodyDeclaration<*>>
-  ) {
+  fun decompileBody(classNode: ClassNode, method: MethodNode, declaration: BodyDeclaration<out BodyDeclaration<*>>) {
     if (method.instructions.size() == 0) {
       // The method has no body as even methods with empty bodies have a `return` instruction
       this.log.debug("**** Method is has no body ****")

@@ -16,8 +16,9 @@ import org.slf4j.Logger as Slf4jLogger
 
 object Log {
   operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
+
   private val log = Log {}
-  const val PREFIX = "org.ucombinator.jade." // TODO: autodetect or take from BuildInfo
+
   fun getLog(name: String): LogbackLogger {
     val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name
     return LoggerFactory.getLogger(modifiedName) as LogbackLogger
@@ -33,12 +34,12 @@ object Log {
   //   ScalaLogger(LoggerFactory.getLogger(log.underlying.getName + "." + name))
   // }
 
-//   def getLog(name: String): LogbackLogger = {
-//     val modifiedName =
-//       if (name.isEmpty) { Slf4jLogger.ROOT_LOGGER_NAME }
-//       else { name }
-//     LoggerFactory.getLogger(modifiedName).asInstanceOf[LogbackLogger]
-//   }
+  // def getLog(name: String): LogbackLogger = {
+  //   val modifiedName =
+  //     if (name.isEmpty) { Slf4jLogger.ROOT_LOGGER_NAME }
+  //     else { name }
+  //   LoggerFactory.getLogger(modifiedName).asInstanceOf[LogbackLogger]
+  // }
 
   fun listLoggers() {
     // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
@@ -65,7 +66,6 @@ object Log {
 class RelativeLoggerConverter : ClassicConverter() {
   lateinit var prefix: String
 
-  // override fun start(): Unit {
   override fun start() {
     val x = getOptionList()
     assert(x.size == 1)

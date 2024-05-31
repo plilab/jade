@@ -14,9 +14,13 @@ import java.lang.reflect.Modifier
 
 data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable<Insn> {
   fun index(): Int = method.instructions.indexOf(insn)
+
   fun next(): Insn = Insn(method, insn.next)
+
   fun shortString(): String = InsnTextifier.shortString(method, insn)
+
   fun longString(): String = InsnTextifier.longString(method, insn)
+
   override fun toString(): String = InsnTextifier.longString(method, insn)
 
   // NOTE: valid only for Insn for the same method
@@ -37,8 +41,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
     private val methodVisitor = TraceMethodVisitor(this)
     private var insnList: InsnList? = null
 
-    fun shortString(method: MethodNode, insn: AbstractInsnNode): String =
-      shortString(method.instructions, insn)
+    fun shortString(method: MethodNode, insn: AbstractInsnNode): String = shortString(method.instructions, insn)
 
     fun shortString(insnList: InsnList, insn: AbstractInsnNode): String {
       // Ensure labels have the correct name
@@ -60,8 +63,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
       return string
     }
 
-    fun longString(method: MethodNode, insn: AbstractInsnNode): String =
-      longString(method.instructions, insn)
+    fun longString(method: MethodNode, insn: AbstractInsnNode): String = longString(method.instructions, insn)
 
     fun longString(insnList: InsnList, insn: AbstractInsnNode): String {
       val index = insnList.indexOf(insn)
@@ -80,17 +82,13 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
       return "$index:$string ($typeString)"
     }
 
-    val typeToInt: Map<String, Int> =
-      AbstractInsnNode::class.java.declaredFields
-        .filter {
-          // As of ASM 7.1, all final public static int members of AbstractInsNode are ones we want. Updates beware.
-          it.type == Int::class.java && it.modifiers == (Modifier.FINAL or Modifier.PUBLIC or Modifier.STATIC)
-        }
-        .map {
-          val x = (it[null] as Integer).toInt()
-          Pair<String, Int>(it.name, x)
-        }
-        .toMap()
+    val typeToInt: Map<String, Int> = AbstractInsnNode::class.java.declaredFields.filter {
+      // As of ASM 7.1, all final public static int members of AbstractInsNode are ones we want. Updates beware.
+      it.type == Int::class.java && it.modifiers == (Modifier.FINAL or Modifier.PUBLIC or Modifier.STATIC)
+    }.map {
+      val x = (it[null] as Integer).toInt()
+      Pair<String, Int>(it.name, x)
+    }.toMap()
 
     val intToType: Map<Int, String> = typeToInt.toList().map { it.second to it.first }.toMap()
   }

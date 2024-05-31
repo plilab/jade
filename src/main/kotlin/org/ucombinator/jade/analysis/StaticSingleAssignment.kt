@@ -78,8 +78,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     return this.returnTypeValue
   }
 
-  override fun newEmptyValue(local: Int): Var =
-    EmptyVar
+  override fun newEmptyValue(local: Int): Var = EmptyVar
 
   override fun newExceptionValue(
     tryCatchBlockNode: TryCatchBlockNode,
@@ -87,8 +86,8 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     exceptionType: Type
   ): Var =
     ExceptionVar(
-      TypedBasicInterpreter
-        .newExceptionValue(tryCatchBlockNode, handlerFrame as Frame<BasicValue>, exceptionType), // TODO: wrong cast?
+      // TODO: wrong cast?
+      TypedBasicInterpreter.newExceptionValue(tryCatchBlockNode, handlerFrame as Frame<BasicValue>, exceptionType),
       Insn(method, tryCatchBlockNode.handler)
     )
 

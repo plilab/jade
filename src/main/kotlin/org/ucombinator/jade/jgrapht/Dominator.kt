@@ -9,8 +9,11 @@ typealias DominatorTree<V> = Graph<V, Dominator.Edge<V>>
 
 data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
   private val lca = EulerTourRMQLCAFinder(tree, root)
+
   fun dominates(a: V, b: V): Boolean = lca.getLCA(a, b) == a
+
   fun dominatesSource(a: V, b: Dominator.Edge<V>): Boolean = lca.getLCA(a, tree.getEdgeSource(b)) == a
+
   fun dominatesTarget(a: V, b: Dominator.Edge<V>): Boolean = lca.getLCA(a, tree.getEdgeSource(b)) == a
 
   final data class Edge<V>(val source: V, val target: V)
@@ -42,10 +45,12 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
     fun <V, E> dominatorTree(graph: Graph<V, E>, start: V): DominatorTree<V> {
       // The original algorithm dealt in Ints, not Vs.
       fun successors(v: V): Iterable<V> = graph.outgoingEdgesOf(v).map(graph::getEdgeTarget)
+
       fun predecessors(v: V): Iterable<V> = graph.incomingEdgesOf(v).map(graph::getEdgeSource)
+
       val numNodes: Int = graph.vertexSet().size
 
-      var N = 0
+      var num = 0
 
       val bucket = mutableMapOf<V, Set<V>>() // buckets of nodes with the same sdom
       for (vertex in graph.vertexSet()) {
@@ -85,10 +90,10 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
       while (stack.isNotEmpty()) {
         val (p, n) = stack.removeLast()
         if (!dfnum.contains(n)) {
-          dfnum.put(n, N)
-          vertex.set(N, n)
+          dfnum.put(n, num)
+          vertex.set(num, n)
           if (p != null) parent.put(n, p)
-          N += 1
+          num += 1
           for (w in successors(n)) {
             stack.add(Pair(n, w))
           }
@@ -96,7 +101,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
       }
 
       // Iterate over nodes from bottom of DFS tree to top.
-      for (i in (N - 1) downTo 1) { // Do not include 0 because that is the root
+      for (i in (num - 1) downTo 1) { // Do not include 0 because that is the root
         val n = vertex[i]!!
         val p = parent.getValue(n)
         var s = p
@@ -134,7 +139,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
       }
 
       // Iterate and assign idom based on samedom. Order guarantees idom will be defined in time.
-      for (i in 0 until N) {
+      for (i in 0 until num) {
         val n = vertex[i]!!
         if (samedom.contains(n)) {
           idom.put(n, idom.getValue(samedom.getValue(n)))

@@ -2,12 +2,10 @@ package org.ucombinator.jade.maven
 
 import org.apache.http.conn.ssl.NoopHostnameVerifier
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
-import org.apache.maven.model.Model
 import org.apache.maven.model.building.DefaultModelBuilderFactory
 import org.apache.maven.model.building.ModelBuildingRequest
+import org.apache.maven.model.Model
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
-import org.eclipse.aether.RepositorySystem
-import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.artifact.DefaultArtifact
 import org.eclipse.aether.collection.CollectRequest
@@ -22,6 +20,8 @@ import org.eclipse.aether.metadata.Metadata.Nature
 import org.eclipse.aether.repository.LocalRepository
 import org.eclipse.aether.repository.RemoteRepository
 import org.eclipse.aether.repository.RepositoryPolicy
+import org.eclipse.aether.RepositorySystem
+import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest
 import org.eclipse.aether.resolution.ArtifactDescriptorResult
 import org.eclipse.aether.resolution.ArtifactRequest
@@ -35,20 +35,18 @@ import org.eclipse.aether.transfer.MetadataNotFoundException
 import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.util.artifact.JavaScopes
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer
+import org.eclipse.aether.util.graph.transformer.ConflictResolver
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner
+import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver
+import org.eclipse.aether.util.graph.transformer.JavaScopeSelector
+import org.eclipse.aether.util.graph.transformer.NearestVersionSelector
+import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector
 import org.eclipse.aether.util.repository.AuthenticationBuilder
 import org.eclipse.aether.util.version.GenericVersionScheme
 import org.ucombinator.jade.util.AtomicWriteFile
 import org.ucombinator.jade.util.Log
 import org.ucombinator.jade.util.Tuples.Fiveple
-import org.eclipse.aether.util.graph.transformer.ConflictResolver
-import org.eclipse.aether.util.graph.transformer.JavaScopeSelector
-import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector
-import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver
-import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer
-import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner
-
-import org.eclipse.aether.util.graph.transformer.NearestVersionSelector
-
 import java.io.File
 import java.io.FileInputStream
 import java.io.PrintWriter
@@ -57,7 +55,9 @@ import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 import kotlin.text.RegexOption
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 data class CaretInVersionException(val artifact: Artifact) : Exception("Caret in version for artifact $artifact")
 data class DollarInCoordinateException(val artifact: Artifact) : Exception("Dollar in coordinate $artifact")
@@ -107,8 +107,10 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
       this.size > 100_000
   })
 
-  override fun resolveMetadata(session: RepositorySystemSession, requests: MutableCollection<out MetadataRequest>): List<MetadataResult> =
-    requests.map { resolveMetadata(session, it) }
+  override fun resolveMetadata(
+    session: RepositorySystemSession,
+    requests: MutableCollection<out MetadataRequest>
+  ): List<MetadataResult> = requests.map { resolveMetadata(session, it) }
 
   fun resolveMetadata(session: RepositorySystemSession, request: MetadataRequest): MetadataResult {
     // log.error { "META: $request" }
@@ -261,14 +263,23 @@ class CachingArtifactResolver : ArtifactResolver {
     }
   }
 
-  override fun resolveArtifacts(session: RepositorySystemSession, requests: MutableCollection<out ArtifactRequest>): List<ArtifactResult> =
-    requests.map { resolveArtifact(session, it) }
+  override fun resolveArtifacts(
+    session: RepositorySystemSession,
+    requests: MutableCollection<out ArtifactRequest>
+  ): List<ArtifactResult> = requests.map { resolveArtifact(session, it) }
+
   companion object {
     var defaultArtifactResolver: ArtifactResolver? = null
   }
 }
 
-class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir: File, val reverse: Boolean, val shuffle: Boolean) {
+class DownloadMaven(
+  val indexFile: File,
+  val localRepoDir: File,
+  val jarListsDir: File,
+  val reverse: Boolean,
+  val shuffle: Boolean
+) {
   private val log = Log {}
 
   val cachedFails = Collections.synchronizedMap(mutableMapOf<String, Int>())
@@ -319,6 +330,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       .addHostnameVerifier(NoopHostnameVerifier())
       .build()
 
+  @Suppress("MaxLineLength")
   val remotes =
     listOf(
       // We do not use springio-* or spring-* repositories as they no longer allow anonymous access.
@@ -346,7 +358,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       // TODO: maven.java.net
       // TODO: Certificate for .. doesn't match any of the subject ...
 
-      //////////////// broken but possibly fixable
+      // ////////////// broken but possibly fixable
 
       // "icm" to "https://maven.icm.edu.pl/artifactory/repo/", // 94k jars / null pointer exception / too long to reach?
       // "apache-releases" to "https://repository.apache.org/content/repositories/releases/", // 92k jars / Network is unreachable (connect failed)
@@ -382,7 +394,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       //    org/qi4j*
       //    org/swssf*
 
-      //////////////// less than 35 uses
+      // ////////////// less than 35 uses
 
       // /*  32 uses / 3.6k jars */ "geo-solutions" to "http://maven.geo-solutions.it/",
       // /*  26 uses /  21k jars */ "eclipse-releases" to "https://repo.eclipse.org/content/groups/releases/",
@@ -392,7 +404,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       // /*   7 uses /  72k jars */ "mulesoft-public" to "https://repository.mulesoft.org/nexus/content/repositories/public/",
       // /*   2 uses / 112  jars */ "edinburgh-ph" to "https://www2.ph.ed.ac.uk/maven2/",
 
-      //////////////// 0 uses
+      // ////////////// 0 uses
 
       // /*   0 uses / 2.1M jars */ "sonatype-releases" to "https://oss.sonatype.org/content/repositories/releases/",
       // /*   0 uses / 273k jars */ "jboss-releases" to "https://repository.jboss.org/nexus/content/repositories/releases/",
@@ -405,7 +417,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       // /*   0 uses /  67  jars */ "eclipse-paho" to "https://repo.eclipse.org/content/repositories/paho-releases/",
       // /*   0 uses /   4  jars */ "tweetyproject" to "https://tweetyproject.org/mvn/",
 
-      //////////////// unreachable servers
+      // ////////////// unreachable servers
 
       // /*   ? uses/  10k jars */ "jspresso" to "http://repository.jspresso.org/maven2/",
       // /*   ? uses/ 3.9k jars */ "metova-public" to "http://repo.metova.com/nexus/content/groups/public/",
@@ -421,38 +433,36 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
 
   fun run() {
     Runtime.getRuntime().addShutdownHook(
-      object : Thread() {
-        override fun run() {
-          println()
-          println("cached pass $cachedPass")
-          println("cached fail $cachedFail")
-          println("pass  $pass")
-          println("fail  $fail")
-          println("abort $abort")
+      Thread {
+        println()
+        println("cached pass $cachedPass")
+        println("cached fail $cachedFail")
+        println("pass  $pass")
+        println("fail  $fail")
+        println("abort $abort")
 
-          println()
-          println("Cached fails: ${cachedFails.toList().map(Pair<String, Int>::second).sum()}\n")
-          for ((key, value) in cachedFails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-            println("$value\t$key")
-          }
+        println()
+        println("Cached fails: ${cachedFails.toList().map(Pair<String, Int>::second).sum()}\n")
+        for ((key, value) in cachedFails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+          println("$value\t$key")
+        }
 
-          println()
-          println("Fails: ${fails.toList().map(Pair<String, Int>::second).sum()}\n")
-          for ((key, value) in fails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-            println("$value\t$key")
-          }
+        println()
+        println("Fails: ${fails.toList().map(Pair<String, Int>::second).sum()}\n")
+        for ((key, value) in fails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+          println("$value\t$key")
+        }
 
-          println()
-          println("Aborts: ${aborts.toList().map(Pair<String, Int>::second).sum()}\n")
-          for ((key, value) in aborts.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-            println("$value\t$key")
-          }
+        println()
+        println("Aborts: ${aborts.toList().map(Pair<String, Int>::second).sum()}\n")
+        for ((key, value) in aborts.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+          println("$value\t$key")
+        }
 
-          println()
-          println("Running: ${running.size} / $remaining\n")
-          for ((name, startTime) in running.toList().sortedBy(Pair<Pair<String, String>, Long>::second).reversed()) {
-            println("- ${time(startTime)}: ${name.first}:${name.second}")
-          }
+        println()
+        println("Running: ${running.size} / $remaining\n")
+        for ((name, startTime) in running.toList().sortedBy(Pair<Pair<String, String>, Long>::second).reversed()) {
+          println("- ${time(startTime)}: ${name.first}:${name.second}")
         }
       }
     )
@@ -485,7 +495,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
           // if (artifactId == "caom2harvester") continue
 
           // if (groupIdPath.startsWith("org/open") && groupIdPath >= "org/opend") continue
-          // if (groupIdPath.startsWith("org/open") && groupIdPath >= "org/opencb") continue 
+          // if (groupIdPath.startsWith("org/open") && groupIdPath >= "org/opencb") continue
           // if (groupIdPath.startsWith("org/o")) continue
           // if (!groupIdPath.startsWith("org/p")) continue
           // if (!groupIdPath.startsWith("org/q")) continue
@@ -531,13 +541,20 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     try {
       running.put(Pair(groupIdPath, artifactId), startTime)
       println("running +${running.size} / $remaining")
-      if (groupIdPath.contains('.')) throw DotInGroupIdException(groupIdPath, artifactId) // Maven will incorrectly translate the '.' to a '/'
+      // Maven will incorrectly translate the '.' to a '/'
+      if (groupIdPath.contains('.')) throw DotInGroupIdException(groupIdPath, artifactId)
       println("start   $name")
       val version = getVersion(groupId, artifactId)
       val artifactDescriptorResult = getArtifactDescriptor(groupId, artifactId, version)
       val pomArtifactResult = getArtifact(groupId, artifactId, null, "pom", version)
       val model = getModel(pomArtifactResult.artifact.file)
-      val artifactResult = getArtifact(groupId, artifactId, artifactDescriptorResult.artifact.classifier, model.packaging, version)
+      val artifactResult = getArtifact(
+        groupId,
+        artifactId,
+        artifactDescriptorResult.artifact.classifier,
+        model.packaging,
+        version
+      )
       artifactDescriptorResult.artifact = artifactResult.artifact
       artifactDescriptorResult.request.artifact = artifactResult.artifact
       val dependencyTree = getDependencyTree(artifactDescriptorResult)
@@ -661,7 +678,13 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
   }
 
   // TODO: rename extension to packaging
-  fun getArtifact(groupId: String, artifactId: String, classifier: String?, extension: String, version: String): ArtifactResult {
+  fun getArtifact(
+    groupId: String,
+    artifactId: String,
+    classifier: String?,
+    extension: String,
+    version: String
+  ): ArtifactResult {
     val (cls, extensions) = when {
       extension == "pom" -> Pair(null, listOf(extension)) // TODO: null isn't technically correct (should be classifier)
       extension == "feature" -> Pair("features", listOf("xml"))
@@ -766,12 +789,25 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       }
 
       // if (node.artifact !== node.dependency?.artifact) {
-      //   log.error("dependency.artifact === artifact: ${node.artifact === node.dependency?.artifact} for ${node.artifact} ${node.dependency} ${groupId}:${artifactId}")
+      //   log.error("dependency.artifact === artifact: ${node.artifact === node.dependency?.artifact}
+      //     for ${node.artifact} ${node.dependency} ${groupId}:${artifactId}")
       // }
 
-      val pomArtifactResult = getArtifact(node.artifact.groupId, node.artifact.artifactId, null, "pom", node.artifact.version)
+      val pomArtifactResult = getArtifact(
+        node.artifact.groupId,
+        node.artifact.artifactId,
+        null,
+        "pom",
+        node.artifact.version
+      )
       val model = getModel(pomArtifactResult.artifact.file)
-      val art = Fiveple(node.artifact.groupId, node.artifact.artifactId, node.artifact.classifier, model.packaging, node.artifact.version)
+      val art = Fiveple(
+        node.artifact.groupId,
+        node.artifact.artifactId,
+        node.artifact.classifier,
+        model.packaging,
+        node.artifact.version
+      )
       artifactRequests += art
 
       for (child in node.children) {

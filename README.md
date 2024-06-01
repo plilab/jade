@@ -33,4 +33,4 @@ The generated html can be found in `/build/dokka/html`. To view the documentatio
 
 ## Developer Guide
 
-For more details on Jade's codebase, refer to [Developer Guide](/docs/Developer Guide.md)
+For more details on Jade's codebase, refer to Developer Guide which can be found at `docs/Developer Guide.md`

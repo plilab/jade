@@ -8,19 +8,19 @@ Contains intermediate representations for decompiling control flows.
 
 # Package org.ucombinator.jade.asm
 
-Contains wrappers around data structures from Javaparser library for Abstract Syntax Tree of Java code.
+Contains wrappers around ASM library used for reading bytecodes
 
 # Package org.ucombinator.jade.classfile
 
-Contains wrappers around data structures from Javaparser library for Abstract Syntax Tree of Java code.
+Contains data structures for representing class-level constructs
 
 # Package org.ucombinator.jade.decompile
 
-Contains logic to decompile various Java constructs.
+Contains logic to decompile various Java constructs
 
 # Package org.ucombinator.jade.javaparser
 
-Contains wrappers around data structures from Javaparser library for abstract syntax tree of Java code.
+Contains wrappers around data structures from Javaparser library for abstract syntax tree of Java code
 
 # Package org.ucombinator.jade.jgrapht
 
@@ -36,4 +36,4 @@ Contains tools used to acquire and test against Maven bytecodes.
 
 # Package org.ucombinator.jade.util
 
-Contains miscellaneous utilities such as logging, debugging and internal data structures for convenience.
+ Contains miscellaneous utilities such as logging, debugging and internal data structures for convenience.

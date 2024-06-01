@@ -19,15 +19,15 @@ The following figure illustrates Jade's decompilation workflow:
 ### Subdirectories
 Jade's source source consists of the following subdirectories:
 
-- `/analysis`: This directory contains intermediate representations that are used for decompiling control flows in Java code.
-- `/asm`: This directory contains wrappers around data structures from the Javaparser library, which are used for representing the Abstract Syntax Tree (AST) of Java code.
-- `/classfile`: This directory contains wrappers around data structures from the Javaparser library, which are used for representing the Abstract Syntax Tree (AST) of Java code.
-- `/decompile`: This directory contains the logic and algorithms that are used to decompile various Java constructs, such as classes, methods, and bytecode.
-- `/javaparser`: This directory contains wrappers around data structures from the Javaparser library, which are used for representing the abstract syntax tree (AST) of Java code.
-- `/jgrapht`: This directory contains wrappers around the JGraphT library, which is used for working with graphs and graph-related data structures.
-- `/main`: This directory contains the main entry point for Jade's various tools and commands, which are implemented using the Clikt library for command-line interfaces.
-- `/maven`: This directory contains tools and utilities that are used to acquire and test against Maven bytecodes, which are a common format for distributing Java libraries and applications.
-- `/util`: This directory contains miscellaneous utilities and helper functions that are used throughout the Jade project, such as logging, debugging, and internal data structures for convenience and efficiency.
+- `/analysis`: Contains intermediate representations for decompiling control flows.
+- `/asm`: Contains wrappers around ASM library used for reading bytecodes.
+- `/classfile`: Contains data structures for representing class-level constructs.
+- `/decompile`: Contains logic to decompile various Java constructs.
+- `/javaparser`: Contains wrappers around data structures from Javaparser library for abstract syntax tree of Java code.
+- `/jgrapht`: Contains wrappers around JGraphT library for working with graphs.
+- `/main`: Contains Jade Clikt commands which serves as command line interface entrypoint for Jade's various tools.
+- `/maven`: Contains tools used to acquire and test against Maven bytecodes.
+- `/util`: Contains miscellaneous utilities such as logging, debugging and internal data structures for convenience.
 
 ### Parsing and Decompiling Class-level Constructs
 (TODO: High-level implementation strategy & key design decisions)

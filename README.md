@@ -30,3 +30,7 @@ To generate KDoc, run the following:
 ```
 
 The generated html can be found in `/build/dokka/html`. To view the documentation, you can open `index.html` with your browser.
+
+## Developer Guide
+
+For more details on Jade's codebase, refer to [Developer Guide](/docs/Developer Guide.md)

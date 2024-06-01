@@ -1,9 +1,17 @@
 package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.expr.*
-import com.github.javaparser.ast.stmt.*
-import org.jgrapht.graph.*
+import com.github.javaparser.ast.expr.BooleanLiteralExpr
+import com.github.javaparser.ast.expr.VariableDeclarationExpr
+import com.github.javaparser.ast.stmt.BlockStmt
+import com.github.javaparser.ast.stmt.BreakStmt
+import com.github.javaparser.ast.stmt.ExpressionStmt
+import com.github.javaparser.ast.stmt.IfStmt
+import com.github.javaparser.ast.stmt.LabeledStmt
+import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.stmt.WhileStmt
+import org.jgrapht.graph.AsSubgraph
+import org.jgrapht.graph.MaskSubgraph
 import org.objectweb.asm.tree.LabelNode
 import org.ucombinator.jade.analysis.ControlFlowGraph
 import org.ucombinator.jade.analysis.StaticSingleAssignment
@@ -182,12 +190,15 @@ object DecompileStatement {
     if (pendingOutside.isNotEmpty()) { Errors.fatal("Non-empty pending $pendingOutside") }
     val variables = ssa.insnVars.values.map(Pair<Var, List<Var>>::first) + ssa.phiInputs.keys
     fun decompileVarDecl(v: Var): Statement =
-      // TODO: modifiers
-      if (v.basicValue == null || v.basicValue.type == null) {
-        JavaParser.noop(v.toString())
-      } else {
-        val t = Descriptor.fieldDescriptor(v.basicValue.type.descriptor)
-        ExpressionStmt(VariableDeclarationExpr(t, v.name))
+      // TODO: handle the mutability and nullability of v.basicValue in a better way
+      v.basicValue.let { basicValue ->
+        // TODO: modifiers
+        if (basicValue == null || basicValue.type == null) {
+          JavaParser.noop(v.toString())
+        } else {
+          val t = Descriptor.fieldDescriptor(basicValue.type.descriptor)
+          ExpressionStmt(VariableDeclarationExpr(t, v.name))
+        }
       }
     val declarations = variables.map(::decompileVarDecl)
 

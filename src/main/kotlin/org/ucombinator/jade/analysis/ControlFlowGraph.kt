@@ -22,7 +22,7 @@ data class ControlFlowGraph(
   val entry: Insn,
   val graph: DirectedPseudograph<Insn, Edge>,
   val graphWithExceptions: Graph<Insn, Edge>,
-  val frames: Array<Frame<BasicValue>>
+  val frames: Array<Frame<BasicValue>>,
 ) {
   final data class Edge(val source: Insn, val target: Insn)
 
@@ -51,7 +51,7 @@ data class ControlFlowGraph(
 
 private class ControlFlowGraphAnalyzer(
   val method: MethodNode,
-  val graph: DirectedPseudograph<Insn, ControlFlowGraph.Edge>
+  val graph: DirectedPseudograph<Insn, ControlFlowGraph.Edge>,
 ) : Analyzer<BasicValue>(TypedBasicInterpreter) {
   protected override fun newControlFlowEdge(insn: Int, successor: Int) {
     val source = Insn(method, this.method.instructions[insn])

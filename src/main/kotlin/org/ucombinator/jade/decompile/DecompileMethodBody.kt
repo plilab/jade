@@ -40,7 +40,7 @@ object DecompileMethodBody {
         ThrowStmt(
           ObjectCreationExpr(
             null,
-            ClassName.classNameType("java.lang.UnsupportedOperationException"),
+            ClassName.classNameType("java/lang/UnsupportedOperationException"),
             NodeList(StringLiteralExpr(message))
           )
         ),
@@ -183,15 +183,15 @@ object DecompileMethodBody {
         "++++ dominator nesting ++++\n${GraphViz.nestingTree(cfg.graphWithExceptions, doms, cfg.entry)}"
       )
 
-      this.log.debug("**** Structure ****")
-      val structure = Structure.make(cfg)
+      // this.log.debug("**** Structure ****")
+      // val structure = Structure.make(cfg)
 
       // TODO: JEP 334: JVM Constants API: https://openjdk.java.net/jeps/334
 
-      this.log.debug("**** Statement ****")
-      val statement = DecompileStatement.make(cfg, ssa, structure)
-      this.log.debug(statement.toString())
-      setDeclarationBody(declaration, statement)
+      // this.log.debug("**** Statement ****")
+      // val statement = DecompileStatement.make(cfg, ssa, structure)
+      // this.log.debug(statement.toString())
+      // setDeclarationBody(declaration, statement)
 
       // var statements = List[Statement]()
       // for (insn in method.instructions.toArray) {

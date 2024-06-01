@@ -1,23 +1,50 @@
 package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.DataKey
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.PackageDeclaration
-import com.github.javaparser.ast.body.*
+import com.github.javaparser.ast.body.BodyDeclaration
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.body.ConstructorDeclaration
+import com.github.javaparser.ast.body.FieldDeclaration
+import com.github.javaparser.ast.body.InitializerDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.body.Parameter
+import com.github.javaparser.ast.body.ReceiverParameter
+import com.github.javaparser.ast.body.TypeDeclaration
+import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.comments.BlockComment
-import com.github.javaparser.ast.expr.*
+import com.github.javaparser.ast.expr.AnnotationExpr
+import com.github.javaparser.ast.expr.ClassExpr
+import com.github.javaparser.ast.expr.DoubleLiteralExpr
+import com.github.javaparser.ast.expr.Expression
+import com.github.javaparser.ast.expr.IntegerLiteralExpr
+import com.github.javaparser.ast.expr.LongLiteralExpr
+import com.github.javaparser.ast.expr.MarkerAnnotationExpr
+import com.github.javaparser.ast.expr.MemberValuePair
+import com.github.javaparser.ast.expr.Name
+import com.github.javaparser.ast.expr.NormalAnnotationExpr
+import com.github.javaparser.ast.expr.SimpleName
+import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr
+import com.github.javaparser.ast.expr.StringLiteralExpr
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.type.ReferenceType
 import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.type.TypeParameter
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.*
+import org.objectweb.asm.tree.AnnotationNode
+import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.FieldNode
+import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.tree.ParameterNode
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.Flags
 import org.ucombinator.jade.classfile.Signature
+import org.ucombinator.jade.classfile.MethodSignature
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Lists.pairs
 import org.ucombinator.jade.util.Lists.tail
@@ -32,6 +59,8 @@ import org.ucombinator.jade.util.Tuples._3
  * Handles decompiling class-level constructs. It contains various methods that builds Javaparser abstract syntax tree data structures from corresponding ASM data structures.
  */
 object DecompileClass {
+  val CLASS_NODE = object: DataKey<ClassNode>() {}
+  val METHOD_NODE = object: DataKey<MethodNode>() {}
   // TODO: ktlint: "${foo}"
 
   fun decompileLiteral(node: Any?): Expression? =
@@ -133,6 +162,7 @@ object DecompileClass {
 
   fun <A> nullToSeq(x: List<A>?): List<A> = if (x === null) listOf() else x
 
+  // TODO: rename node to methodNode
   fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
     // attr (ignore?)
     // instructions
@@ -149,28 +179,28 @@ object DecompileClass {
       node.visibleTypeAnnotations,
       node.invisibleTypeAnnotations
     )
-    val descriptor: Pair<List<Type>, Type> = Descriptor.methodDescriptor(node.desc)
-    val sig = // : Fourple<List<TypeParameter>, List<Type>, Type, out List<ReferenceType>> =
+    val descriptor = Descriptor.methodDescriptor(node.desc)
+    val sig =
       if (node.signature === null) {
-        Fourple(listOf(), descriptor.first, descriptor.second, node.exceptions.map(ClassName::classNameType))
+        MethodSignature(listOf(), descriptor.parameterTypes, descriptor.returnType, node.exceptions.map(ClassName::classNameType))
       } else {
         Signature.methodSignature(node.signature)
       }
     val parameterNodes = nullToSeq(node.parameters)
-    if (node.parameters != null && sig._2.size != node.parameters.size) {
+    if (node.parameters != null && sig.parameterTypes.size != node.parameters.size) {
       // TODO: check if always in an enum
     }
-    val typeParameters: NodeList<TypeParameter> = NodeList(sig._1)
+    val typeParameters: NodeList<TypeParameter> = NodeList(sig.typeParameters)
     val ps =
       zipAll(
-        parameterTypes(descriptor._1(), sig._2, parameterNodes),
+        parameterTypes(descriptor.parameterTypes, sig.parameterTypes, parameterNodes),
         parameterNodes,
-        nullToSeq(node.visibleParameterAnnotations.toList()),
-        nullToSeq(node.invisibleParameterAnnotations.toList())
+        nullToSeq(node.visibleParameterAnnotations?.toList()), // TODO: combine ?. with nullToSeq
+        nullToSeq(node.invisibleParameterAnnotations?.toList())
       ).withIndex()
-    val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig._2.size, it) })
-    val type: Type = sig._3
-    val thrownExceptions: NodeList<ReferenceType> = NodeList(sig._4)
+    val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig.parameterTypes.size, it) })
+    val type: Type = sig.returnType
+    val thrownExceptions: NodeList<ReferenceType> = NodeList(sig.exceptionTypes)
     val name: SimpleName = SimpleName(node.name)
     val body: BlockStmt = DecompileMethodBody.decompileBodyStub(node)
     val receiverParameter: ReceiverParameter? = null // TODO
@@ -201,6 +231,7 @@ object DecompileClass {
           receiverParameter
         )
     }
+    bodyDeclaration.setData(METHOD_NODE, node)
     // TODO: Decompile.methods.add(bodyDeclaration to ((classNode, node)))
     return bodyDeclaration
   }
@@ -248,6 +279,7 @@ object DecompileClass {
         permittedTypes: NodeList<ClassOrInterfaceType> // TODO: implement
       ) =
         if (node.signature === null) {
+          // TODO: maybe change Fourple to MethodSignature
           Fourple(
             NodeList<TypeParameter>(),
             if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
@@ -256,7 +288,7 @@ object DecompileClass {
           )
         } else {
           val s = Signature.classSignature(node.signature)
-          Fourple(NodeList(s._1()), NodeList(s._2()), NodeList(s._3()), NodeList<ClassOrInterfaceType>())
+          Fourple(NodeList(s.typeParameters), NodeList(s.superclass), NodeList(s.interfaces), NodeList<ClassOrInterfaceType>())
         }
       val members: NodeList<BodyDeclaration<*>> = run {
         val list = NodeList<BodyDeclaration<*>>()
@@ -284,6 +316,8 @@ object DecompileClass {
       classOrInterfaceDeclaration.setImplementedTypes(NodeList())
     }
 
+    classOrInterfaceDeclaration.setData(CLASS_NODE, node)
+
     val types = NodeList<TypeDeclaration<*>>()
     types.add(classOrInterfaceDeclaration)
 
@@ -294,6 +328,7 @@ object DecompileClass {
     // TODO: ModuleRequireNode
     val module = null // TODO node.module
 
+    // TODO: maybe move CompilationUnit out of this function
     val compilationUnit = CompilationUnit(packageDeclaration, imports, types, module)
     JavaParser.setComment(compilationUnit, comment)
     Decompile.classes += compilationUnit to node

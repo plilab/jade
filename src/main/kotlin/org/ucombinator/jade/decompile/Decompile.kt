@@ -2,6 +2,9 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
+import com.github.javaparser.ast.body.CallableDeclaration
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.type.ClassOrInterfaceType
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
@@ -9,6 +12,7 @@ import org.objectweb.asm.commons.AnalyzerAdapter
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import org.ucombinator.jade.util.ReadFiles
+import org.ucombinator.jade.util.Log
 import java.io.File
 
 // import org.objectweb.asm.util.Textifier
@@ -28,6 +32,7 @@ import java.io.File
  * Handles processing files and decomposing them into classes and methods. Processing of class-level constructs and method bodies are delegated to `DecompileClass` and `DecompileMethodBody` respectively.
  */
 object Decompile {
+  private val log = Log {}
 
 
   // Maps decompiled tree nodes to ASM nodes
@@ -40,13 +45,35 @@ object Decompile {
    * @param files The list of files to decompile.
    */
   fun main(files: List<File>) {
-    val readFiles = ReadFiles()
-    for (file in files) {
-      readFiles.dir(file)
+    // Temporary code that decompiles only one .class file
+    require(files.size == 1)
+    val file = files.first()
+    val classReader = ClassReader(file.readBytes())
+    val compilationUnit = decompileClassFile(file.toString(), file.toString(), classReader, 0)
+    for (type in compilationUnit.types) {
+      log.debug("type: ${type.javaClass}")
+      when (type) {
+        is ClassOrInterfaceDeclaration -> {
+          val classNode = type.getData(DecompileClass.CLASS_NODE)!!
+          // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
+          for (callable in type.constructors + type.methods) {
+            val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
+            DecompileMethodBody.decompileBody(classNode, methodNode, callable)
+            log.debug("method: $callable")
+          }
+        }
+        else -> { TODO() }
+      }
     }
-    for ((k, _) in readFiles.result) {
-      println("k $k")
-    }
+
+    // val readFiles = ReadFiles()
+    // for (file in files) {
+    //   readFiles.dir(file)
+    // }
+    // for ((k, _) in readFiles.result) {
+    //   println("k $k")
+    // }
+
     // for (((name, readers), classIndex) <- VFS.classes.zipWithIndex) {
     //   for ((path, classReader) <- readers) { // TODO: pick "best" classReader
     //     // TODO: why don't we combine the class and method passes?
@@ -70,7 +97,6 @@ object Decompile {
     //     this.log.debug(f"compilationUnit\n${compilationUnit}")
     //   }
     // }
-    TODO()
   }
 
   /**
@@ -88,8 +114,8 @@ object Decompile {
         access: Int,
         name: String,
         descriptor: String,
-        signature: String,
-        exceptions: Array<String>
+        signature: String?,
+        exceptions: Array<String>?
       ): MethodVisitor =
         if (true) {
           super.visitMethod(access, name, descriptor, signature, exceptions)
@@ -109,7 +135,7 @@ object Decompile {
     }
     cr.accept(classNode, ClassReader.EXPAND_FRAMES) // TODO: Do we actually need ClassReader.EXPAND_FRAMES?
 
-    if (classNode.name === null) return null // TODO
+    if (classNode.name === null) TODO()
     // this.log.debug("class name: " + classNode.name)
 
     // this.asmLog.whenDebugEnabled {

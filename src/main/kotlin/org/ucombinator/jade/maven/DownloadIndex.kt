@@ -3,11 +3,11 @@ package org.ucombinator.jade.maven
 import com.google.cloud.storage.Storage
 import org.ucombinator.jade.maven.googlecloudstorage.GcsBucket
 import org.ucombinator.jade.util.Log
-import java.io.EOFException
 import java.io.File
 import java.io.FileWriter
 import java.io.RandomAccessFile
 
+// TODO: can this be parallelized?
 // TODO: repos/central/data is old version of maven2?
 // $ gsutil -o Credentials:gs_service_key_file=../smooth-splicer-342907-2a129f6f3cd4.json ls -l 'gs://maven-central/maven2/**'
 // TDOO: trailing commas
@@ -22,22 +22,20 @@ object DownloadIndex {
     pageSize: Long = 0L,
     prefix: String? = null,
     startOffset: String? = null,
-    flushFrequency: Long = 0L,
-  ): Unit {
+    flushFrequency: Long = 1L shl 14,
+  ) {
     // TODO: add auto-removal of indexFile
     val trueStartOffset =
       if (resume) {
-        if (startOffset !== null) throw Exception("TODO")
-        if (!indexFile.exists()) throw Exception("TODO")
+        if (startOffset !== null) TODO() // TODO: use `require`
+        if (!indexFile.exists()) TODO()
         val offset = lastFullLine(indexFile).substringBeforeLast('\t', missingDelimiterValue = "")
-        if (offset == "") throw Exception("TODO")
+        if (offset == "") TODO()
         offset
       } else {
-        if (indexFile.exists()) throw Exception("TODO")
+        if (indexFile.exists()) TODO()
         startOffset
       }
-    // TODO: move this constant out
-    val trueFlushFrequency = if (flushFrequency == 0L) { 1L shl 14 } else { flushFrequency }
 
     FileWriter(indexFile, true).buffered().use { writer ->
       val bucket = GcsBucket.open(authFile)
@@ -57,11 +55,11 @@ object DownloadIndex {
           continue
         }
         val line = "${blob.name}\t${blob.size}"
-        log.debug { "writing line ${index}: ${line}" }
+        log.trace { "writing line ${index}: ${line}" }
         writer.write(line + "\n")
-        if (index % trueFlushFrequency == 0L) {
+        if (index % flushFrequency == 0L) {
           writer.flush()
-          log.info { "flushing line ${index}: ${line}" }
+          log.debug { "flushing line ${index}: ${line}" }
         }
       }
     }

@@ -73,7 +73,7 @@ object GraphViz {
         }
       }
       val label = "\"${GraphViz.escape(v.toString())}\""
-      out.write("$indent  ${id(v)} < label=$label >;\n")
+      out.write("$indent  ${id(v)} [label=$label];\n")
       val edges = tree.incomingEdgesOf(v)
       // TODO: edges in trees should always go down
       val sole = when (edges.size) {
@@ -99,7 +99,7 @@ object GraphViz {
       val source = graph.getEdgeSource(edge)
       val target = graph.getEdgeTarget(edge)
       val constraint = !Dominator.isDominator(tree, target, source)
-      out.write("  ${id(source)} -> ${id(target)} < constraint=$constraint >;\n")
+      out.write("  ${id(source)} -> ${id(target)} [constraint=$constraint];\n")
     }
     out.write("}\n")
   }

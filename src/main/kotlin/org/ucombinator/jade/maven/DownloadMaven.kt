@@ -791,7 +791,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
   fun writeJarList(artifactResults: List<ArtifactResult>, jarListFile: File) {
     val builder = StringBuilder()
     for (result in artifactResults) {
-      builder.append(result.artifact.file.relativeTo(localRepoDir).toString() + "\t${result.repository}\n")
+      builder.append("${result.artifact.file.relativeTo(localRepoDir).toString()}\t${result.repository}\n")
     }
     try {
       AtomicWriteFile.write(jarListFile, builder.toString(), true)

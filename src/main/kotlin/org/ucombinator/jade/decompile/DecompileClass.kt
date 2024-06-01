@@ -28,6 +28,9 @@ import org.ucombinator.jade.util.Tuples._2
 import org.ucombinator.jade.util.Tuples._3
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
+/**
+ * Handles decompiling class-level constructs. It contains various methods that builds Javaparser abstract syntax tree data structures from corresponding ASM data structures.
+ */
 object DecompileClass {
   // TODO: ktlint: "${foo}"
 

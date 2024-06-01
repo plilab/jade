@@ -9,6 +9,13 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.reflect.Modifier
 
+
+/**
+ * Represents a single instruction in a method. Wrapper for `org.objectweb.asm.tree.AbstractInsnNode`.
+ *
+ * @property method The method that this instruction belongs to.
+ * @property insn The actual instruction.
+ */
 data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable<Insn> {
   fun index(): Int = method.instructions.indexOf(insn)
   fun next(): Insn = Insn(method, insn.next)

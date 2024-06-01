@@ -18,14 +18,15 @@ To compile the project for use, simply run the following:
 ./gradlew build
 ```
 
-## Usage
+## Running Jade from command line
+TODO
 
-After building simply run:
+## Generating HTML KDoc with Dokka
+
+To generate KDoc, run the following:
 
 ```shell
-TODO
+./gradlew dokkaHtml
 ```
 
-## TODO
-
-See src/Module.md for the code structure
+The generated html can be found in `/build/dokka/html`. To view the documentation, you can open `index.html` with your browser.

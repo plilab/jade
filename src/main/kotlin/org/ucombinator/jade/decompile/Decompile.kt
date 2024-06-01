@@ -23,12 +23,22 @@ import java.io.File
 // TODO: load flag
 // TODO: support stdin for files to decompile
 // TODO: skip over ct.jar as it is just signatures.  Maybe don't skip second load if it is better.
-object Decompile {
-  // private val asmLog = childLog("asm")
 
+/**
+ * Handles processing files and decomposing them into classes and methods. Processing of class-level constructs and method bodies are delegated to `DecompileClass` and `DecompileMethodBody` respectively.
+ */
+object Decompile {
+
+
+  // Maps decompiled tree nodes to ASM nodes
   val classes = mutableMapOf<CompilationUnit, ClassNode>()
   val methods = mutableMapOf<BodyDeclaration<out BodyDeclaration<*>>, Pair<ClassNode, MethodNode>>()
 
+  /**
+   * The main entry point for the decompiler. It takes a list of files as input and attempts to decompile them.
+   *
+   * @param files The list of files to decompile.
+   */
   fun main(files: List<File>) {
     val readFiles = ReadFiles()
     for (file in files) {
@@ -63,10 +73,16 @@ object Decompile {
     TODO()
   }
 
+  /**
+   * Decompiles a class file and returns the corresponding CompilationUnit.
+   *
+   * @param name The name of the class file.
+   * @param owner The owner of the class (e.g., package name).
+   * @param cr The ClassReader object for the class file.
+   * @param i The index of the class file within the list to be decompiled.
+   * @return The decompiled CompilationUnit, or null if there's an error.
+   */
   fun decompileClassFile(name: String, owner: String, cr: ClassReader, i: Int): CompilationUnit? {
-    // TODO: name use "." instead of "/" and "$"
-    // this.log.info(f"Decompiling [${i + 1} of ${VFS.classes.size}] ${name} from ${owner}")
-    // val log = this.log
     val classNode = object : ClassNode(Opcodes.ASM9) {
       override fun visitMethod(
         access: Int,
@@ -85,8 +101,6 @@ object Decompile {
             descriptor,
             object : MethodVisitor(Opcodes.ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
               override fun visitInsn(opcode: Int) {
-                // log.info("AA LOCALS: " + aa.locals)
-                // log.info("AA STACK: " + aa.stack)
                 return super.visitInsn(opcode)
               }
             }

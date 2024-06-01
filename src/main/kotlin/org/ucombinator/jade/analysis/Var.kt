@@ -4,6 +4,14 @@ import org.objectweb.asm.tree.analysis.BasicValue
 import org.objectweb.asm.tree.analysis.Value
 import org.ucombinator.jade.asm.Insn
 
+
+/*
+ * Represents a variable in Jade's analyses.
+ *
+ * @property name The name of the variable.
+ * @property basicValue The value of the variable.
+ *
+ */
 sealed class Var(val name: String) : Value {
   abstract val basicValue: BasicValue
   override fun getSize(): Int = basicValue.size

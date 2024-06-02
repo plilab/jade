@@ -23,7 +23,7 @@ Non-linear expressions
 typealias Nesting = List<Structure.Block>
 
 /**
- * Represents the structure resulting from CFG analysis.
+ * Represents the domination structure in the CFG.
  *
  * @property nesting A map that associates each instruction with its nesting level within the CFG.
  * @property backEdges A set of edges in the CFG that keeps track of back edges.

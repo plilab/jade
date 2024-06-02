@@ -20,7 +20,7 @@ Contains logic to decompile various Java constructs
 
 # Package org.ucombinator.jade.javaparser
 
-Contains wrappers around data structures from Javaparser library for abstract syntax tree of Java code
+Contains wrappers around data structures from JavaParser library for abstract syntax tree of Java code
 
 # Package org.ucombinator.jade.jgrapht
 

@@ -56,7 +56,7 @@ import org.ucombinator.jade.util.Tuples._3
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 /**
- * Handles decompiling class-level constructs. It contains various methods that builds Javaparser abstract syntax tree data structures from corresponding ASM data structures.
+ * Handles decompiling class-level constructs. It contains various methods that builds JavaParser abstract syntax tree data structures from corresponding ASM data structures.
  */
 object DecompileClass {
   val CLASS_NODE = object: DataKey<ClassNode>() {}

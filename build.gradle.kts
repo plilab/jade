@@ -98,6 +98,7 @@ dependencies {
 // Application Setup / Meta-data
 application {
   mainClass = "org.ucombinator.jade.main.MainKt"
+  applicationDefaultJvmArgs += listOf("-ea") // enable assertions
 }
 
 // version = "0.1.0" // Uncomment to manually set the version

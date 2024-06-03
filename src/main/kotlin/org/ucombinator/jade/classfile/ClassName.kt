@@ -29,5 +29,5 @@ object ClassName {
   fun classNameType(name: Name): ClassOrInterfaceType = classNameTypeOrNull(name)!!
 
   private fun classNameTypeOrNull(name: Name?): ClassOrInterfaceType? =
-    if (name === null) null else ClassOrInterfaceType(classNameTypeOrNull(name.qualifier.orElse(null)), name.identifier)
+    if (name == null) null else ClassOrInterfaceType(classNameTypeOrNull(name.qualifier.orElse(null)), name.identifier)
 }

@@ -81,7 +81,7 @@ object DecompileClass {
     val name = typeToName(Descriptor.fieldDescriptor(node.desc))
     val vs = node.values
     return when {
-      vs === null -> MarkerAnnotationExpr(name)
+      vs == null -> MarkerAnnotationExpr(name)
       vs.size == 1 -> SingleMemberAnnotationExpr(name, decompileLiteral(vs.first()))
       else ->
         NormalAnnotationExpr(
@@ -103,12 +103,8 @@ object DecompileClass {
       node.visibleTypeAnnotations,
       node.invisibleTypeAnnotations
     )
-    val type: Type =
-      if (node.signature === null) {
-        Descriptor.fieldDescriptor(node.desc)
-      } else {
-        Signature.typeSignature(node.signature)
-      }
+    val type =
+      if (node.signature != null) Signature.typeSignature(node.signature) else Descriptor.fieldDescriptor(node.desc)
     val name = SimpleName(node.name)
     val initializer = decompileLiteral(node.value)
     val variables = NodeList<VariableDeclarator>(VariableDeclarator(type, name, initializer))
@@ -124,13 +120,13 @@ object DecompileClass {
   ): Parameter {
     val index = parameter.index
     val (type, node, a1, a2) = parameter.value
-    val flags = if (node === null) listOf() else Flags.parameterFlags(node.access)
+    val flags = if (node == null) listOf() else Flags.parameterFlags(node.access)
     val modifiers = Flags.toModifiers(flags)
     val annotations = decompileAnnotations(a1, a2, null, null)
     val isVarArgs = Flags.methodFlags(method.access).contains(Flags.ACC_VARARGS) && index == paramCount - 1
     val varArgsAnnotations = NodeList<AnnotationExpr>() // TODO?
     // TODO: make consistent with analysis.ParameterVar
-    val name = SimpleName(if (node === null) "parameter${index + 1}" else node.name)
+    val name = SimpleName(if (node == null) "parameter${index + 1}" else node.name)
     return Parameter(modifiers, annotations, type, isVarArgs, varArgsAnnotations, name)
   }
 
@@ -146,7 +142,7 @@ object DecompileClass {
       else -> throw Exception("failed to construct parameter types: $desc, $sig, $params")
     }
 
-  fun <A> nullToSeq(x: List<A>?): List<A> = if (x === null) listOf() else x
+  fun <A> nullToSeq(x: List<A>?): List<A> = if (x == null) listOf() else x
 
   // TODO: rename node to methodNode
   fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
@@ -167,7 +163,7 @@ object DecompileClass {
     )
     val descriptor = Descriptor.methodDescriptor(node.desc)
     val sig =
-      if (node.signature === null) {
+      if (node.signature == null) {
         MethodSignature(
           listOf(),
           descriptor.parameterTypes,
@@ -269,11 +265,11 @@ object DecompileClass {
         implementedTypes: NodeList<ClassOrInterfaceType>,
         permittedTypes: NodeList<ClassOrInterfaceType> // TODO: implement
       ) =
-        if (node.signature === null) {
+        if (node.signature == null) {
           // TODO: maybe change Fourple to MethodSignature
           Fourple(
             NodeList<TypeParameter>(),
-            if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
+            if (node.superName == null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
             NodeList(node.interfaces.map { ClassName.classNameType(it) }),
             NodeList<ClassOrInterfaceType>()
           )

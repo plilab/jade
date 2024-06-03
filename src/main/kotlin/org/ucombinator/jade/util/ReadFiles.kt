@@ -124,7 +124,7 @@ class ReadFiles {
     val entries = mutableMapOf<List<File>, ByteArrayInputStream>()
     while (true) {
       val entry: ArchiveEntry? = archive.nextEntry
-      if (entry === null) break
+      if (entry == null) break
       if (!archive.canReadEntryData(entry)) continue
       if (entry.isDirectory) continue
       val entryName = name + File(entry.name)

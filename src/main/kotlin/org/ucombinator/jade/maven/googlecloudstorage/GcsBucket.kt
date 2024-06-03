@@ -13,7 +13,7 @@ object GcsBucket {
 
   fun open(authFile: File? = null): Bucket {
     val storage =
-      if (authFile !== null) {
+      if (authFile != null) {
         val credentials = GoogleCredentials.fromStream(FileInputStream(authFile)).createScoped(listOf(URL))
         StorageOptions.newBuilder().setCredentials(credentials).build().getService()
       } else {

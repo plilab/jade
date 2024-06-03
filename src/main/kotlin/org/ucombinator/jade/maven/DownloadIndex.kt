@@ -27,7 +27,7 @@ object DownloadIndex {
     // TODO: add auto-removal of indexFile
     val trueStartOffset =
       if (resume) {
-        if (startOffset !== null) TODO() // TODO: use `require`
+        if (startOffset != null) TODO() // TODO: use `require`
         if (!indexFile.exists()) TODO()
         val offset = lastFullLine(indexFile).substringBeforeLast('\t', missingDelimiterValue = "")
         if (offset == "") TODO()
@@ -42,8 +42,8 @@ object DownloadIndex {
 
       var options = listOf(Storage.BlobListOption.fields(Storage.BlobField.NAME, Storage.BlobField.SIZE))
       if (pageSize != 0L) options += Storage.BlobListOption.pageSize(pageSize)
-      if (prefix !== null) options += Storage.BlobListOption.prefix(prefix)
-      if (trueStartOffset !== null) options += Storage.BlobListOption.startOffset(trueStartOffset)
+      if (prefix != null) options += Storage.BlobListOption.prefix(prefix)
+      if (trueStartOffset != null) options += Storage.BlobListOption.startOffset(trueStartOffset)
 
       val blobs = bucket.list(*options.toTypedArray()).iterateAll()
 

@@ -104,7 +104,7 @@ object DecompileInsn {
   fun decompileVar(variable: Var): NameExpr = NameExpr(variable.name)
 
   fun decompileExpression(retVar: Var?, expression: Expression) =
-    if (retVar === null) {
+    if (retVar == null) {
       ExpressionStmt(expression)
     } else {
       ExpressionStmt(AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN))

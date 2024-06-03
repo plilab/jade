@@ -101,7 +101,7 @@ class Jade : CliktCommand() {
   )
 
   override fun run() {
-    if (ioThreads !== null) System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, ioThreads.toString())
+    if (ioThreads != null) System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, ioThreads.toString())
 
     DynamicCallerConverter.depthEnd = logCallerDepth
 

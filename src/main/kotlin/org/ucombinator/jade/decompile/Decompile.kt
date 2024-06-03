@@ -117,7 +117,7 @@ object Decompile {
     }
     cr.accept(classNode, ClassReader.EXPAND_FRAMES) // TODO: Do we actually need ClassReader.EXPAND_FRAMES?
 
-    if (classNode.name === null) TODO()
+    if (classNode.name == null) TODO()
     // this.log.debug("class name: " + classNode.name)
 
     // this.asmLog.whenDebugEnabled {

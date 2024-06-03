@@ -28,7 +28,7 @@ data class PhiVar(override val basicValue: BasicValue, val insn: Insn, val index
   // Note that `changed` has to be in the parameters so that the analysis sees that the value has changed
   private var changedPhiVar: PhiVar? = null
   fun change(): PhiVar {
-    if (this.changedPhiVar === null) this.changedPhiVar = this.copy(changed = true).apply { changedPhiVar = this }
+    if (this.changedPhiVar == null) this.changedPhiVar = this.copy(changed = true).apply { changedPhiVar = this }
     return this.changedPhiVar!!
   }
 }

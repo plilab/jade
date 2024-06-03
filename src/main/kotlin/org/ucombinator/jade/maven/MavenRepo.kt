@@ -39,7 +39,7 @@ object MavenRepo {
           async(Dispatchers.IO) {
             // log.info("Downloading blob to $destFile")
             val blob = bucket.get(file.toString())
-            if (blob === null) {
+            if (blob == null) {
               log.error("Skipping missing blob $destFile")
             } else {
               log.info("Downloading blob to $destFile")

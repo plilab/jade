@@ -39,7 +39,7 @@ object GenerateClassfileFlags {
         val keywordOption = "(Declared|Marked|Marked or implicitly) <code class=\"literal\">(.*)</code>"
           .toRegex()
           .find(description.childNodes().joinToString())
-        val keyword = if (keywordOption === null) "-" else keywordOption.groupValues[2] // TODO: 2 -> 1?
+        val keyword = if (keywordOption == null) "-" else keywordOption.groupValues[2] // TODO: 2 -> 1?
         builder.append("$kind%-11s ${accName.text()}%-16s ${value.text()} $keyword%-12s ${description.text()}\n")
       }
       builder.append("\n")
@@ -117,7 +117,7 @@ object GenerateClassfileFlags {
         |  fun value(): Int
         |  fun valueAsString(): String = "0x${'$'}{"%04x".format(value())}"
         |  fun keyword(): Modifier.Keyword?
-        |  fun modifier(): Modifier? = if (keyword() === null) { null } else { Modifier(keyword()) }
+        |  fun modifier(): Modifier? = if (keyword() == null) { null } else { Modifier(keyword()) }
         |}
         |
         |
@@ -150,7 +150,7 @@ object GenerateClassfileFlags {
     )
 
     for (flagsInfo in uniqueFlagInfos) {
-      val keyword = if (flagsInfo.keyword === null) null else "Modifier.Keyword.${flagsInfo.keyword.uppercase()}"
+      val keyword = if (flagsInfo.keyword == null) null else "Modifier.Keyword.${flagsInfo.keyword.uppercase()}"
       val extensions = flagExtensions.getValue(flagsInfo.accName).joinToString(", ") { "${it}Flag" }
 
       builder.append("""

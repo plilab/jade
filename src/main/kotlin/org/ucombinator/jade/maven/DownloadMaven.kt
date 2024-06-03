@@ -93,7 +93,7 @@ object Exceptions {
     var e: Throwable? = exception
     var l = listOf<String>()
 
-    while (e !== null) {
+    while (e != null) {
       l += e::class.qualifiedName ?: "<anonymous>"
       e = e.cause
     }
@@ -143,7 +143,7 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
     val maxTries = 10
     while (true) {
       val ex = cache.get(key)
-      if (ex !== null) throw CachedException(ex.first, ex.second)
+      if (ex != null) throw CachedException(ex.first, ex.second)
 
       try {
         val results = defaultMetadataResolver!!.resolveMetadata(session, mutableListOf(request))
@@ -243,7 +243,7 @@ class CachingArtifactResolver : ArtifactResolver {
     val maxTries = 10
     while (true) {
       val ex = cache.get(key)
-      if (ex !== null) throw CachedException(ex.first, ex.second)
+      if (ex != null) throw CachedException(ex.first, ex.second)
 
       try {
         return defaultArtifactResolver!!.resolveArtifact(session, request)
@@ -529,7 +529,7 @@ class DownloadMaven(
             jarListFile.bufferedReader().use {
               val line = it.readLine()
               when {
-                line === null -> log.error("!!!! Empty cache file: $jarListFile")
+                line == null -> log.error("!!!! Empty cache file: $jarListFile")
                 line.startsWith('!') -> {
                   cachedFail.incrementAndGet()
                   cachedFails.merge(line.substring(1), 1, Int::plus)
@@ -663,14 +663,14 @@ class DownloadMaven(
     val metadataResults = system.resolveMetadata(session, listOf(metadataRequest))
     assert(metadataResults.size == 1)
     val metadataResult = metadataResults[0]
-    if (metadataResult.metadata === null) {
-      assert(metadataResult.exception !== null)
+    if (metadataResult.metadata == null) {
+      assert(metadataResult.exception != null)
       throw metadataResult.exception
     }
     val m = FileInputStream(metadataResult.metadata.file).use { MetadataXpp3Reader().read(it, false) }
-    if (m.versioning === null) throw NoVersioningTagException(groupId, artifactId)
-    if (m.versioning.release !== null) return m.versioning.release
-    if (m.versioning.latest !== null) return m.versioning.latest
+    if (m.versioning == null) throw NoVersioningTagException(groupId, artifactId)
+    if (m.versioning.release != null) return m.versioning.release
+    if (m.versioning.latest != null) return m.versioning.latest
     val versions = m.versioning.versions
     return versions.maxByOrNull(versionScheme::parseVersion) ?: throw NoVersionsInVersioningTagException(groupId, artifactId)
   }
@@ -854,7 +854,7 @@ class DownloadMaven(
     var e: Throwable? = exception
     var l = listOf<String>()
 
-    while (e !== null) {
+    while (e != null) {
       l += e::class.qualifiedName ?: "<anonymous>"
       e = e.cause
     }
@@ -874,10 +874,10 @@ class DownloadMaven(
     }
 
     for (c in classes) {
-      if (e === null || !c.isInstance(e)) return false
+      if (e == null || !c.isInstance(e)) return false
       e = e.cause
     }
-    return e === null
+    return e == null
   }
 
   private val UNSOLVABLE_ORG_WEBJARS_NPM_ARTIFACTS = listOf(

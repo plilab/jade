@@ -78,7 +78,9 @@ object GraphViz {
         val y = tree.getEdgeSource(x)
         graph.outgoingEdgesOf(v).map(graph::getEdgeTarget) == setOf(y) &&
           graph.incomingEdgesOf(y).map(graph::getEdgeSource) == setOf(v)
-      } else { false }
+      } else {
+        false
+      }
       for (child in edges.map(tree::getEdgeSource)) {
         val newIndent = if (!flatten || !sole) "$indent  " else indent
         go(newIndent, child, (flatten && sole) == backgroundColor, sole)

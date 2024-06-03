@@ -156,11 +156,12 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
   override fun run() {
     with(BuildInformation) {
       println("""
-        $versionMessage
-        Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
-        Build time: $buildTime
-        Dependencies:
-      """.trimIndent())
+          $versionMessage
+          Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
+          Build time: $buildTime
+          Dependencies:
+        """.trimIndent()
+      )
     }
     for (d in BuildInformation.dependencies) {
       println("  ${d.first} (configuration: ${d.second})")

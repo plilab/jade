@@ -35,7 +35,6 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
   data class Block(val kind: Kind, val headInsn: Insn)
   // case class Block(kind: Kind, headInsn: Insn, var parent: Block = null)
 
-  // TODO: as enum?
   sealed interface Kind // TODO: structural type
   object Loop : Kind
   object Exception : Kind

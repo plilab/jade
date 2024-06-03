@@ -24,9 +24,9 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
   override fun toString(): String = InsnTextifier.longString(method, insn)
 
   // NOTE: valid only for Insn for the same method
-  override fun compareTo(other: Insn): Int = run {
+  override fun compareTo(other: Insn): Int {
     assert(this.method === other.method) // TODO: assert message or log message
-    when {
+    return when {
       this === other || this.insn === other.insn -> 0
       this.index() < other.index() -> -1
       this.index() > other.index() -> 1

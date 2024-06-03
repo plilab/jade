@@ -95,7 +95,7 @@ object DecompileClass {
     NodeList<AnnotationExpr>(nodes.filterNotNull().flatMap { it.map(::decompileAnnotation) })
 
   private fun decompileField(node: FieldNode): FieldDeclaration {
-    // // attrs (ignore?)
+    // attrs (ignore?)
     val modifiers = Flags.toModifiers(Flags.fieldFlags(node.access))
     val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
       node.visibleAnnotations,
@@ -126,22 +126,18 @@ object DecompileClass {
     val (type, node, a1, a2) = parameter.value
     val flags = if (node === null) listOf() else Flags.parameterFlags(node.access)
     val modifiers = Flags.toModifiers(flags)
-    val annotations: NodeList<AnnotationExpr> = decompileAnnotations(a1, a2, null, null)
-    val isVarArgs: Boolean =
-      Flags.methodFlags(method.access).contains(Flags.ACC_VARARGS) &&
-        index == paramCount - 1
+    val annotations = decompileAnnotations(a1, a2, null, null)
+    val isVarArgs = Flags.methodFlags(method.access).contains(Flags.ACC_VARARGS) && index == paramCount - 1
     val varArgsAnnotations = NodeList<AnnotationExpr>() // TODO?
     // TODO: make consistent with analysis.ParameterVar
-    val name: SimpleName = SimpleName(if (node === null) "parameter${index + 1}" else node.name)
+    val name = SimpleName(if (node === null) "parameter${index + 1}" else node.name)
     return Parameter(modifiers, annotations, type, isVarArgs, varArgsAnnotations, name)
   }
 
   fun parameterTypes(desc: List<Type>, sig: List<Type>, params: List<ParameterNode>): List<Type> =
     when {
-      desc.isNotEmpty() && params.isNotEmpty() && (
-        Flags.parameterFlags(params.first().access).contains(Flags.ACC_SYNTHETIC) ||
-          Flags.parameterFlags(params.first().access).contains(Flags.ACC_MANDATED)
-      ) ->
+      desc.isNotEmpty() && params.isNotEmpty() &&
+        Flags.parameterFlags(params.first().access).any(listOf(Flags.ACC_SYNTHETIC, Flags.ACC_MANDATED)::contains) ->
         // TODO: Flags.checkParameter(access, Modifier)
         listOf(desc.first()) + parameterTypes(desc.tail(), sig, params.tail())
       desc.isNotEmpty() && sig.isNotEmpty() && params.isNotEmpty() ->

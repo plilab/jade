@@ -248,6 +248,7 @@ val generateBuildInfo by tasks.registering {
 // ////////////////////////////////////////////////////////////////
 // Generic Configuration
 
+// TODO: tasks.check.dependsOn(diktatCheck)
 tasks.withType<Test> {
   // Use JUnit Platform for unit tests.
   useJUnitPlatform()

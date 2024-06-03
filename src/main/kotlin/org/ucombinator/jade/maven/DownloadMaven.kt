@@ -110,16 +110,18 @@ object Exceptions {
   }
 }
 
+// TODO: Map vs LinkedHashMap
+// TODO: remove Fiveple
+typealias CacheKey<T> = Fiveple<String, String, String, String, T>
+class Cache<T> : LinkedHashMap<CacheKey<T>, Pair<String, String>>(16, 0.75F, true) {
+  override fun removeEldestEntry(eldest: Map.Entry<CacheKey<T>, Pair<String, String>>): Boolean = this.size > 100_000
+}
+
 // TODO: NearestVersionSelectorWrapper (DependencyNodeWrapper) https://kotlinlang.org/docs/delegation.html
 class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
   private val log = Log {}
 
-  val cache = Collections.synchronizedMap(
-    object : LinkedHashMap<Fiveple<String, String, String, String, Nature>, Pair<String, String>>(16, 0.75F, true) {
-      override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, Nature>, Pair<String, String>>): Boolean =
-        this.size > 100_000
-    }
-  )
+  val cache = Collections.synchronizedMap(Cache<Nature>())
 
   override fun resolveMetadata(
     session: RepositorySystemSession,
@@ -182,12 +184,8 @@ class CachingArtifactResolver : ArtifactResolver {
   private val log = Log {}
 
   // val exists = Collections.synchronizedMap(mutableMapOf<Artifact, Boolean>())
-  val cache = Collections.synchronizedMap(
-    object : LinkedHashMap<Fiveple<String, String, String, String, String>, Pair<String, String>>(16, 0.75F, true) {
-      override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, String>, Pair<String, String>>): Boolean =
-        this.size > 100_000
-    }
-  )
+  val cache = Collections.synchronizedMap(Cache<String>())
+
   override fun resolveArtifact(session: RepositorySystemSession, request: ArtifactRequest): ArtifactResult {
     if (
       request.artifact.groupId.contains("\${") ||
@@ -330,10 +328,11 @@ class DownloadMaven(
   val modelBuilder = DefaultModelBuilderFactory().newInstance() // TODO: locator
   val session = MavenRepositorySystemUtils.newSession()
   val localRepo = LocalRepository(localRepoDir)
+
   init {
     session.localRepositoryManager = system.newLocalRepositoryManager(session, localRepo)
-    val transformer = ConflictResolver(NearestVersionSelector(), JavaScopeSelector(),
-                            SimpleOptionalitySelector(), JavaScopeDeriver())
+    val transformer =
+      ConflictResolver(NearestVersionSelector(), JavaScopeSelector(), SimpleOptionalitySelector(), JavaScopeDeriver())
     val t = ChainedDependencyGraphTransformer(transformer, JavaDependencyContextRefiner())
     session.dependencyGraphTransformer = t
   }
@@ -348,106 +347,105 @@ class DownloadMaven(
       .addHostnameVerifier(NoopHostnameVerifier())
       .build()
 
-  @Suppress("MaxLineLength")
-  val remotes =
-    listOf(
-      // We do not use springio-* or spring-* repositories as they no longer allow anonymous access.
-      // See https://spring.io/blog/2020/10/29/notice-of-permissions-changes-to-repo-spring-io-fall-and-winter-2020
+  @Suppress("ktlint:standard:comment-wrapping", "ktlint:standard:max-line-length", "MaxLineLength")
+  val remotes = listOf(
+    // We do not use springio-* or spring-* repositories as they no longer allow anonymous access.
+    // See https://spring.io/blog/2020/10/29/notice-of-permissions-changes-to-repo-spring-io-fall-and-winter-2020
 
-      /* 9.6M uses / 8.7M jars */ "google-maven-central" to "https://maven-central-asia.storage-download.googleapis.com/maven2/",
-      /* 137k uses /  32k jars */ "google" to "https://maven.google.com/",
-      /*  78k uses / 270k jars */ "wso2-releases" to "https://maven.wso2.org/nexus/content/repositories/releases/",
-      /*  68k uses /  30k jars */ "wso2" to "http://dist.wso2.org/maven2/",
-      /*  41k uses /  59k jars */ "liferay-public" to "https://repository.liferay.com/nexus/content/repositories/public/",
-      /*  33k uses /  13k jars */ "osgeo-release" to "https://repo.osgeo.org/repository/release/",
-      /*  12k uses / 280k jars */ "pentaho-omni" to "https://nexus.pentaho.org/content/groups/omni/",
-      // /* 5.1k uses /  22k jars */ "ebi-public" to "https://www.ebi.ac.uk/intact/maven/nexus/content/repositories/public/",
-      /* 4.0k uses / 145k jars */ "redhat-ga" to "https://maven.repository.redhat.com/ga/",
-      /* 3.4k uses / 120k jars */ "geomajas" to "http://maven.geomajas.org/",
-      /* 1.8k uses / 8.2k jars */ "typesafe-maven-releases" to "https://repo.typesafe.com/typesafe/maven-releases/",
-      /* 1.5k uses / 9.0k jars */ "twitter" to "https://maven.twttr.com/",
-      /* 1.4k uses /  41k jars */ "fusesource-releases" to "https://repo.fusesource.com/nexus/content/repositories/releases/",
-      /* 1.1k uses /  13k jars */ "confluent-packages" to "https://packages.confluent.io/maven/",
-      /* 791  uses /  19  jars */ "wso2-thirdparty" to "https://maven.wso2.org/nexus/content/repositories/thirdparty/",
-      /* 638  uses /  21k jars */ "netbeans" to "http://netbeans.apidesign.org/maven2/", // Note: https://netbeans.apache.org/about/oracle-transition.html
-      /* 268  uses / 3.9k jars */ "ow2-public" to "https://repository.ow2.org/nexus/content/repositories/public/",
-      /* 130  uses / 227k jars */ "wso2-public" to "https://maven.wso2.org/nexus/content/repositories/public/",
+    /* 9.6M uses / 8.7M jars */ "google-maven-central" to "https://maven-central-asia.storage-download.googleapis.com/maven2/",
+    /* 137k uses /  32k jars */ "google" to "https://maven.google.com/",
+    /*  78k uses / 270k jars */ "wso2-releases" to "https://maven.wso2.org/nexus/content/repositories/releases/",
+    /*  68k uses /  30k jars */ "wso2" to "http://dist.wso2.org/maven2/",
+    /*  41k uses /  59k jars */ "liferay-public" to "https://repository.liferay.com/nexus/content/repositories/public/",
+    /*  33k uses /  13k jars */ "osgeo-release" to "https://repo.osgeo.org/repository/release/",
+    /*  12k uses / 280k jars */ "pentaho-omni" to "https://nexus.pentaho.org/content/groups/omni/",
+    // /* 5.1k uses /  22k jars */ "ebi-public" to "https://www.ebi.ac.uk/intact/maven/nexus/content/repositories/public/",
+    /* 4.0k uses / 145k jars */ "redhat-ga" to "https://maven.repository.redhat.com/ga/",
+    /* 3.4k uses / 120k jars */ "geomajas" to "http://maven.geomajas.org/",
+    /* 1.8k uses / 8.2k jars */ "typesafe-maven-releases" to "https://repo.typesafe.com/typesafe/maven-releases/",
+    /* 1.5k uses / 9.0k jars */ "twitter" to "https://maven.twttr.com/",
+    /* 1.4k uses /  41k jars */ "fusesource-releases" to "https://repo.fusesource.com/nexus/content/repositories/releases/",
+    /* 1.1k uses /  13k jars */ "confluent-packages" to "https://packages.confluent.io/maven/",
+    /* 791  uses /  19  jars */ "wso2-thirdparty" to "https://maven.wso2.org/nexus/content/repositories/thirdparty/",
+    /* 638  uses /  21k jars */ "netbeans" to "http://netbeans.apidesign.org/maven2/", // Note: https://netbeans.apache.org/about/oracle-transition.html
+    /* 268  uses / 3.9k jars */ "ow2-public" to "https://repository.ow2.org/nexus/content/repositories/public/",
+    /* 130  uses / 227k jars */ "wso2-public" to "https://maven.wso2.org/nexus/content/repositories/public/",
 
-      // TODO: maven.java.net
-      // TODO: Certificate for .. doesn't match any of the subject ...
+    // TODO: maven.java.net
+    // TODO: Certificate for .. doesn't match any of the subject ...
 
-      // ////////////// broken but possibly fixable
+    // ////////////// broken but possibly fixable
 
-      // "icm" to "https://maven.icm.edu.pl/artifactory/repo/", // 94k jars / null pointer exception / too long to reach?
-      // "apache-releases" to "https://repository.apache.org/content/repositories/releases/", // 92k jars / Network is unreachable (connect failed)
-      //    commons-*
-      //    javax/jdo:*
-      //    javax/portlet:portlet-api
-      //    log4j:apache-log4j-extras
-      //    log4j:log4j
-      //    net/jini:jsk-*
-      //    net/jini/lookup:serviceui
-      //    org/apache*
-      //    org/freemarker*
-      //    org/netbeans*
-      //    org/openoffice*
-      //    org/qi4j*
-      // "apache-public" to "https://repository.apache.org/content/repositories/public/", // 17k jars / Network is unreachable (connect failed)
-      //    commons-*
-      //    io/re-digital:*
-      //    javax/jdo:*
-      //    javax/portlet*
-      //    log4j:apache-chainsaw
-      //    log4j:apache-log4j-extras
-      //    log4j:log4j
-      //    net/jini:jsk-*
-      //    net/jini/lookup:serviceui
-      //    org/apache*
-      //    org/cocooon*
-      //    org/deri*
-      //    org/foo*
-      //    org/freemarker*
-      //    org/netbeans*
-      //    org/openoffice*
-      //    org/qi4j*
-      //    org/swssf*
+    // "icm" to "https://maven.icm.edu.pl/artifactory/repo/", // 94k jars / null pointer exception / too long to reach?
+    // "apache-releases" to "https://repository.apache.org/content/repositories/releases/", // 92k jars / Network is unreachable (connect failed)
+    //    commons-*
+    //    javax/jdo:*
+    //    javax/portlet:portlet-api
+    //    log4j:apache-log4j-extras
+    //    log4j:log4j
+    //    net/jini:jsk-*
+    //    net/jini/lookup:serviceui
+    //    org/apache*
+    //    org/freemarker*
+    //    org/netbeans*
+    //    org/openoffice*
+    //    org/qi4j*
+    // "apache-public" to "https://repository.apache.org/content/repositories/public/", // 17k jars / Network is unreachable (connect failed)
+    //    commons-*
+    //    io/re-digital:*
+    //    javax/jdo:*
+    //    javax/portlet*
+    //    log4j:apache-chainsaw
+    //    log4j:apache-log4j-extras
+    //    log4j:log4j
+    //    net/jini:jsk-*
+    //    net/jini/lookup:serviceui
+    //    org/apache*
+    //    org/cocooon*
+    //    org/deri*
+    //    org/foo*
+    //    org/freemarker*
+    //    org/netbeans*
+    //    org/openoffice*
+    //    org/qi4j*
+    //    org/swssf*
 
-      // ////////////// less than 35 uses
+    // ////////////// less than 35 uses
 
-      // /*  32 uses / 3.6k jars */ "geo-solutions" to "http://maven.geo-solutions.it/",
-      // /*  26 uses /  21k jars */ "eclipse-releases" to "https://repo.eclipse.org/content/groups/releases/",
-      // /*  20 uses / 280  jars */ "cit-ec-releases" to "https://mvn.cit-ec.de/nexus/content/repositories/releases/",
-      // /*  19 uses /  10k jars */ "conjars" to "https://conjars.org/repo/",
-      // /*  18 uses / 142k jars */ "nuxeo-public-releases" to "https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases/",
-      // /*   7 uses /  72k jars */ "mulesoft-public" to "https://repository.mulesoft.org/nexus/content/repositories/public/",
-      // /*   2 uses / 112  jars */ "edinburgh-ph" to "https://www2.ph.ed.ac.uk/maven2/",
+    // /*  32 uses / 3.6k jars */ "geo-solutions" to "http://maven.geo-solutions.it/",
+    // /*  26 uses /  21k jars */ "eclipse-releases" to "https://repo.eclipse.org/content/groups/releases/",
+    // /*  20 uses / 280  jars */ "cit-ec-releases" to "https://mvn.cit-ec.de/nexus/content/repositories/releases/",
+    // /*  19 uses /  10k jars */ "conjars" to "https://conjars.org/repo/",
+    // /*  18 uses / 142k jars */ "nuxeo-public-releases" to "https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases/",
+    // /*   7 uses /  72k jars */ "mulesoft-public" to "https://repository.mulesoft.org/nexus/content/repositories/public/",
+    // /*   2 uses / 112  jars */ "edinburgh-ph" to "https://www2.ph.ed.ac.uk/maven2/",
 
-      // ////////////// 0 uses
+    // ////////////// 0 uses
 
-      // /*   0 uses / 2.1M jars */ "sonatype-releases" to "https://oss.sonatype.org/content/repositories/releases/",
-      // /*   0 uses / 273k jars */ "jboss-releases" to "https://repository.jboss.org/nexus/content/repositories/releases/",
-      // /*   0 uses /  22k jars */ "osgeo" to "https://download.osgeo.org/webdav/geotools/",
-      // /*   0 uses / 6.4k jars */ "jboss-thirdparty-releases" to "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/",
-      // /*   0 uses / 3.7k jars */ "seasar" to "https://maven.seasar.org/maven2/",
-      // /*   0 uses / 1.4k jars */ "unidata-ucar-releases" to "https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/",
-      // /*   0 uses / 1.2k jars */ "pustefix-framework" to "http://pustefix-framework.org/repository/maven/",
-      // /*   0 uses /  96  jars */ "tidalwave-releases" to "https://services.tidalwave.it/nexus/content/repositories/releases/",
-      // /*   0 uses /  67  jars */ "eclipse-paho" to "https://repo.eclipse.org/content/repositories/paho-releases/",
-      // /*   0 uses /   4  jars */ "tweetyproject" to "https://tweetyproject.org/mvn/",
+    // /*   0 uses / 2.1M jars */ "sonatype-releases" to "https://oss.sonatype.org/content/repositories/releases/",
+    // /*   0 uses / 273k jars */ "jboss-releases" to "https://repository.jboss.org/nexus/content/repositories/releases/",
+    // /*   0 uses /  22k jars */ "osgeo" to "https://download.osgeo.org/webdav/geotools/",
+    // /*   0 uses / 6.4k jars */ "jboss-thirdparty-releases" to "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/",
+    // /*   0 uses / 3.7k jars */ "seasar" to "https://maven.seasar.org/maven2/",
+    // /*   0 uses / 1.4k jars */ "unidata-ucar-releases" to "https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/",
+    // /*   0 uses / 1.2k jars */ "pustefix-framework" to "http://pustefix-framework.org/repository/maven/",
+    // /*   0 uses /  96  jars */ "tidalwave-releases" to "https://services.tidalwave.it/nexus/content/repositories/releases/",
+    // /*   0 uses /  67  jars */ "eclipse-paho" to "https://repo.eclipse.org/content/repositories/paho-releases/",
+    // /*   0 uses /   4  jars */ "tweetyproject" to "https://tweetyproject.org/mvn/",
 
-      // ////////////// unreachable servers
+    // ////////////// unreachable servers
 
-      // /*   ? uses/  10k jars */ "jspresso" to "http://repository.jspresso.org/maven2/",
-      // /*   ? uses/ 3.9k jars */ "metova-public" to "http://repo.metova.com/nexus/content/groups/public/",
-      // /*   ? uses/ 1.9k jars */ "atricore-m2-release-repository" to "http://repository.atricore.org/m2-release-repository/",
-      // /*   ? uses/ 1.3k jars */ "entwine-releases" to "http://maven.entwinemedia.com/content/repositories/releases/",
+    // /*   ? uses/  10k jars */ "jspresso" to "http://repository.jspresso.org/maven2/",
+    // /*   ? uses/ 3.9k jars */ "metova-public" to "http://repo.metova.com/nexus/content/groups/public/",
+    // /*   ? uses/ 1.9k jars */ "atricore-m2-release-repository" to "http://repository.atricore.org/m2-release-repository/",
+    // /*   ? uses/ 1.3k jars */ "entwine-releases" to "http://maven.entwinemedia.com/content/repositories/releases/",
 
-    ).map {
-      RemoteRepository.Builder(it.first, "default", it.second)
-        .setPolicy(RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL))
-        .setAuthentication(authentication)
-        .build()
-    }
+  ).map {
+    RemoteRepository.Builder(it.first, "default", it.second)
+      .setPolicy(RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL))
+      .setAuthentication(authentication)
+      .build()
+  }
 
   fun run() {
     Runtime.getRuntime().addShutdownHook(
@@ -837,7 +835,7 @@ class DownloadMaven(
     return artifactRequests
   }
 
-  fun downloadDependencies(artifactRequests: List<Fiveple<String, String, String, String, String>>): List<ArtifactResult> =
+  fun downloadDependencies(artifactRequests: List<CacheKey<String>>): List<ArtifactResult> =
     artifactRequests.map { getArtifact(it._1, it._2, it._3, it._4, it._5) }
 
   fun writeJarList(artifactResults: List<ArtifactResult>, jarListFile: File) {

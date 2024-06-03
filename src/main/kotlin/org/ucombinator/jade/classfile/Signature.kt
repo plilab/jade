@@ -15,9 +15,12 @@ import org.objectweb.asm.signature.SignatureVisitor
 import org.objectweb.asm.signature.SignatureWriter
 import org.ucombinator.jade.util.Errors
 
-// https://docs.oracle.com/javase/specs/jvms/se22/html/jvms-4.html#jvms-4.7.9.1
-// https://gitlab.ow2.org/asm/asm/-/blob/master/asm/src/main/java/org/objectweb/asm/signature/SignatureReader.java
-// https://github.com/openjdk/jdk/blob/jdk-23%2B23/src/java.base/share/classes/sun/reflect/generics/parser/SignatureParser.java
+// See:
+// - https://docs.oracle.com/javase/specs/jvms/se22/html/jvms-4.html#jvms-4.7.9.1
+// - https://gitlab.ow2.org/asm/asm/-/blob/master/asm/src/main/java/org/objectweb/asm/signature/SignatureReader.java
+// - https://github.com/openjdk/jdk/blob/jdk-23%2B23/src/java.base/share/classes/sun/reflect/generics/parser/SignatureParser.java
+
+// TODO: use Delegates.notNull (or custom). See https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.properties/-delegates/not-null.html
 
 data class ClassSignature(
   val typeParameters: List<TypeParameter>,
@@ -129,7 +132,7 @@ open class DelegateSignatureVisitor {
 }
 
 typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
-@Suppress("LONG_LINE", "MaxLineLength")
+@Suppress("LONG_LINE", "MaxLineLength", "ktlint:standard:function-signature")
 class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisitor() {
   override fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? = receiver(descriptorToType(descriptor))
   override fun visitTypeVariable(name: String): DelegateSignatureVisitor? = receiver(TypeParameter(ClassName.identifier(name)))
@@ -159,6 +162,7 @@ class ClassSignatureVisitor : FormalTypeParameterVisitor() {
     TypeSignatureVisitor { this.apply { interfaces.add(it.cast<ClassOrInterfaceType>("non-class in interface")) } }
 }
 
+@Suppress("ktlint:standard:function-signature")
 class MethodSignatureVisitor : FormalTypeParameterVisitor() {
   val parameterTypes = mutableListOf<Type>()
   var returnType = null as Type?
@@ -173,6 +177,7 @@ class MethodSignatureVisitor : FormalTypeParameterVisitor() {
 }
 
 // TODO: TypeReceiver -> ClassOrInterfaceTypeReceiver??
+@Suppress("ktlint:standard:function-signature")
 class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSignatureVisitor() {
   var result = ClassName.classNameType(name)
 
@@ -191,24 +196,26 @@ class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSigna
 
 private inline fun <reified T> Any.cast(message: String): T = requireNotNull(this as? T) { message }
 
-private fun descriptorToType(descriptor: Char): Type = when (descriptor) {
-  'B' -> PrimitiveType.byteType()
-  'C' -> PrimitiveType.charType()
-  'D' -> PrimitiveType.doubleType()
-  'F' -> PrimitiveType.floatType()
-  'I' -> PrimitiveType.intType()
-  'J' -> PrimitiveType.longType()
-  'S' -> PrimitiveType.shortType()
-  'Z' -> PrimitiveType.booleanType()
-  'V' -> VoidType()
-  else -> Errors.unmatchedValue(descriptor)
+private fun descriptorToType(descriptor: Char): Type =
+  when (descriptor) {
+    'B' -> PrimitiveType.byteType()
+    'C' -> PrimitiveType.charType()
+    'D' -> PrimitiveType.doubleType()
+    'F' -> PrimitiveType.floatType()
+    'I' -> PrimitiveType.intType()
+    'J' -> PrimitiveType.longType()
+    'S' -> PrimitiveType.shortType()
+    'Z' -> PrimitiveType.booleanType()
+    'V' -> VoidType()
+    else -> Errors.unmatchedValue(descriptor)
 }
 
-private fun toTypeParameter(type: Type): ClassOrInterfaceType = when (type) {
-  is ClassOrInterfaceType -> type
-  is TypeParameter -> ClassOrInterfaceType(null, type.name, null)
-  else -> Errors.unmatchedType(type)
-}
+private fun toTypeParameter(type: Type): ClassOrInterfaceType =
+  when (type) {
+    is ClassOrInterfaceType -> type
+    is TypeParameter -> ClassOrInterfaceType(null, type.name, null)
+    else -> Errors.unmatchedType(type)
+  }
 
 private fun typeArguments(type: ClassOrInterfaceType): NodeList<Type> {
   val typeArguments = type.typeArguments.orElse(NodeList<Type>())
@@ -218,10 +225,11 @@ private fun typeArguments(type: ClassOrInterfaceType): NodeList<Type> {
 
 private fun toTypeArgument(): Type = WildcardType()
 
-private fun toTypeArgument(wildcard: Char, type: Type): Type = when (wildcard) {
-  // TODO: remove need for casts
-  SignatureVisitor.EXTENDS -> WildcardType(type.cast<ReferenceType>("non-reference type in type parameter bound"))
-  SignatureVisitor.SUPER -> WildcardType(null, type.cast<ReferenceType>("non-reference type in type parameter bound"), NodeList())
-  SignatureVisitor.INSTANCEOF -> type // TODO: this may be wrong
-  else -> Errors.unmatchedValue(wildcard)
-}
+private fun toTypeArgument(wildcard: Char, type: Type): Type =
+  when (wildcard) {
+    // TODO: remove need for casts
+    SignatureVisitor.EXTENDS -> WildcardType(type.cast<ReferenceType>("non-reference type in type parameter bound"))
+    SignatureVisitor.SUPER -> WildcardType(null, type.cast<ReferenceType>("non-reference type in type parameter bound"), NodeList())
+    SignatureVisitor.INSTANCEOF -> type // TODO: this may be wrong
+    else -> Errors.unmatchedValue(wildcard)
+  }

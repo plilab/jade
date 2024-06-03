@@ -9,10 +9,11 @@ import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
 
 object ClassName {
-  fun identifier(identifier: String): String = identifier.apply {
-    require(this.isNotEmpty()) { "Empty identifier" }
-    require(!this.any { it in ".;[/<>:" }) { """Invalid identifier "${this}"""" }
-  }
+  fun identifier(identifier: String): String =
+    identifier.apply {
+      require(this.isNotEmpty()) { "Empty identifier" }
+      require(!this.any { it in ".;[/<>:" }) { """Invalid identifier "${this}"""" }
+    }
 
   fun identifiers(string: String): List<String> = string.split('/').map(::identifier)
 

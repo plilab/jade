@@ -68,7 +68,7 @@ object DownloadIndex {
   fun lastFullLine(file: File): String {
     RandomAccessFile(file, "rw").use { input ->
       fun newlineBefore(end: Long): Long? =
-        (end - 1 downTo 0).find { input.seek(it); input.readByte().toInt().toChar() == '\n' }
+        (end - 1 downTo 0).find { input.seek(it).run { input.readByte() == '\n'.code.toByte() } }
 
       // The last newline is probably the last byte but we check in case an incomplete line was written
       val lastNewline = newlineBefore(input.length()) ?: return ""

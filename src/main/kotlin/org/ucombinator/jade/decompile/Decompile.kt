@@ -47,7 +47,9 @@ object Decompile {
           DecompileMethodBody.decompileBody(classNode, methodNode, callable)
           log.debug("method: $callable")
         }
-      } else { TODO() }
+      } else {
+        TODO()
+      }
     }
 
     // val readFiles = ReadFiles()

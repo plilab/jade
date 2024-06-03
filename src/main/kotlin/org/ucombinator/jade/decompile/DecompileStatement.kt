@@ -51,6 +51,7 @@ object DecompileStatement {
     val graph = AsSubgraph(MaskSubgraph(cfg.graph, { false }, structure.backEdges::contains))
 
     fun labelString(label: LabelNode): String = "JADE_${jumpTargets.getValue(label.label).index()}"
+
     fun insnLabelString(insn: Insn): String = "JADE_${insn.index()}" // TODO: overload with labelString
 
     fun structuredBlock(head: Insn): Pair<Statement, Set<Insn> /* pendingOutside */> {

@@ -52,12 +52,15 @@ import java.io.FileInputStream
 import java.io.InputStream
 
 class ReadFiles {
-  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT")
   companion object {
-    private val CLASS_SIGNATURE =
-      listOf<UByte>(0xcaU, 0xfeU, 0xbaU, 0xbeU).map { it.toByte() }
+    @Suppress("MAGIC_NUMBER", "VARIABLE_NAME_INCORRECT_FORMAT")
+    private val CLASS_SIGNATURE = listOf<UByte>(0xcaU, 0xfeU, 0xbaU, 0xbeU).map { it.toByte() }
+
+    @Suppress("MAGIC_NUMBER", "VARIABLE_NAME_INCORRECT_FORMAT")
     private val JMOD_SIGNATURE =
       listOf<UByte>(0x4aU, 0x4dU, 0x01U, 0x00U, 0x50U, 0x4bU, 0x03U, 0x04U).map { it.toByte() }
+
+    @Suppress("MAGIC_NUMBER")
     private const val JMOD_OFFSET = 4
   }
 

@@ -110,9 +110,8 @@ object DecompileInsn {
       ExpressionStmt(AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN))
     }
 
-  @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "MaxLineLength")
   fun decompileInsn(retVar: Var?, insn: DecompiledInsn): Statement =
-    @Suppress("ktlint:standard:no-multi-spaces")
+    @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "ktlint:standard:no-multi-spaces")
     when (insn) {
       is DecompiledStatement      -> insn.statement
       is DecompiledExpression     -> decompileExpression(retVar, insn.expression)

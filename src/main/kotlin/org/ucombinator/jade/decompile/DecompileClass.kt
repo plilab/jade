@@ -53,9 +53,8 @@ import org.ucombinator.jade.util.Tuples.Fourple
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 object DecompileClass {
-  val CLASS_NODE = object : DataKey<ClassNode>() {}
-  val METHOD_NODE = object : DataKey<MethodNode>() {}
-  // TODO: ktlint: "${foo}"
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT") val CLASS_NODE = object : DataKey<ClassNode>() {}
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT") val METHOD_NODE = object : DataKey<MethodNode>() {}
 
   fun decompileLiteral(node: Any?): Expression? =
     when (node) {

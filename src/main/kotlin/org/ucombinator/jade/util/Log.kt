@@ -34,7 +34,7 @@ object Log {
   //   ScalaLogger(LoggerFactory.getLogger(log.underlying.getName + "." + name))
   // }
 
-  fun listLoggers() {
+  fun loggers(): List<LogbackLogger> {
     // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
     // Note: toURI is required in order to handle special characters
     val jar = java.io.File(Jade::class.java.protectionDomain.codeSource.location.toURI()).path
@@ -50,9 +50,7 @@ object Log {
       }
     }
 
-    for (l in (LoggerFactory.getLogger(Slf4jLogger.ROOT_LOGGER_NAME)as LogbackLogger).loggerContext.loggerList) {
-      println(l.name)
-    }
+    return (LoggerFactory.getLogger(Slf4jLogger.ROOT_LOGGER_NAME) as LogbackLogger).loggerContext.loggerList
   }
 }
 

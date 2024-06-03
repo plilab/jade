@@ -111,7 +111,11 @@ data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) :
 // /////////////////////////////////////
 // Delegate visitors
 
-@Suppress("ThrowingExceptionsWithoutMessageOrCause", "ktlint:standard:blank-line-before-declaration")
+@Suppress(
+  "ThrowingExceptionsWithoutMessageOrCause",
+  "WRONG_OVERLOADING_FUNCTION_ARGUMENTS",
+  "ktlint:standard:blank-line-before-declaration",
+)
 open class DelegateSignatureVisitor {
   open fun visitFormalTypeParameter(name: String): DelegateSignatureVisitor? = throw IllegalArgumentException()
   open fun visitClassBound(): DelegateSignatureVisitor? = throw IllegalArgumentException()
@@ -177,7 +181,7 @@ class MethodSignatureVisitor : FormalTypeParameterVisitor() {
 }
 
 // TODO: TypeReceiver -> ClassOrInterfaceTypeReceiver??
-@Suppress("ktlint:standard:function-signature")
+@Suppress("WRONG_OVERLOADING_FUNCTION_ARGUMENTS", "ktlint:standard:function-signature")
 class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSignatureVisitor() {
   var result = ClassName.classNameType(name)
 
@@ -208,7 +212,7 @@ private fun descriptorToType(descriptor: Char): Type =
     'Z' -> PrimitiveType.booleanType()
     'V' -> VoidType()
     else -> Errors.unmatchedValue(descriptor)
-}
+  }
 
 private fun toTypeParameter(type: Type): ClassOrInterfaceType =
   when (type) {

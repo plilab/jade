@@ -201,6 +201,8 @@ object DescriptorTest {
       Triple(Kind.FIELD, "V", "void"),
     )
 
+  // TODO: test signatures that have typeParameters or exceptionTypes
+
   fun <T : Type> resultsToString(r: List<T>): String = r.joinToString(",") { it.asString() }
 
   fun parseDescriptor(kind: Kind, descriptor: String): String =

@@ -3,12 +3,13 @@ package org.ucombinator.jade.classfile
 import com.github.javaparser.ast.type.Type
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.ucombinator.jade.util.Log
 import kotlin.test.assertFailsWith
 import kotlin.test.expect
 
 @Suppress("BACKTICKS_PROHIBITED")
 object SignatureTest {
-  // TODO: use "parameterized tests"
+  private val log = Log {}
 
   enum class Kind { TYPE, CLASS, METHOD }
 
@@ -822,10 +823,10 @@ object SignatureTest {
   fun <Kind> test(type: String, test: Triple<Kind, String, String?>, parse: (Kind, String) -> String) {
     val (kind, signature, expectedResult) = test
     if (expectedResult == "") { // Don't run test; just print actual result
-      println("$type: $signature type: ${parse(kind, signature)}")
+      log.error("$type: $signature type: ${parse(kind, signature)}")
     } else if (expectedResult == null) { // Expect an error
       // NOTE: Printing the actual result if it doesn't fail to help with debugging the tests
-      assertFailsWith<IllegalArgumentException> { println("$type: $signature type: ${parse(kind, signature)}") }
+      assertFailsWith<IllegalArgumentException> { log.error("$type: $signature type: ${parse(kind, signature)}") }
     } else {
       expect(expectedResult) { parse(kind, signature) }
     }

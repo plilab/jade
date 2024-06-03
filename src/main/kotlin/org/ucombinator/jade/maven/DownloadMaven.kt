@@ -140,6 +140,7 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
     )
 
     var i = 1
+    @Suppress("MAGIC_NUMBER")
     val maxTries = 10
     while (true) {
       val ex = cache.get(key)
@@ -187,8 +188,7 @@ class CachingArtifactResolver : ArtifactResolver {
   val cache = Collections.synchronizedMap(Cache<String>())
 
   override fun resolveArtifact(session: RepositorySystemSession, request: ArtifactRequest): ArtifactResult {
-    if (
-      request.artifact.groupId.contains("\${") ||
+    if (request.artifact.groupId.contains("\${") ||
       request.artifact.artifactId.contains("\${") ||
       request.artifact.version.contains("\${") ||
       request.artifact.classifier.contains("\${") ||
@@ -240,6 +240,7 @@ class CachingArtifactResolver : ArtifactResolver {
     )
 
     var i = 1
+    @Suppress("MAGIC_NUMBER")
     val maxTries = 10
     while (true) {
       val ex = cache.get(key)
@@ -310,32 +311,27 @@ class DownloadMaven(
   val fail = AtomicInteger()
   val abort = AtomicInteger()
 
-  val locator = MavenRepositorySystemUtils.newServiceLocator()
-
-  init {
-    locator.addService(RepositoryConnectorFactory::class.java, BasicRepositoryConnectorFactory::class.java)
-    locator.addService(TransporterFactory::class.java, FileTransporterFactory::class.java)
-    locator.addService(TransporterFactory::class.java, HttpTransporterFactory::class.java)
-    CachingArtifactResolver.defaultArtifactResolver = locator.getService(ArtifactResolver::class.java)
-    locator.setService<ArtifactResolver>(ArtifactResolver::class.java, CachingArtifactResolver::class.java)
-    CachingMetadataResolver.defaultMetadataResolver = locator.getService(MetadataResolver::class.java)
-    locator.setService<MetadataResolver>(MetadataResolver::class.java, CachingMetadataResolver::class.java)
-    locator.setService<MetadataResolver>(MetadataResolver::class.java, CachingMetadataResolver::class.java)
+  val locator = MavenRepositorySystemUtils.newServiceLocator().apply {
+    addService(RepositoryConnectorFactory::class.java, BasicRepositoryConnectorFactory::class.java)
+    addService(TransporterFactory::class.java, FileTransporterFactory::class.java)
+    addService(TransporterFactory::class.java, HttpTransporterFactory::class.java)
+    CachingArtifactResolver.defaultArtifactResolver = getService(ArtifactResolver::class.java)
+    setService<ArtifactResolver>(ArtifactResolver::class.java, CachingArtifactResolver::class.java)
+    CachingMetadataResolver.defaultMetadataResolver = getService(MetadataResolver::class.java)
+    setService<MetadataResolver>(MetadataResolver::class.java, CachingMetadataResolver::class.java)
+    setService<MetadataResolver>(MetadataResolver::class.java, CachingMetadataResolver::class.java)
   }
 
   val system = locator.getService(RepositorySystem::class.java)
   val versionScheme = GenericVersionScheme() // locator.getService(VersionScheme::class.java)
   val modelBuilder = DefaultModelBuilderFactory().newInstance() // TODO: locator
-  val session = MavenRepositorySystemUtils.newSession()
-  val localRepo = LocalRepository(localRepoDir)
-
-  init {
-    session.localRepositoryManager = system.newLocalRepositoryManager(session, localRepo)
+  val session = MavenRepositorySystemUtils.newSession().apply {
+    localRepositoryManager = system.newLocalRepositoryManager(this, localRepo)
     val transformer =
       ConflictResolver(NearestVersionSelector(), JavaScopeSelector(), SimpleOptionalitySelector(), JavaScopeDeriver())
-    val t = ChainedDependencyGraphTransformer(transformer, JavaDependencyContextRefiner())
-    session.dependencyGraphTransformer = t
+    dependencyGraphTransformer = ChainedDependencyGraphTransformer(transformer, JavaDependencyContextRefiner())
   }
+  val localRepo = LocalRepository(localRepoDir)
 
   val remote = RemoteRepository
     .Builder("google-maven-central", "default", "https://maven-central-asia.storage-download.googleapis.com/maven2")
@@ -762,12 +758,13 @@ class DownloadMaven(
       throw UnsolvableArtifactException(descriptorResult.artifact.groupId, descriptorResult.artifact.artifactId)
     }
 
-    val collectRequest = CollectRequest()
-    // collectRequest.setRoot(Dependency(descriptorResult.artifact, JavaScopes.COMPILE))
-    collectRequest.rootArtifact = descriptorResult.artifact
-    collectRequest.dependencies = descriptorResult.dependencies
-    collectRequest.managedDependencies = descriptorResult.managedDependencies
-    collectRequest.repositories = remotes
+    val collectRequest = CollectRequest().apply {
+      // setRoot(Dependency(descriptorResult.artifact, JavaScopes.COMPILE))
+      rootArtifact = descriptorResult.artifact
+      dependencies = descriptorResult.dependencies
+      managedDependencies = descriptorResult.managedDependencies
+      repositories = remotes
+    }
     val collectResult = system.collectDependencies(session, collectRequest)
     // collectResult.getRoot().accept(ConsoleDependencyGraphDumper())
     return collectResult.getRoot()
@@ -866,9 +863,9 @@ class DownloadMaven(
     var e: Throwable? = exception
     while (
       e is org.apache.maven.model.resolution.UnresolvableModelException ||
-      e is org.eclipse.aether.collection.DependencyCollectionException ||
-      e is org.eclipse.aether.resolution.ArtifactDescriptorException ||
-      e is org.eclipse.aether.resolution.ArtifactResolutionException
+        e is org.eclipse.aether.collection.DependencyCollectionException ||
+        e is org.eclipse.aether.resolution.ArtifactDescriptorException ||
+        e is org.eclipse.aether.resolution.ArtifactResolutionException
     ) {
       e = e.cause
     }
@@ -880,6 +877,7 @@ class DownloadMaven(
     return e == null
   }
 
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT")
   private val UNSOLVABLE_ORG_WEBJARS_NPM_ARTIFACTS = listOf(
     "3dmol",
     "admin-lte",

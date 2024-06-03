@@ -36,12 +36,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
     //   ACM Transactions on Programming Languages and Systems, Vol. 1, No. 1, July 1979, Pages 121-141.
     // Based on the code at https://gist.github.com/yuzeh/a5e6602dfdb0db3c2130c10537db54d7
     // A useful description: https://eden.dei.uc.pt/~amilcar/pdf/CompilerInJava.pdf
-    @Suppress(
-      "CONFUSING_IDENTIFIER_NAMING",
-      "LOCAL_VARIABLE_EARLY_DECLARATION",
-      "VARIABLE_HAS_PREFIX",
-      "VARIABLE_NAME_INCORRECT_FORMAT"
-    )
+    @Suppress("LOCAL_VARIABLE_EARLY_DECLARATION")
     fun <V, E> dominatorTree(graph: Graph<V, E>, start: V): DominatorTree<V> {
       // The original algorithm dealt in Ints, not Vs.
       fun successors(v: V): Iterable<V> = graph.outgoingEdgesOf(v).map(graph::getEdgeTarget)
@@ -108,6 +103,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
 
         // Find the semidominator of v
         for (v in predecessors(n)) {
+          @Suppress("VARIABLE_HAS_PREFIX")
           val sPrime =
             // Determine if pred is an ancestor in DFS tree.
             if (dfnum.getValue(v) <= dfnum.getValue(n)) {

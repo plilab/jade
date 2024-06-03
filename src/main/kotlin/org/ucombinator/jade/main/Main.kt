@@ -74,8 +74,8 @@ class Jade : CliktCommand() {
       LVL is one of (case insensitive): off info warning error debug trace all.
       NAME is a qualified package or class name and is relative to `org.ucombinator.jade` unless prefixed with `.`.
     """.trimIndent()
-  ).convert {
-    it.split(",").map {
+  ).convert { arg ->
+    arg.split(",").map {
       val r = it.split("=", limit = 2)
       when (r.size) {
         1 -> LogSetting("", Level.toLevel(r[0]))
@@ -84,7 +84,6 @@ class Jade : CliktCommand() {
       }
     }
   }.default(listOf())
-//     showDefaultValue = CommandLine.Help.Visibility.NEVER,
 
   val logCallerDepth: Int by option(
     metavar = "DEPTH",
@@ -114,7 +113,7 @@ class Jade : CliktCommand() {
         } else if (name == "") {
           ""
         } else {
-          "org.ucombinator.jade." + lvl // TODO: autodetect or take from BuildInfo
+          "org.ucombinator.jade.${lvl}" // TODO: autodetect or take from BuildInfo
         }
       Log.getLog(parsedName).setLevel(lvl)
     }
@@ -132,11 +131,11 @@ class Jade : CliktCommand() {
 
 // TODO: `hidden` parameter
 class TestLog : CliktCommand() {
-  class Bar {
-    val log = Log {} // TODO: lazy?
+  inner class Bar {
+    private val log = Log {} // TODO: lazy?
 
     fun f() {
-      println(this.javaClass.name)
+      echo(this.javaClass.name)
       log.error("error")
       log.warn("warn")
       log.info("info")
@@ -146,8 +145,8 @@ class TestLog : CliktCommand() {
   }
 
   override fun run() {
-    Bar().f()
     echo("executing")
+    Bar().f()
   }
 }
 
@@ -155,7 +154,7 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
   // TODO: --long --short
   override fun run() {
     with(BuildInformation) {
-      println("""
+      echo("""
           $versionMessage
           Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
           Build time: $buildTime
@@ -164,18 +163,18 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
       )
     }
     for (d in BuildInformation.dependencies) {
-      println("  ${d.first} (configuration: ${d.second})")
+      echo("  ${d.first} (configuration: ${d.second})")
     }
-    println("Compile-time system properties:")
+    echo("Compile-time system properties:")
     for (l in BuildInformation.systemProperties) {
-      println("  ${l.first}=${l.second}")
+      echo("  ${l.first}=${l.second}")
     }
-    println("Runtime system properties:")
+    echo("Runtime system properties:")
     for (p in System.getProperties().toList()
       .sortedBy { it.first.toString() }
       .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) }
     ) {
-      println("  ${p.first}=${p.second}")
+      echo("  ${p.first}=${p.second}")
     }
   }
 }
@@ -219,7 +218,7 @@ class Diff : CliktCommand(help = "Compare class files") {
 
 class Loggers : CliktCommand(help = "Lists available loggers") {
   override fun run() {
-    Log.listLoggers()
+    for (l in Log.loggers()) echo(l.name)
   }
 }
 
@@ -231,6 +230,7 @@ class DownloadIndex : CliktCommand(help = "Download index of all files") {
   val pageSize: Long by option().long().default(0)
   val prefix: String? by option()
   val startOffset: String? by option()
+  @Suppress("MAGIC_NUMBER")
   val flushFrequency: Long by option().long().default(1L shl 14)
 
   override fun run() {

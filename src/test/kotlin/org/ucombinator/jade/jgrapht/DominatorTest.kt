@@ -4,16 +4,16 @@ import org.jgrapht.graph.SimpleDirectedGraph
 import kotlin.test.Test
 import kotlin.test.expect
 
-typealias V = Char
+typealias Vertex = Char
 
 object DominatorTest {
   @Test fun test() {
-    val graph = SimpleDirectedGraph<V, Pair<V, V>>(Pair::class.java as Class<Pair<V, V>>)
+    val graph = SimpleDirectedGraph<Vertex, Pair<Vertex, Vertex>>(Pair::class.java as Class<Pair<Vertex, Vertex>>)
     // Test taken from the paper:
     //   THOMAS LENGAUER and ROBERT ENDRE TARJAN. A Fast Algorithm for Finding Dominators in a Flowgraph.
     //   ACM Transactions on Programming Languages and Systems, Vol. 1, No. 1, July 1979, Pages 121-141.
     val root = 'R'
-    val graphEdges = listOf<Pair<V, List<V>>>(
+    val graphEdges = listOf<Pair<Vertex, List<Vertex>>>(
       'R' to listOf('A', 'B', 'C'),
       'A' to listOf('D'),
       'B' to listOf('A', 'D', 'E'),
@@ -28,7 +28,7 @@ object DominatorTest {
       'K' to listOf('R', 'I'),
       'L' to listOf('H'),
     )
-    for (vertex: V in graphEdges.map(Pair<V, List<V>>::first)) {
+    for (vertex: Vertex in graphEdges.map(Pair<Vertex, List<Vertex>>::first)) {
       graph.addVertex(vertex)
     }
     for ((source, targets) in graphEdges) {
@@ -55,7 +55,7 @@ object DominatorTest {
 
     expect(treeEdges) {
       val result = Dominator.dominatorTree(graph, root)
-      result.vertexSet().map { it to result.outgoingEdgesOf(it).map { it.target }.toSet() }.toMap()
+      result.vertexSet().map { v -> v to result.outgoingEdgesOf(v).map { it.target }.toSet() }.toMap()
     }
   }
 }

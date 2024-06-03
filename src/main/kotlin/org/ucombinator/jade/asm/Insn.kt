@@ -55,6 +55,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
         }
       }
       insn.accept(methodVisitor)
+      @Suppress("DEBUG_PRINT") // this print is to printWriter, not stdout
       print(printWriter)
       printWriter.flush()
       val string = stringBuffer.toString().trim()

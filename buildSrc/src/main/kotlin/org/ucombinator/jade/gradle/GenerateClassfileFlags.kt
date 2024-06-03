@@ -141,7 +141,7 @@ object GenerateClassfileFlags {
         |    val maskedInt = int and 0xffff // Ignore ASM specific flags, which occur above bit 16
         |    val result = mapping.filter { it.first and maskedInt != 0 }
         |    val intResult = result.fold(0) { x, y -> x or y.first }
-        |    assert(maskedInt == intResult, { "flag parsing error: want 0x${'$'}{"%x".format(int)}, got 0x${'$'}{"%x".format(intResult)}" })
+        |    assert(maskedInt == intResult) { "flag parsing error: want 0x${'$'}{"%x".format(int)}, got 0x${'$'}{"%x".format(intResult)}" }
         |    result.map { it.second }
         |  }
         |

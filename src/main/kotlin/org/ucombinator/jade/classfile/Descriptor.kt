@@ -11,8 +11,12 @@ object Descriptor {
   // TODO: use org.objectweb.asm.Type.getArgumentTypes(descriptor) and org.objectweb.asm.Type.getReturnType(descriptor)
   fun methodDescriptor(string: String): MethodDescriptor {
     val s = Signature.methodSignature(string)
-    assert(s.typeParameters.isEmpty())
-    assert(s.exceptionTypes.isEmpty())
+    require(s.typeParameters.isEmpty()) {
+      """Unexpected type parameters "${s.typeParameters}" in descriptor "${string}"."""
+    }
+    require(s.exceptionTypes.isEmpty()) {
+      """Unexpected exception types "${s.exceptionTypes}" in descriptor "${string}"."""
+    }
     return MethodDescriptor(s.parameterTypes, s.returnType)
   }
 }

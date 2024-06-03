@@ -53,7 +53,7 @@ object Signature {
     checkSignature(string, SignatureReader::acceptType)
     var type = null as Type?
     SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor { type = it; null }))
-    return requireNotNull(type) { """no type for signature "$string"""" }
+    return requireNotNull(type) { "no type for signature \"$string\"" }
   }
 
   fun classSignature(string: String): ClassSignature {
@@ -62,7 +62,7 @@ object Signature {
     SignatureReader(string).accept(DelegatingSignatureVisitor(visitor))
     return ClassSignature(
       visitor.typeParameters,
-      requireNotNull(visitor.superclass) { """no superclass for signature "$string"""" },
+      requireNotNull(visitor.superclass) { "no superclass for signature \"$string\"" },
       visitor.interfaces
     )
   }
@@ -75,7 +75,7 @@ object Signature {
     return MethodSignature(
       visitor.typeParameters,
       visitor.parameterTypes,
-      requireNotNull(visitor.returnType) { """no return type for signature "$string"""" },
+      requireNotNull(visitor.returnType) { "no return type for signature \"$string\"" },
       visitor.exceptionTypes
     )
   }

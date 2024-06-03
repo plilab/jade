@@ -84,7 +84,7 @@ class ReadFiles {
   }
 
   fun headerMatches(inputStream: InputStream, header: List<Byte>): Boolean {
-    assert(inputStream.markSupported())
+    require(inputStream.markSupported()) { "InputStream does not support mark: ${inputStream}" }
     inputStream.mark(header.size)
     // `ByteArray`s always compare as false (I don't know why), so we use List<Byte> instead
     val bytes = inputStream.readNBytes(header.size).toList()

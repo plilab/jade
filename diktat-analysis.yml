@@ -236,7 +236,8 @@
   enabled: true
 # Checks that the line length is < lineLength parameter
 - name: LONG_LINE
-  enabled: true
+  # Since Diktat is disabled only per class, not per expression, use other linters for this
+  enabled: false
   configuration:
     lineLength: '120'
 # Checks that semicolons are not used at the end of a line

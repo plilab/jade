@@ -132,7 +132,7 @@ open class DelegateSignatureVisitor {
 }
 
 typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
-@Suppress("LONG_LINE", "MaxLineLength", "ktlint:standard:function-signature")
+@Suppress("MaxLineLength", "ktlint:standard:function-signature")
 class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisitor() {
   override fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? = receiver(descriptorToType(descriptor))
   override fun visitTypeVariable(name: String): DelegateSignatureVisitor? = receiver(TypeParameter(ClassName.identifier(name)))

@@ -1,3 +1,4 @@
+import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 import org.ucombinator.jade.gradle.GenerateClassfileFlags
 import org.ucombinator.jade.gradle.GitVersionPlugin
 import java.text.SimpleDateFormat
@@ -106,8 +107,25 @@ apply<GitVersionPlugin>()
 // Code Formatting
 
 // See https://github.com/saveourtool/diktat/blob/v2.0.0/diktat-gradle-plugin/src/main/kotlin/com/saveourtool/diktat/plugin/gradle/DiktatExtension.kt
+//
+// TODO: fix errors in stderr of diktatCheck:
+//     line 1:3 no viable alternative at character '='
+//     line 1:4 no viable alternative at character '='
+//     line 1:5 no viable alternative at character '='
+//     line 1:7 mismatched input 'null' expecting RPAREN
 diktat {
   ignoreFailures = true
+  // TODO: githubActions = true
+
+  // See https://github.com/saveourtool/diktat/blob/v2.0.0/diktat-gradle-plugin/src/main/kotlin/com/saveourtool/diktat/plugin/gradle/extension/Reporters.kt
+  reporters {
+    plain()
+    json()
+    sarif()
+    // gitHubActions()
+    checkstyle()
+    html()
+  }
 }
 
 // See https://github.com/detekt/detekt/blob/v1.23.6/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
@@ -123,6 +141,16 @@ ktlint {
   verbose = true
   ignoreFailures = true
   enableExperimentalRules = true
+
+  // See https://github.com/JLLeitschuh/ktlint-gradle/blob/v12.1.1/plugin/src/adapter/kotlin/org/jlleitschuh/gradle/ktlint/reporter/ReporterType.kt
+  reporters {
+    reporter(ReporterType.PLAIN)
+    reporter(ReporterType.PLAIN_GROUP_BY_FILE)
+    reporter(ReporterType.CHECKSTYLE)
+    reporter(ReporterType.JSON)
+    reporter(ReporterType.SARIF)
+    reporter(ReporterType.HTML)
+  }
 }
 
 // ////////////////////////////////////////////////////////////////
@@ -149,6 +177,7 @@ val generateClassfileFlags by tasks.registering {
 val generateBuildInfo by tasks.registering {
   doLast {
     // TODO: avoid running when unchanged
+    // TODO: move to a plugin
 
     // project.kotlin.target.platformType
     // project.kotlin.target.targetName

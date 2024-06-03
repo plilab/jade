@@ -114,7 +114,9 @@ object GenerateClassfileFlags {
         |
         |import com.github.javaparser.ast.Modifier
         |import com.github.javaparser.ast.NodeList
+        |import javax.annotation.Generated
         |
+        |@Generated("org.ucombinator.jade.gradle.GenerateClassfileFlags")
         |sealed interface Flag {
         |  fun value(): Int
         |  fun valueAsString(): String = "0x${'$'}{"%04x".format(value())}"
@@ -127,11 +129,15 @@ object GenerateClassfileFlags {
     )
 
     for (kind in flagInfos.map { it.kind }.distinct()) {
-      builder.append("sealed interface ${kind}Flag : Flag\n")
+      builder.append(
+        "@Generated(\"org.ucombinator.jade.gradle.GenerateClassfileFlags\") sealed interface ${kind}Flag : Flag\n"
+      )
     }
 
     builder.append(
       """
+        |
+        |@Generated("org.ucombinator.jade.gradle.GenerateClassfileFlags")
         |object Flags {
         |  fun toModifiers(flags: List<Flag>): NodeList<Modifier> =
         |    NodeList(flags.mapNotNull { it.modifier() })

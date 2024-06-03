@@ -97,7 +97,7 @@ dependencies {
 // ////////////////////////////////////////////////////////////////
 // Application Setup / Meta-data
 application {
-  mainClass.set("org.ucombinator.jade.main.MainKt")
+  mainClass = "org.ucombinator.jade.main.MainKt"
 }
 
 // version = "0.1.0" // Uncomment to manually set the version

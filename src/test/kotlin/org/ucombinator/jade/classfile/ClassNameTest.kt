@@ -1,6 +1,7 @@
 package org.ucombinator.jade.classfile
 
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.expect
 
 @Suppress("BACKTICKS_PROHIBITED", "ktlint:standard:class-naming")
 object ClassNameTest {

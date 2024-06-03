@@ -9,11 +9,11 @@ import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.type.TypeParameter
 import com.github.javaparser.ast.type.VoidType
 import com.github.javaparser.ast.type.WildcardType
-import org.ucombinator.jade.util.Errors
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.signature.SignatureReader
-import org.objectweb.asm.signature.SignatureWriter
 import org.objectweb.asm.signature.SignatureVisitor
+import org.objectweb.asm.signature.SignatureWriter
+import org.ucombinator.jade.util.Errors
 
 // https://docs.oracle.com/javase/specs/jvms/se22/html/jvms-4.html#jvms-4.7.9.1
 // https://gitlab.ow2.org/asm/asm/-/blob/master/asm/src/main/java/org/objectweb/asm/signature/SignatureReader.java

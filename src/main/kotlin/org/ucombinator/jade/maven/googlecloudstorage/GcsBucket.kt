@@ -3,7 +3,6 @@ package org.ucombinator.jade.maven.googlecloudstorage
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.StorageOptions
-
 import java.io.File
 import java.io.FileInputStream
 

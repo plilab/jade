@@ -3,7 +3,6 @@ package org.ucombinator.jade.classfile
 import com.github.javaparser.ast.type.Type
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import kotlin.test.*
 
 @Suppress("BACKTICKS_PROHIBITED")
 object DescriptorTest {

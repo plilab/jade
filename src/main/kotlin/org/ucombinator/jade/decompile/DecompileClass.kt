@@ -43,8 +43,8 @@ import org.objectweb.asm.tree.ParameterNode
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.Flags
-import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.classfile.MethodSignature
+import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Lists.pairs
 import org.ucombinator.jade.util.Lists.tail

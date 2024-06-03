@@ -1,16 +1,16 @@
 package org.ucombinator.jade.analysis
 
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 import org.objectweb.asm.tree.AbstractInsnNode
+import org.objectweb.asm.tree.InsnList
+import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.tree.TryCatchBlockNode
 import org.objectweb.asm.tree.analysis.Analyzer
 import org.objectweb.asm.tree.analysis.AnalyzerException
 import org.objectweb.asm.tree.analysis.BasicValue
 import org.objectweb.asm.tree.analysis.Frame
 import org.objectweb.asm.tree.analysis.Interpreter
-import org.objectweb.asm.tree.InsnList
-import org.objectweb.asm.tree.MethodNode
-import org.objectweb.asm.tree.TryCatchBlockNode
-import org.objectweb.asm.Type
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.asm.TypedBasicInterpreter
 import org.ucombinator.jade.util.Errors

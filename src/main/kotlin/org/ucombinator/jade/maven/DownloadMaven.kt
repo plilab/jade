@@ -2,10 +2,12 @@ package org.ucombinator.jade.maven
 
 import org.apache.http.conn.ssl.NoopHostnameVerifier
 import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Reader
+import org.apache.maven.model.Model
 import org.apache.maven.model.building.DefaultModelBuilderFactory
 import org.apache.maven.model.building.ModelBuildingRequest
-import org.apache.maven.model.Model
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
+import org.eclipse.aether.RepositorySystem
+import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.artifact.Artifact
 import org.eclipse.aether.artifact.DefaultArtifact
 import org.eclipse.aether.collection.CollectRequest
@@ -20,8 +22,6 @@ import org.eclipse.aether.metadata.Metadata.Nature
 import org.eclipse.aether.repository.LocalRepository
 import org.eclipse.aether.repository.RemoteRepository
 import org.eclipse.aether.repository.RepositoryPolicy
-import org.eclipse.aether.RepositorySystem
-import org.eclipse.aether.RepositorySystemSession
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest
 import org.eclipse.aether.resolution.ArtifactDescriptorResult
 import org.eclipse.aether.resolution.ArtifactRequest
@@ -55,8 +55,8 @@ import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 import kotlin.text.RegexOption
-import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 
 data class CaretInVersionException(val artifact: Artifact) :

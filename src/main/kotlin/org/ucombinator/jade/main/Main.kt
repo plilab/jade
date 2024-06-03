@@ -180,7 +180,7 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
   }
 }
 
-class Decompile : CliktCommand(help = "Display information about how `jade` was built") {
+class Decompile : CliktCommand(help = "Decompile a class file") {
   // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
   // --filter=+dir=
 

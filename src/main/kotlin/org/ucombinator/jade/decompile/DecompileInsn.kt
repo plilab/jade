@@ -75,6 +75,7 @@ Generators
 
 // TODO: ktlint: alligned forms
 // TODO: ktlint: two-line if
+// TODO: use nested classes for sealed
 sealed class DecompiledInsn(val usesNextInsn: Boolean = true)
 data class DecompiledStatement(val statement: Statement, val usesNextInsnArg: Boolean = true) :
   DecompiledInsn(usesNextInsnArg)

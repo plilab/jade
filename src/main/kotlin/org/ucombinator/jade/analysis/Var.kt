@@ -8,10 +8,9 @@ import org.ucombinator.jade.asm.Insn
  * Represents a variable in Jade's analyses.
  *
  * @property name The name of the variable.
- * @property basicValue The value of the variable.
- *
  */
 sealed class Var(val name: String) : Value {
+  // TODO @property basicValue The value of the variable.
   abstract val basicValue: BasicValue?
   override fun getSize(): Int = basicValue?.size ?: 0
 }

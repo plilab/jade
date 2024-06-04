@@ -52,6 +52,7 @@ import org.ucombinator.jade.util.Lists.zipAll
 import org.ucombinator.jade.util.Tuples.Fourple
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
+
 /**
  * Handles decompiling class-level constructs. It contains various methods that builds JavaParser abstract syntax tree data structures from corresponding ASM data structures.
  */

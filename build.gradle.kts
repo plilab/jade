@@ -8,6 +8,7 @@ repositories {
   mavenCentral()
 }
 
+// TODO: explain: $ ./gradlew tasks
 plugins {
   kotlin("jvm") // version matches buildSrc/build.gradle.kts
   application

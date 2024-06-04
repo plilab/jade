@@ -43,24 +43,21 @@ import org.objectweb.asm.tree.ParameterNode
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.classfile.Flags
-import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.classfile.MethodSignature
+import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Lists.pairs
 import org.ucombinator.jade.util.Lists.tail
 import org.ucombinator.jade.util.Lists.zipAll
 import org.ucombinator.jade.util.Tuples.Fourple
-import org.ucombinator.jade.util.Tuples._1
-import org.ucombinator.jade.util.Tuples._2
-import org.ucombinator.jade.util.Tuples._3
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 /**
  * Handles decompiling class-level constructs. It contains various methods that builds JavaParser abstract syntax tree data structures from corresponding ASM data structures.
  */
 object DecompileClass {
-  val CLASS_NODE = object: DataKey<ClassNode>() {}
-  val METHOD_NODE = object: DataKey<MethodNode>() {}
+  val CLASS_NODE = object : DataKey<ClassNode>() {}
+  val METHOD_NODE = object : DataKey<MethodNode>() {}
   // TODO: ktlint: "${foo}"
 
   fun decompileLiteral(node: Any?): Expression? =
@@ -87,7 +84,7 @@ object DecompileClass {
     val name = typeToName(Descriptor.fieldDescriptor(node.desc))
     val vs = node.values
     return when {
-      vs === null -> MarkerAnnotationExpr(name)
+      vs == null -> MarkerAnnotationExpr(name)
       vs.size == 1 -> SingleMemberAnnotationExpr(name, decompileLiteral(vs.first()))
       else ->
         NormalAnnotationExpr(
@@ -101,7 +98,7 @@ object DecompileClass {
     NodeList<AnnotationExpr>(nodes.filterNotNull().flatMap { it.map(::decompileAnnotation) })
 
   private fun decompileField(node: FieldNode): FieldDeclaration {
-    // // attrs (ignore?)
+    // attrs (ignore?)
     val modifiers = Flags.toModifiers(Flags.fieldFlags(node.access))
     val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
       node.visibleAnnotations,
@@ -109,12 +106,8 @@ object DecompileClass {
       node.visibleTypeAnnotations,
       node.invisibleTypeAnnotations
     )
-    val type: Type =
-      if (node.signature === null) {
-        Descriptor.fieldDescriptor(node.desc)
-      } else {
-        Signature.typeSignature(node.signature)
-      }
+    val type =
+      if (node.signature != null) Signature.typeSignature(node.signature) else Descriptor.fieldDescriptor(node.desc)
     val name = SimpleName(node.name)
     val initializer = decompileLiteral(node.value)
     val variables = NodeList<VariableDeclarator>(VariableDeclarator(type, name, initializer))
@@ -130,37 +123,29 @@ object DecompileClass {
   ): Parameter {
     val index = parameter.index
     val (type, node, a1, a2) = parameter.value
-    val flags = if (node === null) listOf() else Flags.parameterFlags(node.access)
+    val flags = if (node == null) listOf() else Flags.parameterFlags(node.access)
     val modifiers = Flags.toModifiers(flags)
-    val annotations: NodeList<AnnotationExpr> = decompileAnnotations(a1, a2, null, null)
-    val isVarArgs: Boolean =
-      Flags.methodFlags(method.access).contains(Flags.ACC_VARARGS) &&
-        index == paramCount - 1
+    val annotations = decompileAnnotations(a1, a2, null, null)
+    val isVarArgs = Flags.methodFlags(method.access).contains(Flags.ACC_VARARGS) && index == paramCount - 1
     val varArgsAnnotations = NodeList<AnnotationExpr>() // TODO?
     // TODO: make consistent with analysis.ParameterVar
-    val name: SimpleName = SimpleName(if (node === null) "parameter${index + 1}" else node.name)
+    val name = SimpleName(if (node == null) "parameter${index + 1}" else node.name)
     return Parameter(modifiers, annotations, type, isVarArgs, varArgsAnnotations, name)
   }
 
   fun parameterTypes(desc: List<Type>, sig: List<Type>, params: List<ParameterNode>): List<Type> =
     when {
-      desc.isNotEmpty() &&
-        params.isNotEmpty() && (
-        Flags.parameterFlags(params.first().access).contains(Flags.ACC_SYNTHETIC) ||
-          Flags.parameterFlags(params.first().access).contains(Flags.ACC_MANDATED)
-        )
-      // TODO: Flags.checkParameter(access, Modifier)
-      -> listOf(desc.first()) + parameterTypes(desc.tail(), sig, params.tail())
-      desc.isNotEmpty() &&
-        sig.isNotEmpty() &&
-        params.isNotEmpty()
-      -> listOf(sig.first()) + parameterTypes(desc.tail(), sig.tail(), params.tail())
-      params.isEmpty()
-      -> sig
+      desc.isNotEmpty() && params.isNotEmpty() &&
+        Flags.parameterFlags(params.first().access).any(listOf(Flags.ACC_SYNTHETIC, Flags.ACC_MANDATED)::contains) ->
+        // TODO: Flags.checkParameter(access, Modifier)
+        listOf(desc.first()) + parameterTypes(desc.tail(), sig, params.tail())
+      desc.isNotEmpty() && sig.isNotEmpty() && params.isNotEmpty() ->
+        listOf(sig.first()) + parameterTypes(desc.tail(), sig.tail(), params.tail())
+      params.isEmpty() -> sig
       else -> throw Exception("failed to construct parameter types: $desc, $sig, $params")
     }
 
-  fun <A> nullToSeq(x: List<A>?): List<A> = if (x === null) listOf() else x
+  fun <A> nullToSeq(x: List<A>?): List<A> = if (x == null) listOf() else x
 
   // TODO: rename node to methodNode
   fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
@@ -181,8 +166,13 @@ object DecompileClass {
     )
     val descriptor = Descriptor.methodDescriptor(node.desc)
     val sig =
-      if (node.signature === null) {
-        MethodSignature(listOf(), descriptor.parameterTypes, descriptor.returnType, node.exceptions.map(ClassName::classNameType))
+      if (node.signature == null) {
+        MethodSignature(
+          listOf(),
+          descriptor.parameterTypes,
+          descriptor.returnType,
+          node.exceptions.map(ClassName::classNameType)
+        )
       } else {
         Signature.methodSignature(node.signature)
       }
@@ -212,7 +202,7 @@ object DecompileClass {
           modifiers,
           annotations,
           typeParameters,
-          SimpleName(ClassName.className(classNode.name).identifier) /*TODO*/,
+          SimpleName(ClassName.className(classNode.name).identifier), // TODO
           parameters,
           thrownExceptions,
           body,
@@ -255,8 +245,8 @@ object DecompileClass {
 
     val fullClassName: Name = ClassName.className(node.name)
 
-    val packageDeclaration =
-      PackageDeclaration(NodeList<AnnotationExpr>() /*TODO*/, fullClassName.qualifier.orElse(Name()))
+    // TODO: NodeList<AnnotationExpr>()
+    val packageDeclaration = PackageDeclaration(NodeList<AnnotationExpr>(), fullClassName.qualifier.orElse(Name()))
     val imports = NodeList<ImportDeclaration>() // TODO
 
     val classOrInterfaceDeclaration = run {
@@ -278,17 +268,22 @@ object DecompileClass {
         implementedTypes: NodeList<ClassOrInterfaceType>,
         permittedTypes: NodeList<ClassOrInterfaceType> // TODO: implement
       ) =
-        if (node.signature === null) {
+        if (node.signature == null) {
           // TODO: maybe change Fourple to MethodSignature
           Fourple(
             NodeList<TypeParameter>(),
-            if (node.superName === null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
+            if (node.superName == null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
             NodeList(node.interfaces.map { ClassName.classNameType(it) }),
             NodeList<ClassOrInterfaceType>()
           )
         } else {
           val s = Signature.classSignature(node.signature)
-          Fourple(NodeList(s.typeParameters), NodeList(s.superclass), NodeList(s.interfaces), NodeList<ClassOrInterfaceType>())
+          Fourple(
+            NodeList(s.typeParameters),
+            NodeList(s.superclass),
+            NodeList(s.interfaces),
+            NodeList<ClassOrInterfaceType>()
+          )
         }
       val members: NodeList<BodyDeclaration<*>> = run {
         val list = NodeList<BodyDeclaration<*>>()

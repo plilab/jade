@@ -1,20 +1,14 @@
 package org.ucombinator.jade.util
 
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.storage.Bucket
-import com.google.cloud.storage.StorageOptions
-import org.ucombinator.jade.util.Log
-import java.io.File
-import java.io.FileInputStream
-import kotlinx.coroutines.*
-
-import org.xml.sax.SAXException
 import org.w3c.dom.Element
+import org.xml.sax.SAXException
+import java.io.File
 import java.io.IOException
 import javax.xml.parsers.DocumentBuilderFactory
 
 object Xml {
   private val log = Log {}
+
   fun readXml(file: File, rootTag: String): Element? {
     val document = try {
       DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)

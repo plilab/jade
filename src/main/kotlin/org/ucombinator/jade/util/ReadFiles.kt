@@ -40,8 +40,8 @@ package org.ucombinator.jade.util
 
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.ArchiveException
-import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.ArchiveInputStream
+import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.compressors.CompressorException
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.ucombinator.jade.util.Lists.map
@@ -84,7 +84,7 @@ class ReadFiles {
   }
 
   fun headerMatches(inputStream: InputStream, header: List<Byte>): Boolean {
-    assert(inputStream.markSupported())
+    require(inputStream.markSupported()) { "InputStream does not support mark: ${inputStream}" }
     inputStream.mark(header.size)
     // `ByteArray`s always compare as false (I don't know why), so we use List<Byte> instead
     val bytes = inputStream.readNBytes(header.size).toList()
@@ -124,9 +124,9 @@ class ReadFiles {
     val entries = mutableMapOf<List<File>, ByteArrayInputStream>()
     while (true) {
       val entry: ArchiveEntry? = archive.nextEntry
-      if (entry === null) { break }
-      if (!archive.canReadEntryData(entry)) { continue }
-      if (entry.isDirectory) { continue }
+      if (entry == null) break
+      if (!archive.canReadEntryData(entry)) continue
+      if (entry.isDirectory) continue
       val entryName = name + File(entry.name)
       // if (!match_entry(entryName.joinToString("\0"))) { continue; }
       entries[entryName] = ByteArrayInputStream(archive.readBytes())

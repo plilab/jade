@@ -9,10 +9,7 @@ import java.io.StringWriter
 import java.io.Writer
 
 object GraphViz {
-  fun escape(string: String): String =
-    string
-      .replace("\\\\", "\\\\\\\\")
-      .replace("\"", "\\\\\"")
+  fun escape(string: String): String = string.replace("\\\\", """\\\\""").replace("\"", """\\"""")
 
   fun <N, E> toString(graph: Graph<N, E>): String {
     val writer = StringWriter()
@@ -76,14 +73,13 @@ object GraphViz {
       out.write("$indent  ${id(v)} [label=$label];\n")
       val edges = tree.incomingEdgesOf(v)
       // TODO: edges in trees should always go down
-      val sole = when (edges.size) {
-        1 -> {
-          var x = edges.first()
-          val y = tree.getEdgeSource(x)
-          graph.outgoingEdgesOf(v).map(graph::getEdgeTarget) == setOf(y) &&
-            graph.incomingEdgesOf(y).map(graph::getEdgeSource) == setOf(v)
-        }
-        else -> false
+      val sole = if (edges.size == 1) {
+        var x = edges.first()
+        val y = tree.getEdgeSource(x)
+        graph.outgoingEdgesOf(v).map(graph::getEdgeTarget) == setOf(y) &&
+          graph.incomingEdgesOf(y).map(graph::getEdgeSource) == setOf(v)
+      } else {
+        false
       }
       for (child in edges.map(tree::getEdgeSource)) {
         val newIndent = if (!flatten || !sole) "$indent  " else indent

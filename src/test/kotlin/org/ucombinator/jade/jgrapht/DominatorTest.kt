@@ -1,7 +1,8 @@
 package org.ucombinator.jade.jgrapht
 
 import org.jgrapht.graph.SimpleDirectedGraph
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.expect
 
 typealias V = Char
 

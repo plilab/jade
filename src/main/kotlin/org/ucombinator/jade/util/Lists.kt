@@ -3,17 +3,10 @@ package org.ucombinator.jade.util
 import org.ucombinator.jade.util.Tuples.Fourple
 
 object Lists {
-  fun <A, B, C, D> zipAll(a: List<A>, b: List<B>, c: List<C>, d: List<D>): List<Fourple<A?, B?, C?, D?>> {
-    val length = listOf(a, b, c, d).map { it.size }.maxOrNull() ?: 0
-    return (0 until length).map {
-      Fourple(
-        a.getOrNull(it),
-        b.getOrNull(it),
-        c.getOrNull(it),
-        d.getOrNull(it),
-      )
+  fun <A, B, C, D> zipAll(a: List<A>, b: List<B>, c: List<C>, d: List<D>): List<Fourple<A?, B?, C?, D?>> =
+    (0 until (listOf(a, b, c, d).map { it.size }.maxOrNull() ?: 0)).map {
+      Fourple(a.getOrNull(it), b.getOrNull(it), c.getOrNull(it), d.getOrNull(it))
     }
-  }
 
   fun <T> List<T>.tail(): List<T> = this.subList(1, this.size)
 

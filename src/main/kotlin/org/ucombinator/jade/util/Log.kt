@@ -15,9 +15,10 @@ import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as Ol
 import org.slf4j.Logger as Slf4jLogger
 
 object Log {
-  operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
   private val log = Log {}
-  const val PREFIX = "org.ucombinator.jade." // TODO: autodetect or take from BuildInfo
+
+  operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
+
   fun getLog(name: String): LogbackLogger {
     val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name
     return LoggerFactory.getLogger(modifiedName) as LogbackLogger
@@ -32,13 +33,6 @@ object Log {
   // fun childLog(name: String): ScalaLogger = {
   //   ScalaLogger(LoggerFactory.getLogger(log.underlying.getName + "." + name))
   // }
-
-//   def getLog(name: String): LogbackLogger = {
-//     val modifiedName =
-//       if (name.isEmpty) { Slf4jLogger.ROOT_LOGGER_NAME }
-//       else { name }
-//     LoggerFactory.getLogger(modifiedName).asInstanceOf[LogbackLogger]
-//   }
 
   fun listLoggers() {
     // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
@@ -65,10 +59,9 @@ object Log {
 class RelativeLoggerConverter : ClassicConverter() {
   lateinit var prefix: String
 
-  // override fun start(): Unit {
   override fun start() {
     val x = getOptionList()
-    assert(x.size == 1)
+    check(x.size == 1) { "Expected exactly one option but got: ${x}" }
     prefix = x[0]
     super.start()
   }

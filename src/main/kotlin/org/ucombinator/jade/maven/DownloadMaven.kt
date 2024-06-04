@@ -35,20 +35,18 @@ import org.eclipse.aether.transfer.MetadataNotFoundException
 import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.util.artifact.JavaScopes
+import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer
+import org.eclipse.aether.util.graph.transformer.ConflictResolver
+import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner
+import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver
+import org.eclipse.aether.util.graph.transformer.JavaScopeSelector
+import org.eclipse.aether.util.graph.transformer.NearestVersionSelector
+import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector
 import org.eclipse.aether.util.repository.AuthenticationBuilder
 import org.eclipse.aether.util.version.GenericVersionScheme
 import org.ucombinator.jade.util.AtomicWriteFile
 import org.ucombinator.jade.util.Log
 import org.ucombinator.jade.util.Tuples.Fiveple
-import org.eclipse.aether.util.graph.transformer.ConflictResolver
-import org.eclipse.aether.util.graph.transformer.JavaScopeSelector
-import org.eclipse.aether.util.graph.transformer.SimpleOptionalitySelector
-import org.eclipse.aether.util.graph.transformer.JavaScopeDeriver
-import org.eclipse.aether.util.graph.transformer.ChainedDependencyGraphTransformer
-import org.eclipse.aether.util.graph.transformer.JavaDependencyContextRefiner
-
-import org.eclipse.aether.util.graph.transformer.NearestVersionSelector
-
 import java.io.File
 import java.io.FileInputStream
 import java.io.PrintWriter
@@ -57,21 +55,35 @@ import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 import kotlin.text.RegexOption
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
-data class CaretInVersionException(val artifact: Artifact) : Exception("Caret in version for artifact $artifact")
-data class DollarInCoordinateException(val artifact: Artifact) : Exception("Dollar in coordinate $artifact")
-data class DotInGroupIdException(val groupIdPath: String, val artifactId: String) : Exception("File path for groupId contains a dot: $groupIdPath (artifactId = $artifactId)")
-data class ModelParsingException(val file: File) : Exception("Could not parse POM file $file")
-data class NoVersioningTagException(val groupId: String, val artifactId: String) : Exception("No <versioning> tag in POM for $groupId:$artifactId")
-data class NoVersionsInVersioningTagException(val groupId: String, val artifactId: String) : Exception("No versions in POM for for $groupId:$artifactId")
-data class UnsolvableArtifactException(val groupId: String, val artifactId: String) : Exception("Skipped artifact with unsolvable dependencies: $groupId:$artifactId")
-// data class VersionDoesNotExistException(val artifact: Artifact, val e: ArtifactResolutionException) : Exception("Artifact version does not exist: $artifact", e)
-data class ArtifactWriteLockException(val artifact: Artifact, val e: IllegalStateException) : Exception("Could not aquire write lock for $artifact", e)
-data class MetadataWriteLockException(val metadata: Metadata, val e: IllegalStateException) : Exception("Could not aquire write lock for $metadata", e)
-data class SystemDependencyException(val root: Artifact, val dependency: Artifact) : Exception("Dependency on system provided artifact $dependency by $root")
+data class CaretInVersionException(val artifact: Artifact) :
+  Exception("Caret in version for artifact $artifact")
+data class DollarInCoordinateException(val artifact: Artifact) :
+  Exception("Dollar in coordinate $artifact")
+data class DotInGroupIdException(val groupIdPath: String, val artifactId: String) :
+  Exception("File path for groupId contains a dot: $groupIdPath (artifactId = $artifactId)")
+data class ModelParsingException(val file: File) :
+  Exception("Could not parse POM file $file")
+data class NoVersioningTagException(val groupId: String, val artifactId: String) :
+  Exception("No <versioning> tag in POM for $groupId:$artifactId")
+data class NoVersionsInVersioningTagException(val groupId: String, val artifactId: String) :
+  Exception("No versions in POM for for $groupId:$artifactId")
+data class UnsolvableArtifactException(val groupId: String, val artifactId: String) :
+  Exception("Skipped artifact with unsolvable dependencies: $groupId:$artifactId")
+// data class VersionDoesNotExistException(val artifact: Artifact, val e: ArtifactResolutionException) :
+//   Exception("Artifact version does not exist: $artifact", e)
+data class ArtifactWriteLockException(val artifact: Artifact, val e: IllegalStateException) :
+  Exception("Could not aquire write lock for $artifact", e)
+data class MetadataWriteLockException(val metadata: Metadata, val e: IllegalStateException) :
+  Exception("Could not aquire write lock for $metadata", e)
+data class SystemDependencyException(val root: Artifact, val dependency: Artifact) :
+  Exception("Dependency on system provided artifact $dependency by $root")
 
-data class CachedException(val name: String, val stackTrace: String) : Exception("CachedException: $name\n$stackTrace")
+data class CachedException(val name: String, val stackTrace: String) :
+  Exception("CachedException: $name\n$stackTrace")
 
 // $ find ~/a/local/jade2/maven '(' -name \*.part -o -name \*.lock -o -size 0 ')' -type f -print0 | xargs -0 rm -v
 // $ find ~/a/local/jade2/jar-lists/ -size 0 -type f -print0 | xargs -0 rm -v
@@ -81,7 +93,7 @@ object Exceptions {
     var e: Throwable? = exception
     var l = listOf<String>()
 
-    while (e !== null) {
+    while (e != null) {
       l += e::class.qualifiedName ?: "<anonymous>"
       e = e.cause
     }
@@ -98,17 +110,23 @@ object Exceptions {
   }
 }
 
+// TODO: Map vs LinkedHashMap
+// TODO: remove Fiveple
+typealias CacheKey<T> = Fiveple<String, String, String, String, T>
+class Cache<T> : LinkedHashMap<CacheKey<T>, Pair<String, String>>(16, 0.75F, true) {
+  override fun removeEldestEntry(eldest: Map.Entry<CacheKey<T>, Pair<String, String>>): Boolean = this.size > 100_000
+}
+
 // TODO: NearestVersionSelectorWrapper (DependencyNodeWrapper) https://kotlinlang.org/docs/delegation.html
 class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
   private val log = Log {}
 
-  val cache = Collections.synchronizedMap(object : LinkedHashMap<Fiveple<String, String, String, String, Nature>, Pair<String, String>>(16, 0.75F, true) {
-    override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, Nature>, Pair<String, String>>): Boolean =
-      this.size > 100_000
-  })
+  val cache = Collections.synchronizedMap(Cache<Nature>())
 
-  override fun resolveMetadata(session: RepositorySystemSession, requests: MutableCollection<out MetadataRequest>): List<MetadataResult> =
-    requests.map { resolveMetadata(session, it) }
+  override fun resolveMetadata(
+    session: RepositorySystemSession,
+    requests: MutableCollection<out MetadataRequest>
+  ): List<MetadataResult> = requests.map { resolveMetadata(session, it) }
 
   fun resolveMetadata(session: RepositorySystemSession, request: MetadataRequest): MetadataResult {
     // log.error { "META: $request" }
@@ -125,7 +143,7 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
     val maxTries = 10
     while (true) {
       val ex = cache.get(key)
-      if (ex !== null) throw CachedException(ex.first, ex.second)
+      if (ex != null) throw CachedException(ex.first, ex.second)
 
       try {
         val results = defaultMetadataResolver!!.resolveMetadata(session, mutableListOf(request))
@@ -166,10 +184,8 @@ class CachingArtifactResolver : ArtifactResolver {
   private val log = Log {}
 
   // val exists = Collections.synchronizedMap(mutableMapOf<Artifact, Boolean>())
-  val cache = Collections.synchronizedMap(object : LinkedHashMap<Fiveple<String, String, String, String, String>, Pair<String, String>>(16, 0.75F, true) {
-    override fun removeEldestEntry(eldest: Map.Entry<Fiveple<String, String, String, String, String>, Pair<String, String>>): Boolean =
-      this.size > 100_000
-  })
+  val cache = Collections.synchronizedMap(Cache<String>())
+
   override fun resolveArtifact(session: RepositorySystemSession, request: ArtifactRequest): ArtifactResult {
     if (
       request.artifact.groupId.contains("\${") ||
@@ -227,7 +243,7 @@ class CachingArtifactResolver : ArtifactResolver {
     val maxTries = 10
     while (true) {
       val ex = cache.get(key)
-      if (ex !== null) throw CachedException(ex.first, ex.second)
+      if (ex != null) throw CachedException(ex.first, ex.second)
 
       try {
         return defaultArtifactResolver!!.resolveArtifact(session, request)
@@ -244,12 +260,14 @@ class CachingArtifactResolver : ArtifactResolver {
         }
       } catch (e: ArtifactResolutionException) {
         // if (!exists.containsKey(request.artifact)) {
-        //   val url = URL("https://mvnrepository.com/artifact/${request.artifact.groupId}/${request.artifact.artifactId}/${request.artifact.version}")
+        //   val url = URL("https://mvnrepository.com/artifact/${request.artifact.groupId}/" +
+        //     "${request.artifact.artifactId}/${request.artifact.version}")
         //   val connection = url.openConnection() as HttpURLConnection
         //   connection.setRequestMethod("HEAD")
         //   connection.setRequestProperty("User-Agent", "Mozilla/5.0")
         //   val responseCode = connection.responseCode
-        //   if (responseCode == HttpURLConnection.HTTP_FORBIDDEN) log.error { "MVNREPOSITORY FORBIDDEN: ${request.artifact} $url" }
+        //   if (responseCode == HttpURLConnection.HTTP_FORBIDDEN)
+        //     log.error { "MVNREPOSITORY FORBIDDEN: ${request.artifact} $url" }
         //   else exists.put(request.artifact, responseCode != HttpURLConnection.HTTP_NOT_FOUND)
         // }
         val ee = e // if (exists.getValue(request.artifact)) e else VersionDoesNotExistException(request.artifact, e)
@@ -261,14 +279,23 @@ class CachingArtifactResolver : ArtifactResolver {
     }
   }
 
-  override fun resolveArtifacts(session: RepositorySystemSession, requests: MutableCollection<out ArtifactRequest>): List<ArtifactResult> =
-    requests.map { resolveArtifact(session, it) }
+  override fun resolveArtifacts(
+    session: RepositorySystemSession,
+    requests: MutableCollection<out ArtifactRequest>
+  ): List<ArtifactResult> = requests.map { resolveArtifact(session, it) }
+
   companion object {
     var defaultArtifactResolver: ArtifactResolver? = null
   }
 }
 
-class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir: File, val reverse: Boolean, val shuffle: Boolean) {
+class DownloadMaven(
+  val indexFile: File,
+  val localRepoDir: File,
+  val jarListsDir: File,
+  val reverse: Boolean,
+  val shuffle: Boolean
+) {
   private val log = Log {}
 
   val cachedFails = Collections.synchronizedMap(mutableMapOf<String, Int>())
@@ -301,10 +328,11 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
   val modelBuilder = DefaultModelBuilderFactory().newInstance() // TODO: locator
   val session = MavenRepositorySystemUtils.newSession()
   val localRepo = LocalRepository(localRepoDir)
+
   init {
     session.localRepositoryManager = system.newLocalRepositoryManager(session, localRepo)
-    val transformer = ConflictResolver(NearestVersionSelector(), JavaScopeSelector(),
-                            SimpleOptionalitySelector(), JavaScopeDeriver())
+    val transformer =
+      ConflictResolver(NearestVersionSelector(), JavaScopeSelector(), SimpleOptionalitySelector(), JavaScopeDeriver())
     val t = ChainedDependencyGraphTransformer(transformer, JavaDependencyContextRefiner())
     session.dependencyGraphTransformer = t
   }
@@ -319,140 +347,138 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       .addHostnameVerifier(NoopHostnameVerifier())
       .build()
 
-  val remotes =
-    listOf(
-      // We do not use springio-* or spring-* repositories as they no longer allow anonymous access.
-      // See https://spring.io/blog/2020/10/29/notice-of-permissions-changes-to-repo-spring-io-fall-and-winter-2020
+  @Suppress("ktlint:standard:comment-wrapping", "ktlint:standard:max-line-length", "MaxLineLength")
+  val remotes = listOf(
+    // We do not use springio-* or spring-* repositories as they no longer allow anonymous access.
+    // See https://spring.io/blog/2020/10/29/notice-of-permissions-changes-to-repo-spring-io-fall-and-winter-2020
 
-      /* 9.6M uses / 8.7M jars */ "google-maven-central" to "https://maven-central-asia.storage-download.googleapis.com/maven2/",
-      /* 137k uses /  32k jars */ "google" to "https://maven.google.com/",
-      /*  78k uses / 270k jars */ "wso2-releases" to "https://maven.wso2.org/nexus/content/repositories/releases/",
-      /*  68k uses /  30k jars */ "wso2" to "http://dist.wso2.org/maven2/",
-      /*  41k uses /  59k jars */ "liferay-public" to "https://repository.liferay.com/nexus/content/repositories/public/",
-      /*  33k uses /  13k jars */ "osgeo-release" to "https://repo.osgeo.org/repository/release/",
-      /*  12k uses / 280k jars */ "pentaho-omni" to "https://nexus.pentaho.org/content/groups/omni/",
-      // /* 5.1k uses /  22k jars */ "ebi-public" to "https://www.ebi.ac.uk/intact/maven/nexus/content/repositories/public/",
-      /* 4.0k uses / 145k jars */ "redhat-ga" to "https://maven.repository.redhat.com/ga/",
-      /* 3.4k uses / 120k jars */ "geomajas" to "http://maven.geomajas.org/",
-      /* 1.8k uses / 8.2k jars */ "typesafe-maven-releases" to "https://repo.typesafe.com/typesafe/maven-releases/",
-      /* 1.5k uses / 9.0k jars */ "twitter" to "https://maven.twttr.com/",
-      /* 1.4k uses /  41k jars */ "fusesource-releases" to "https://repo.fusesource.com/nexus/content/repositories/releases/",
-      /* 1.1k uses /  13k jars */ "confluent-packages" to "https://packages.confluent.io/maven/",
-      /* 791  uses /  19  jars */ "wso2-thirdparty" to "https://maven.wso2.org/nexus/content/repositories/thirdparty/",
-      /* 638  uses /  21k jars */ "netbeans" to "http://netbeans.apidesign.org/maven2/", // Note: https://netbeans.apache.org/about/oracle-transition.html
-      /* 268  uses / 3.9k jars */ "ow2-public" to "https://repository.ow2.org/nexus/content/repositories/public/",
-      /* 130  uses / 227k jars */ "wso2-public" to "https://maven.wso2.org/nexus/content/repositories/public/",
+    /* 9.6M uses / 8.7M jars */ "google-maven-central" to "https://maven-central-asia.storage-download.googleapis.com/maven2/",
+    /* 137k uses /  32k jars */ "google" to "https://maven.google.com/",
+    /*  78k uses / 270k jars */ "wso2-releases" to "https://maven.wso2.org/nexus/content/repositories/releases/",
+    /*  68k uses /  30k jars */ "wso2" to "http://dist.wso2.org/maven2/",
+    /*  41k uses /  59k jars */ "liferay-public" to "https://repository.liferay.com/nexus/content/repositories/public/",
+    /*  33k uses /  13k jars */ "osgeo-release" to "https://repo.osgeo.org/repository/release/",
+    /*  12k uses / 280k jars */ "pentaho-omni" to "https://nexus.pentaho.org/content/groups/omni/",
+    // /* 5.1k uses /  22k jars */ "ebi-public" to "https://www.ebi.ac.uk/intact/maven/nexus/content/repositories/public/",
+    /* 4.0k uses / 145k jars */ "redhat-ga" to "https://maven.repository.redhat.com/ga/",
+    /* 3.4k uses / 120k jars */ "geomajas" to "http://maven.geomajas.org/",
+    /* 1.8k uses / 8.2k jars */ "typesafe-maven-releases" to "https://repo.typesafe.com/typesafe/maven-releases/",
+    /* 1.5k uses / 9.0k jars */ "twitter" to "https://maven.twttr.com/",
+    /* 1.4k uses /  41k jars */ "fusesource-releases" to "https://repo.fusesource.com/nexus/content/repositories/releases/",
+    /* 1.1k uses /  13k jars */ "confluent-packages" to "https://packages.confluent.io/maven/",
+    /* 791  uses /  19  jars */ "wso2-thirdparty" to "https://maven.wso2.org/nexus/content/repositories/thirdparty/",
+    /* 638  uses /  21k jars */ "netbeans" to "http://netbeans.apidesign.org/maven2/", // Note: https://netbeans.apache.org/about/oracle-transition.html
+    /* 268  uses / 3.9k jars */ "ow2-public" to "https://repository.ow2.org/nexus/content/repositories/public/",
+    /* 130  uses / 227k jars */ "wso2-public" to "https://maven.wso2.org/nexus/content/repositories/public/",
 
-      // TODO: maven.java.net
-      // TODO: Certificate for .. doesn't match any of the subject ...
+    // TODO: maven.java.net
+    // TODO: Certificate for .. doesn't match any of the subject ...
 
-      //////////////// broken but possibly fixable
+    // ////////////// broken but possibly fixable
 
-      // "icm" to "https://maven.icm.edu.pl/artifactory/repo/", // 94k jars / null pointer exception / too long to reach?
-      // "apache-releases" to "https://repository.apache.org/content/repositories/releases/", // 92k jars / Network is unreachable (connect failed)
-      //    commons-*
-      //    javax/jdo:*
-      //    javax/portlet:portlet-api
-      //    log4j:apache-log4j-extras
-      //    log4j:log4j
-      //    net/jini:jsk-*
-      //    net/jini/lookup:serviceui
-      //    org/apache*
-      //    org/freemarker*
-      //    org/netbeans*
-      //    org/openoffice*
-      //    org/qi4j*
-      // "apache-public" to "https://repository.apache.org/content/repositories/public/", // 17k jars / Network is unreachable (connect failed)
-      //    commons-*
-      //    io/re-digital:*
-      //    javax/jdo:*
-      //    javax/portlet*
-      //    log4j:apache-chainsaw
-      //    log4j:apache-log4j-extras
-      //    log4j:log4j
-      //    net/jini:jsk-*
-      //    net/jini/lookup:serviceui
-      //    org/apache*
-      //    org/cocooon*
-      //    org/deri*
-      //    org/foo*
-      //    org/freemarker*
-      //    org/netbeans*
-      //    org/openoffice*
-      //    org/qi4j*
-      //    org/swssf*
+    // "icm" to "https://maven.icm.edu.pl/artifactory/repo/", // 94k jars / null pointer exception / too long to reach?
+    // "apache-releases" to "https://repository.apache.org/content/repositories/releases/", // 92k jars / Network is unreachable (connect failed)
+    //    commons-*
+    //    javax/jdo:*
+    //    javax/portlet:portlet-api
+    //    log4j:apache-log4j-extras
+    //    log4j:log4j
+    //    net/jini:jsk-*
+    //    net/jini/lookup:serviceui
+    //    org/apache*
+    //    org/freemarker*
+    //    org/netbeans*
+    //    org/openoffice*
+    //    org/qi4j*
+    // "apache-public" to "https://repository.apache.org/content/repositories/public/", // 17k jars / Network is unreachable (connect failed)
+    //    commons-*
+    //    io/re-digital:*
+    //    javax/jdo:*
+    //    javax/portlet*
+    //    log4j:apache-chainsaw
+    //    log4j:apache-log4j-extras
+    //    log4j:log4j
+    //    net/jini:jsk-*
+    //    net/jini/lookup:serviceui
+    //    org/apache*
+    //    org/cocooon*
+    //    org/deri*
+    //    org/foo*
+    //    org/freemarker*
+    //    org/netbeans*
+    //    org/openoffice*
+    //    org/qi4j*
+    //    org/swssf*
 
-      //////////////// less than 35 uses
+    // ////////////// less than 35 uses
 
-      // /*  32 uses / 3.6k jars */ "geo-solutions" to "http://maven.geo-solutions.it/",
-      // /*  26 uses /  21k jars */ "eclipse-releases" to "https://repo.eclipse.org/content/groups/releases/",
-      // /*  20 uses / 280  jars */ "cit-ec-releases" to "https://mvn.cit-ec.de/nexus/content/repositories/releases/",
-      // /*  19 uses /  10k jars */ "conjars" to "https://conjars.org/repo/",
-      // /*  18 uses / 142k jars */ "nuxeo-public-releases" to "https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases/",
-      // /*   7 uses /  72k jars */ "mulesoft-public" to "https://repository.mulesoft.org/nexus/content/repositories/public/",
-      // /*   2 uses / 112  jars */ "edinburgh-ph" to "https://www2.ph.ed.ac.uk/maven2/",
+    // /*  32 uses / 3.6k jars */ "geo-solutions" to "http://maven.geo-solutions.it/",
+    // /*  26 uses /  21k jars */ "eclipse-releases" to "https://repo.eclipse.org/content/groups/releases/",
+    // /*  20 uses / 280  jars */ "cit-ec-releases" to "https://mvn.cit-ec.de/nexus/content/repositories/releases/",
+    // /*  19 uses /  10k jars */ "conjars" to "https://conjars.org/repo/",
+    // /*  18 uses / 142k jars */ "nuxeo-public-releases" to "https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases/",
+    // /*   7 uses /  72k jars */ "mulesoft-public" to "https://repository.mulesoft.org/nexus/content/repositories/public/",
+    // /*   2 uses / 112  jars */ "edinburgh-ph" to "https://www2.ph.ed.ac.uk/maven2/",
 
-      //////////////// 0 uses
+    // ////////////// 0 uses
 
-      // /*   0 uses / 2.1M jars */ "sonatype-releases" to "https://oss.sonatype.org/content/repositories/releases/",
-      // /*   0 uses / 273k jars */ "jboss-releases" to "https://repository.jboss.org/nexus/content/repositories/releases/",
-      // /*   0 uses /  22k jars */ "osgeo" to "https://download.osgeo.org/webdav/geotools/",
-      // /*   0 uses / 6.4k jars */ "jboss-thirdparty-releases" to "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/",
-      // /*   0 uses / 3.7k jars */ "seasar" to "https://maven.seasar.org/maven2/",
-      // /*   0 uses / 1.4k jars */ "unidata-ucar-releases" to "https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/",
-      // /*   0 uses / 1.2k jars */ "pustefix-framework" to "http://pustefix-framework.org/repository/maven/",
-      // /*   0 uses /  96  jars */ "tidalwave-releases" to "https://services.tidalwave.it/nexus/content/repositories/releases/",
-      // /*   0 uses /  67  jars */ "eclipse-paho" to "https://repo.eclipse.org/content/repositories/paho-releases/",
-      // /*   0 uses /   4  jars */ "tweetyproject" to "https://tweetyproject.org/mvn/",
+    // /*   0 uses / 2.1M jars */ "sonatype-releases" to "https://oss.sonatype.org/content/repositories/releases/",
+    // /*   0 uses / 273k jars */ "jboss-releases" to "https://repository.jboss.org/nexus/content/repositories/releases/",
+    // /*   0 uses /  22k jars */ "osgeo" to "https://download.osgeo.org/webdav/geotools/",
+    // /*   0 uses / 6.4k jars */ "jboss-thirdparty-releases" to "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/",
+    // /*   0 uses / 3.7k jars */ "seasar" to "https://maven.seasar.org/maven2/",
+    // /*   0 uses / 1.4k jars */ "unidata-ucar-releases" to "https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/",
+    // /*   0 uses / 1.2k jars */ "pustefix-framework" to "http://pustefix-framework.org/repository/maven/",
+    // /*   0 uses /  96  jars */ "tidalwave-releases" to "https://services.tidalwave.it/nexus/content/repositories/releases/",
+    // /*   0 uses /  67  jars */ "eclipse-paho" to "https://repo.eclipse.org/content/repositories/paho-releases/",
+    // /*   0 uses /   4  jars */ "tweetyproject" to "https://tweetyproject.org/mvn/",
 
-      //////////////// unreachable servers
+    // ////////////// unreachable servers
 
-      // /*   ? uses/  10k jars */ "jspresso" to "http://repository.jspresso.org/maven2/",
-      // /*   ? uses/ 3.9k jars */ "metova-public" to "http://repo.metova.com/nexus/content/groups/public/",
-      // /*   ? uses/ 1.9k jars */ "atricore-m2-release-repository" to "http://repository.atricore.org/m2-release-repository/",
-      // /*   ? uses/ 1.3k jars */ "entwine-releases" to "http://maven.entwinemedia.com/content/repositories/releases/",
+    // /*   ? uses/  10k jars */ "jspresso" to "http://repository.jspresso.org/maven2/",
+    // /*   ? uses/ 3.9k jars */ "metova-public" to "http://repo.metova.com/nexus/content/groups/public/",
+    // /*   ? uses/ 1.9k jars */ "atricore-m2-release-repository" to "http://repository.atricore.org/m2-release-repository/",
+    // /*   ? uses/ 1.3k jars */ "entwine-releases" to "http://maven.entwinemedia.com/content/repositories/releases/",
 
-    ).map {
-      RemoteRepository.Builder(it.first, "default", it.second)
-        .setPolicy(RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL))
-        .setAuthentication(authentication)
-        .build()
-    }
+  ).map {
+    RemoteRepository.Builder(it.first, "default", it.second)
+      .setPolicy(RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL))
+      .setAuthentication(authentication)
+      .build()
+  }
 
   fun run() {
     Runtime.getRuntime().addShutdownHook(
-      object : Thread() {
-        override fun run() {
-          println()
-          println("cached pass $cachedPass")
-          println("cached fail $cachedFail")
-          println("pass  $pass")
-          println("fail  $fail")
-          println("abort $abort")
+      Thread {
+        println()
+        println("cached pass $cachedPass")
+        println("cached fail $cachedFail")
+        println("pass  $pass")
+        println("fail  $fail")
+        println("abort $abort")
 
-          println()
-          println("Cached fails: ${cachedFails.toList().map(Pair<String, Int>::second).sum()}\n")
-          for ((key, value) in cachedFails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-            println("$value\t$key")
-          }
+        println()
+        println("Cached fails: ${cachedFails.toList().map(Pair<String, Int>::second).sum()}\n")
+        for ((key, value) in cachedFails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+          println("$value\t$key")
+        }
 
-          println()
-          println("Fails: ${fails.toList().map(Pair<String, Int>::second).sum()}\n")
-          for ((key, value) in fails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-            println("$value\t$key")
-          }
+        println()
+        println("Fails: ${fails.toList().map(Pair<String, Int>::second).sum()}\n")
+        for ((key, value) in fails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+          println("$value\t$key")
+        }
 
-          println()
-          println("Aborts: ${aborts.toList().map(Pair<String, Int>::second).sum()}\n")
-          for ((key, value) in aborts.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-            println("$value\t$key")
-          }
+        println()
+        println("Aborts: ${aborts.toList().map(Pair<String, Int>::second).sum()}\n")
+        for ((key, value) in aborts.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
+          println("$value\t$key")
+        }
 
-          println()
-          println("Running: ${running.size} / $remaining\n")
-          for ((name, startTime) in running.toList().sortedBy(Pair<Pair<String, String>, Long>::second).reversed()) {
-            println("- ${time(startTime)}: ${name.first}:${name.second}")
-          }
+        println()
+        println("Running: ${running.size} / $remaining\n")
+        for ((name, startTime) in running.toList().sortedBy(Pair<Pair<String, String>, Long>::second).reversed()) {
+          println("- ${time(startTime)}: ${name.first}:${name.second}")
         }
       }
     )
@@ -485,7 +511,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
           // if (artifactId == "caom2harvester") continue
 
           // if (groupIdPath.startsWith("org/open") && groupIdPath >= "org/opend") continue
-          // if (groupIdPath.startsWith("org/open") && groupIdPath >= "org/opencb") continue 
+          // if (groupIdPath.startsWith("org/open") && groupIdPath >= "org/opencb") continue
           // if (groupIdPath.startsWith("org/o")) continue
           // if (!groupIdPath.startsWith("org/p")) continue
           // if (!groupIdPath.startsWith("org/q")) continue
@@ -503,7 +529,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
             jarListFile.bufferedReader().use {
               val line = it.readLine()
               when {
-                line === null -> log.error("!!!! Empty cache file: $jarListFile")
+                line == null -> log.error("!!!! Empty cache file: $jarListFile")
                 line.startsWith('!') -> {
                   cachedFail.incrementAndGet()
                   cachedFails.merge(line.substring(1), 1, Int::plus)
@@ -531,13 +557,20 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     try {
       running.put(Pair(groupIdPath, artifactId), startTime)
       println("running +${running.size} / $remaining")
-      if (groupIdPath.contains('.')) throw DotInGroupIdException(groupIdPath, artifactId) // Maven will incorrectly translate the '.' to a '/'
+      // Maven will incorrectly translate the '.' to a '/'
+      if (groupIdPath.contains('.')) throw DotInGroupIdException(groupIdPath, artifactId)
       println("start   $name")
       val version = getVersion(groupId, artifactId)
       val artifactDescriptorResult = getArtifactDescriptor(groupId, artifactId, version)
       val pomArtifactResult = getArtifact(groupId, artifactId, null, "pom", version)
       val model = getModel(pomArtifactResult.artifact.file)
-      val artifactResult = getArtifact(groupId, artifactId, artifactDescriptorResult.artifact.classifier, model.packaging, version)
+      val artifactResult = getArtifact(
+        groupId,
+        artifactId,
+        artifactDescriptorResult.artifact.classifier,
+        model.packaging,
+        version
+      )
       artifactDescriptorResult.artifact = artifactResult.artifact
       artifactDescriptorResult.request.artifact = artifactResult.artifact
       val dependencyTree = getDependencyTree(artifactDescriptorResult)
@@ -630,14 +663,14 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     val metadataResults = system.resolveMetadata(session, listOf(metadataRequest))
     assert(metadataResults.size == 1)
     val metadataResult = metadataResults[0]
-    if (metadataResult.metadata === null) {
-      assert(metadataResult.exception !== null)
+    if (metadataResult.metadata == null) {
+      assert(metadataResult.exception != null)
       throw metadataResult.exception
     }
     val m = FileInputStream(metadataResult.metadata.file).use { MetadataXpp3Reader().read(it, false) }
-    if (m.versioning === null) throw NoVersioningTagException(groupId, artifactId)
-    if (m.versioning.release !== null) return m.versioning.release
-    if (m.versioning.latest !== null) return m.versioning.latest
+    if (m.versioning == null) throw NoVersioningTagException(groupId, artifactId)
+    if (m.versioning.release != null) return m.versioning.release
+    if (m.versioning.latest != null) return m.versioning.latest
     val versions = m.versioning.versions
     return versions.maxByOrNull(versionScheme::parseVersion) ?: throw NoVersionsInVersioningTagException(groupId, artifactId)
   }
@@ -655,13 +688,18 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     // TODO: try local first then log if having to hit remote
   }
 
-  fun getModel(file: File): Model {
-    return modelBuilder.buildRawModel(file, ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL, false).get()
+  fun getModel(file: File): Model =
+    modelBuilder.buildRawModel(file, ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL, false).get()
       ?: throw ModelParsingException(file)
-  }
 
   // TODO: rename extension to packaging
-  fun getArtifact(groupId: String, artifactId: String, classifier: String?, extension: String, version: String): ArtifactResult {
+  fun getArtifact(
+    groupId: String,
+    artifactId: String,
+    classifier: String?,
+    extension: String,
+    version: String
+  ): ArtifactResult {
     val (cls, extensions) = when {
       extension == "pom" -> Pair(null, listOf(extension)) // TODO: null isn't technically correct (should be classifier)
       extension == "feature" -> Pair("features", listOf("xml"))
@@ -766,12 +804,25 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
       }
 
       // if (node.artifact !== node.dependency?.artifact) {
-      //   log.error("dependency.artifact === artifact: ${node.artifact === node.dependency?.artifact} for ${node.artifact} ${node.dependency} ${groupId}:${artifactId}")
+      //   log.error("dependency.artifact === artifact: ${node.artifact === node.dependency?.artifact}
+      //     for ${node.artifact} ${node.dependency} ${groupId}:${artifactId}")
       // }
 
-      val pomArtifactResult = getArtifact(node.artifact.groupId, node.artifact.artifactId, null, "pom", node.artifact.version)
+      val pomArtifactResult = getArtifact(
+        node.artifact.groupId,
+        node.artifact.artifactId,
+        null,
+        "pom",
+        node.artifact.version
+      )
       val model = getModel(pomArtifactResult.artifact.file)
-      val art = Fiveple(node.artifact.groupId, node.artifact.artifactId, node.artifact.classifier, model.packaging, node.artifact.version)
+      val art = Fiveple(
+        node.artifact.groupId,
+        node.artifact.artifactId,
+        node.artifact.classifier,
+        model.packaging,
+        node.artifact.version
+      )
       artifactRequests += art
 
       for (child in node.children) {
@@ -784,9 +835,8 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     return artifactRequests
   }
 
-  fun downloadDependencies(artifactRequests: List<Fiveple<String, String, String, String, String>>): List<ArtifactResult> {
-    return artifactRequests.map { getArtifact(it._1, it._2, it._3, it._4, it._5) }
-  }
+  fun downloadDependencies(artifactRequests: List<CacheKey<String>>): List<ArtifactResult> =
+    artifactRequests.map { getArtifact(it._1, it._2, it._3, it._4, it._5) }
 
   fun writeJarList(artifactResults: List<ArtifactResult>, jarListFile: File) {
     val builder = StringBuilder()
@@ -804,7 +854,7 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     var e: Throwable? = exception
     var l = listOf<String>()
 
-    while (e !== null) {
+    while (e != null) {
       l += e::class.qualifiedName ?: "<anonymous>"
       e = e.cause
     }
@@ -824,11 +874,10 @@ class DownloadMaven(val indexFile: File, val localRepoDir: File, val jarListsDir
     }
 
     for (c in classes) {
-      if (e === null) { return false }
-      if (!c.isInstance(e)) { return false }
+      if (e == null || !c.isInstance(e)) return false
       e = e.cause
     }
-    return e === null
+    return e == null
   }
 
   private val UNSOLVABLE_ORG_WEBJARS_NPM_ARTIFACTS = listOf(

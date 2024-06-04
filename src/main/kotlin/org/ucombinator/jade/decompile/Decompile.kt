@@ -2,16 +2,13 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
-import com.github.javaparser.ast.body.CallableDeclaration
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
-import com.github.javaparser.ast.type.ClassOrInterfaceType
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.AnalyzerAdapter
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
-import org.ucombinator.jade.util.ReadFiles
 import org.ucombinator.jade.util.Log
 import java.io.File
 
@@ -52,17 +49,16 @@ object Decompile {
     val compilationUnit = decompileClassFile(file.toString(), file.toString(), classReader, 0)
     for (type in compilationUnit.types) {
       log.debug("type: ${type.javaClass}")
-      when (type) {
-        is ClassOrInterfaceDeclaration -> {
-          val classNode = type.getData(DecompileClass.CLASS_NODE)!!
-          // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
-          for (callable in type.constructors + type.methods) {
-            val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
-            DecompileMethodBody.decompileBody(classNode, methodNode, callable)
-            log.debug("method: $callable")
-          }
+      if (type is ClassOrInterfaceDeclaration) {
+        val classNode = type.getData(DecompileClass.CLASS_NODE)!!
+        // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
+        for (callable in type.constructors + type.methods) {
+          val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
+          DecompileMethodBody.decompileBody(classNode, methodNode, callable)
+          log.debug("method: $callable")
         }
-        else -> { TODO() }
+      } else {
+        TODO()
       }
     }
 
@@ -135,7 +131,7 @@ object Decompile {
     }
     cr.accept(classNode, ClassReader.EXPAND_FRAMES) // TODO: Do we actually need ClassReader.EXPAND_FRAMES?
 
-    if (classNode.name === null) TODO()
+    if (classNode.name == null) TODO()
     // this.log.debug("class name: " + classNode.name)
 
     // this.asmLog.whenDebugEnabled {

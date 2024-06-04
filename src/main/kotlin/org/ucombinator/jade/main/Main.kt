@@ -2,11 +2,21 @@ package org.ucombinator.jade.main
 
 import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.completion.CompletionCommand
-import com.github.ajalt.clikt.core.*
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.context
+import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.output.MordantHelpFormatter
-import com.github.ajalt.clikt.parameters.arguments.*
-import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.*
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.multiple
+import com.github.ajalt.clikt.parameters.options.convert
+import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.split
+import com.github.ajalt.clikt.parameters.options.versionOption
+import com.github.ajalt.clikt.parameters.types.file
+import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.long
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
 import java.io.File
@@ -50,19 +60,13 @@ fun main(args: Array<String>): Unit =
 class Jade : CliktCommand() {
   init {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
-    context {
-      // TODO: color and other formatting in help messages
-      helpFormatter = {
-        MordantHelpFormatter(
-          it,
-          showRequiredTag = true,
-          showDefaultValues = true, // TODO: check
-        )
-      }
-    }
+    // TODO: color and other formatting in help messages
+    // TODO: check
+    context { helpFormatter = { MordantHelpFormatter(it, showRequiredTag = true, showDefaultValues = true) } }
   }
 
   data class LogSetting(val name: String, val lvl: Level)
+
   val log: List<LogSetting> by option(
     metavar = "LEVEL",
     help = """
@@ -97,7 +101,7 @@ class Jade : CliktCommand() {
   )
 
   override fun run() {
-    if (ioThreads !== null) System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, ioThreads.toString())
+    if (ioThreads != null) System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, ioThreads.toString())
 
     DynamicCallerConverter.depthEnd = logCallerDepth
 
@@ -110,7 +114,7 @@ class Jade : CliktCommand() {
         } else if (name == "") {
           ""
         } else {
-          Log.PREFIX + lvl
+          "org.ucombinator.jade." + lvl // TODO: autodetect or take from BuildInfo
         }
       Log.getLog(parsedName).setLevel(lvl)
     }
@@ -130,6 +134,7 @@ class Jade : CliktCommand() {
 class TestLog : CliktCommand() {
   class Bar {
     val log = Log {} // TODO: lazy?
+
     fun f() {
       println(this.javaClass.name)
       log.error("error")
@@ -139,6 +144,7 @@ class TestLog : CliktCommand() {
       log.trace("trace")
     }
   }
+
   override fun run() {
     Bar().f()
     echo("executing")
@@ -165,19 +171,16 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
       println("  ${l.first}=${l.second}")
     }
     println("Runtime system properties:")
-    for (
-      p in System
-        .getProperties()
-        .toList()
-        .sortedBy { it.first.toString() }
-        .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) }
+    for (p in System.getProperties().toList()
+      .sortedBy { it.first.toString() }
+      .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) }
     ) {
       println("  ${p.first}=${p.second}")
     }
   }
 }
 
-class Decompile : CliktCommand(help = "Display information about how `jade` was built") {
+class Decompile : CliktCommand(help = "Decompile a class file") {
   // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
   // --filter=+dir=
 
@@ -221,14 +224,8 @@ class Loggers : CliktCommand(help = "Lists available loggers") {
 }
 
 class DownloadIndex : CliktCommand(help = "Download index of all files") {
-  val indexFile: File by argument(
-    name = "INDEX"
-  ).file(canBeDir = false)
-
-  val authFile: File? by option(
-    metavar = "FILE"
-  ).file(canBeDir = false, mustBeReadable = true)
-
+  val indexFile: File by argument(name = "INDEX").file(canBeDir = false)
+  val authFile: File? by option(metavar = "FILE").file(canBeDir = false, mustBeReadable = true)
   val resume: Boolean by option().flag(default = false)
   val maxResults: Long by option().long().default(0)
   val pageSize: Long by option().long().default(0)
@@ -238,20 +235,22 @@ class DownloadIndex : CliktCommand(help = "Download index of all files") {
 
   override fun run() {
     org.ucombinator.jade.maven.DownloadIndex.main(
-      indexFile, authFile, resume, maxResults, pageSize, prefix, startOffset, flushFrequency)
+      indexFile,
+      authFile,
+      resume,
+      maxResults,
+      pageSize,
+      prefix,
+      startOffset,
+      flushFrequency
+    )
   }
 }
 
 class DownloadMaven : CliktCommand(help = "Download Maven data") {
-  val index: File by argument()
-    .file(mustExist = true, mustBeReadable = true, canBeDir = false)
-
-  val localRepo: File by argument()
-    .file(mustExist = true, canBeFile = false)
-
-  val jarLists: File by argument()
-    .file(mustExist = true, canBeFile = false)
-
+  val index: File by argument().file(mustExist = true, mustBeReadable = true, canBeDir = false)
+  val localRepo: File by argument().file(mustExist = true, canBeFile = false)
+  val jarLists: File by argument().file(mustExist = true, canBeFile = false)
   val reverse: Boolean by option().flag(default = false)
   val shuffle: Boolean by option().flag(default = false)
 

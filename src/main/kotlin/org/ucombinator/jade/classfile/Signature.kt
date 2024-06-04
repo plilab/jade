@@ -9,26 +9,41 @@ import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.type.TypeParameter
 import com.github.javaparser.ast.type.VoidType
 import com.github.javaparser.ast.type.WildcardType
-import org.ucombinator.jade.util.Errors
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.signature.SignatureReader
-import org.objectweb.asm.signature.SignatureWriter
 import org.objectweb.asm.signature.SignatureVisitor
+import org.objectweb.asm.signature.SignatureWriter
+import org.ucombinator.jade.util.Errors
 
-// https://docs.oracle.com/javase/specs/jvms/se22/html/jvms-4.html#jvms-4.7.9.1
-// https://gitlab.ow2.org/asm/asm/-/blob/master/asm/src/main/java/org/objectweb/asm/signature/SignatureReader.java
-// https://github.com/openjdk/jdk/blob/jdk-23%2B23/src/java.base/share/classes/sun/reflect/generics/parser/SignatureParser.java
+// See:
+// - https://docs.oracle.com/javase/specs/jvms/se22/html/jvms-4.html#jvms-4.7.9.1
+// - https://gitlab.ow2.org/asm/asm/-/blob/master/asm/src/main/java/org/objectweb/asm/signature/SignatureReader.java
+// - https://github.com/openjdk/jdk/blob/jdk-23%2B23/src/java.base/share/classes/sun/reflect/generics/parser/SignatureParser.java
 
-data class ClassSignature(val typeParameters: List<TypeParameter>, val superclass: ClassOrInterfaceType, val interfaces: List<ClassOrInterfaceType>)
-data class MethodSignature(val typeParameters: List<TypeParameter>, val parameterTypes: List<Type>, val returnType: Type, val exceptionTypes: List<ReferenceType>)
+// TODO: use Delegates.notNull (or custom). See https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.properties/-delegates/not-null.html
+
+data class ClassSignature(
+  val typeParameters: List<TypeParameter>,
+  val superclass: ClassOrInterfaceType,
+  val interfaces: List<ClassOrInterfaceType>
+)
+
+data class MethodSignature(
+  val typeParameters: List<TypeParameter>,
+  val parameterTypes: List<Type>,
+  val returnType: Type,
+  val exceptionTypes: List<ReferenceType>
+)
 
 object Signature {
   // TODO: document: Check that SignatureReader parses to the end of the string without error
-  private fun checkSignature(string: String, accept: (SignatureReader, SignatureWriter) -> Unit): Unit {
+  private fun checkSignature(string: String, accept: (SignatureReader, SignatureWriter) -> Unit) {
     val signatureWriter = SignatureWriter()
     try {
       accept(SignatureReader(string), signatureWriter)
-    } catch (e: StringIndexOutOfBoundsException) { throw IllegalArgumentException(e) }
+    } catch (e: StringIndexOutOfBoundsException) {
+      throw IllegalArgumentException(e)
+    }
     val result = signatureWriter.toString()
     require(string.startsWith(result)) { """Signature "${string}" reconstituted to "${result}"""" }
     require(string == result) { """Unexpected "${string.removePrefix(result)}" at end of signature "${string}".""" }
@@ -37,15 +52,19 @@ object Signature {
   fun typeSignature(string: String): Type {
     checkSignature(string, SignatureReader::acceptType)
     var type = null as Type?
-    SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor({ type = it; null })))
-    return type ?: throw IllegalArgumentException("""no type for signature "$string"""")
+    SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor { type = it; null }))
+    return requireNotNull(type) { "no type for signature \"$string\"" }
   }
 
   fun classSignature(string: String): ClassSignature {
     checkSignature(string, SignatureReader::accept)
     val visitor = ClassSignatureVisitor()
     SignatureReader(string).accept(DelegatingSignatureVisitor(visitor))
-    return ClassSignature(visitor.typeParameters, visitor.superclass ?: throw IllegalArgumentException("""no superclass for signature "$string""""), visitor.interfaces)
+    return ClassSignature(
+      visitor.typeParameters,
+      requireNotNull(visitor.superclass) { "no superclass for signature \"$string\"" },
+      visitor.interfaces
+    )
   }
 
   // TODO: rename arg to signature
@@ -53,7 +72,12 @@ object Signature {
     checkSignature(string, SignatureReader::accept)
     val visitor = MethodSignatureVisitor()
     SignatureReader(string).accept(DelegatingSignatureVisitor(visitor))
-    return MethodSignature(visitor.typeParameters, visitor.parameterTypes, visitor.returnType ?: throw IllegalArgumentException("""no return type for signature "$string""""), visitor.exceptionTypes)
+    return MethodSignature(
+      visitor.typeParameters,
+      visitor.parameterTypes,
+      requireNotNull(visitor.returnType) { "no return type for signature \"$string\"" },
+      visitor.exceptionTypes
+    )
   }
 }
 
@@ -64,6 +88,7 @@ object Signature {
 
 // TODO: wrap in checked visitor and catch exceptions to detect malformed signatures (and add these to tests)
 // TODO: document: we use this so we can dynamically change what visitor is running
+@Suppress("ktlint:standard:blank-line-before-declaration", "ktlint:standard:statement-wrapping", "MaxLineLength")
 data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : SignatureVisitor(Opcodes.ASM9) {
   override fun visitFormalTypeParameter(name: String) { delegate = delegate!!.visitFormalTypeParameter(name) }
   override fun visitClassBound(): SignatureVisitor { delegate = delegate!!.visitClassBound(); return this }
@@ -86,31 +111,32 @@ data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) :
 // /////////////////////////////////////
 // Delegate visitors
 
-@Suppress("ThrowingExceptionsWithoutMessageOrCause")
+@Suppress("ThrowingExceptionsWithoutMessageOrCause", "ktlint:standard:blank-line-before-declaration")
 open class DelegateSignatureVisitor {
-  open fun visitFormalTypeParameter(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitClassBound(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitInterfaceBound(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitSuperclass(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitInterface(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitParameterType(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitReturnType(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitExceptionType(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitTypeVariable(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitArrayType(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitClassType(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitInnerClassType(name: String): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitTypeArgument(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitTypeArgument(wildcard: Char): DelegateSignatureVisitor? { throw IllegalArgumentException() }
-  open fun visitEnd(): DelegateSignatureVisitor? { throw IllegalArgumentException() }
+  open fun visitFormalTypeParameter(name: String): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitClassBound(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitInterfaceBound(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitSuperclass(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitInterface(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitParameterType(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitReturnType(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitExceptionType(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitTypeVariable(name: String): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitArrayType(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitClassType(name: String): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitInnerClassType(name: String): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitTypeArgument(): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitTypeArgument(wildcard: Char): DelegateSignatureVisitor? = throw IllegalArgumentException()
+  open fun visitEnd(): DelegateSignatureVisitor? = throw IllegalArgumentException()
 }
 
 typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
+@Suppress("MaxLineLength", "ktlint:standard:function-signature")
 class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisitor() {
   override fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? = receiver(descriptorToType(descriptor))
   override fun visitTypeVariable(name: String): DelegateSignatureVisitor? = receiver(TypeParameter(ClassName.identifier(name)))
-  override fun visitArrayType(): DelegateSignatureVisitor? = TypeSignatureVisitor({ receiver(ArrayType(it)) })
+  override fun visitArrayType(): DelegateSignatureVisitor? = TypeSignatureVisitor { receiver(ArrayType(it)) }
   override fun visitClassType(name: String): DelegateSignatureVisitor? = ClassTypeVisitor(receiver, name)
 }
 
@@ -136,20 +162,22 @@ class ClassSignatureVisitor : FormalTypeParameterVisitor() {
     TypeSignatureVisitor { this.apply { interfaces.add(it.cast<ClassOrInterfaceType>("non-class in interface")) } }
 }
 
+@Suppress("ktlint:standard:function-signature")
 class MethodSignatureVisitor : FormalTypeParameterVisitor() {
   val parameterTypes = mutableListOf<Type>()
   var returnType = null as Type?
   val exceptionTypes = mutableListOf<ReferenceType>()
 
   override fun visitParameterType(): DelegateSignatureVisitor? =
-    TypeSignatureVisitor { this.apply { if (it is VoidType) throw IllegalArgumentException("void in parameter type"); parameterTypes.add(it) } }
+    TypeSignatureVisitor { this.apply { require(it !is VoidType) { "void in parameter type" }; parameterTypes.add(it) } }
   override fun visitReturnType(): DelegateSignatureVisitor? =
     TypeSignatureVisitor { this.apply { returnType = it } }
   override fun visitExceptionType(): DelegateSignatureVisitor? =
-    TypeSignatureVisitor { this.apply { if (it is ArrayType) throw IllegalArgumentException("array in exception type"); exceptionTypes.add(it.cast<ReferenceType>("non-reference type in exception type")) } }
+    TypeSignatureVisitor { this.apply { require(it !is ArrayType) { "array in exception type" }; exceptionTypes.add(it.cast<ReferenceType>("non-reference type in exception type")) } }
 }
 
 // TODO: TypeReceiver -> ClassOrInterfaceTypeReceiver??
+@Suppress("ktlint:standard:function-signature")
 class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSignatureVisitor() {
   var result = ClassName.classNameType(name)
 
@@ -166,26 +194,28 @@ class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSigna
 // /////////////////////////////////////
 // Helper functions
 
-private inline fun <reified T> Any.cast(message: String): T = this as? T ?: throw IllegalArgumentException(message)
+private inline fun <reified T> Any.cast(message: String): T = requireNotNull(this as? T) { message }
 
-private fun descriptorToType(descriptor: Char): Type = when (descriptor) {
-  'B' -> PrimitiveType.byteType()
-  'C' -> PrimitiveType.charType()
-  'D' -> PrimitiveType.doubleType()
-  'F' -> PrimitiveType.floatType()
-  'I' -> PrimitiveType.intType()
-  'J' -> PrimitiveType.longType()
-  'S' -> PrimitiveType.shortType()
-  'Z' -> PrimitiveType.booleanType()
-  'V' -> VoidType()
-  else -> Errors.unmatchedValue(descriptor)
+private fun descriptorToType(descriptor: Char): Type =
+  when (descriptor) {
+    'B' -> PrimitiveType.byteType()
+    'C' -> PrimitiveType.charType()
+    'D' -> PrimitiveType.doubleType()
+    'F' -> PrimitiveType.floatType()
+    'I' -> PrimitiveType.intType()
+    'J' -> PrimitiveType.longType()
+    'S' -> PrimitiveType.shortType()
+    'Z' -> PrimitiveType.booleanType()
+    'V' -> VoidType()
+    else -> Errors.unmatchedValue(descriptor)
 }
 
-private fun toTypeParameter(type: Type): ClassOrInterfaceType = when (type) {
-  is ClassOrInterfaceType -> type
-  is TypeParameter -> ClassOrInterfaceType(null, type.name, null)
-  else -> Errors.unmatchedType(type)
-}
+private fun toTypeParameter(type: Type): ClassOrInterfaceType =
+  when (type) {
+    is ClassOrInterfaceType -> type
+    is TypeParameter -> ClassOrInterfaceType(null, type.name, null)
+    else -> Errors.unmatchedType(type)
+  }
 
 private fun typeArguments(type: ClassOrInterfaceType): NodeList<Type> {
   val typeArguments = type.typeArguments.orElse(NodeList<Type>())
@@ -195,10 +225,11 @@ private fun typeArguments(type: ClassOrInterfaceType): NodeList<Type> {
 
 private fun toTypeArgument(): Type = WildcardType()
 
-private fun toTypeArgument(wildcard: Char, type: Type): Type = when (wildcard) {
-  // TODO: remove need for casts
-  SignatureVisitor.EXTENDS -> WildcardType(type.cast<ReferenceType>("non-reference type in type parameter bound"))
-  SignatureVisitor.SUPER -> WildcardType(null, type.cast<ReferenceType>("non-reference type in type parameter bound"), NodeList())
-  SignatureVisitor.INSTANCEOF -> type // TODO: this may be wrong
-  else -> Errors.unmatchedValue(wildcard)
-}
+private fun toTypeArgument(wildcard: Char, type: Type): Type =
+  when (wildcard) {
+    // TODO: remove need for casts
+    SignatureVisitor.EXTENDS -> WildcardType(type.cast<ReferenceType>("non-reference type in type parameter bound"))
+    SignatureVisitor.SUPER -> WildcardType(null, type.cast<ReferenceType>("non-reference type in type parameter bound"), NodeList())
+    SignatureVisitor.INSTANCEOF -> type // TODO: this may be wrong
+    else -> Errors.unmatchedValue(wildcard)
+  }

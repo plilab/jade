@@ -42,7 +42,7 @@ import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.ParameterNode
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
-import org.ucombinator.jade.classfile.Flags
+import org.ucombinator.jade.classfile.Flag
 import org.ucombinator.jade.classfile.MethodSignature
 import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
@@ -99,7 +99,7 @@ object DecompileClass {
 
   private fun decompileField(node: FieldNode): FieldDeclaration {
     // attrs (ignore?)
-    val modifiers = Flags.toModifiers(Flags.fieldFlags(node.access))
+    val modifiers = Flag.toModifiers(Flag.fieldFlags(node.access))
     val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
       node.visibleAnnotations,
       node.invisibleAnnotations,
@@ -123,10 +123,10 @@ object DecompileClass {
   ): Parameter {
     val index = parameter.index
     val (type, node, a1, a2) = parameter.value
-    val flags = if (node == null) listOf() else Flags.parameterFlags(node.access)
-    val modifiers = Flags.toModifiers(flags)
+    val flags = if (node == null) listOf() else Flag.parameterFlags(node.access)
+    val modifiers = Flag.toModifiers(flags)
     val annotations = decompileAnnotations(a1, a2, null, null)
-    val isVarArgs = Flags.methodFlags(method.access).contains(Flags.ACC_VARARGS) && index == paramCount - 1
+    val isVarArgs = Flag.methodFlags(method.access).contains(Flag.ACC_VARARGS) && index == paramCount - 1
     val varArgsAnnotations = NodeList<AnnotationExpr>() // TODO?
     // TODO: make consistent with analysis.ParameterVar
     val name = SimpleName(if (node == null) "parameter${index + 1}" else node.name)
@@ -136,8 +136,8 @@ object DecompileClass {
   fun parameterTypes(desc: List<Type>, sig: List<Type>, params: List<ParameterNode>): List<Type> =
     when {
       desc.isNotEmpty() && params.isNotEmpty() &&
-        Flags.parameterFlags(params.first().access).any(listOf(Flags.ACC_SYNTHETIC, Flags.ACC_MANDATED)::contains) ->
-        // TODO: Flags.checkParameter(access, Modifier)
+        Flag.parameterFlags(params.first().access).any(listOf(Flag.ACC_SYNTHETIC, Flag.ACC_MANDATED)::contains) ->
+        // TODO: Flag.checkParameter(access, Modifier)
         listOf(desc.first()) + parameterTypes(desc.tail(), sig, params.tail())
       desc.isNotEmpty() && sig.isNotEmpty() && params.isNotEmpty() ->
         listOf(sig.first()) + parameterTypes(desc.tail(), sig.tail(), params.tail())
@@ -157,7 +157,7 @@ object DecompileClass {
     // invisibleLocalVariableAnnotations
     // TODO: JPModifier.Keyword.DEFAULT
     // TODO: catch exceptions and return a stub method
-    val modifiers = Flags.toModifiers(Flags.methodFlags(node.access))
+    val modifiers = Flag.toModifiers(Flag.methodFlags(node.access))
     val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
       node.visibleAnnotations,
       node.invisibleAnnotations,
@@ -251,7 +251,7 @@ object DecompileClass {
 
     val classOrInterfaceDeclaration = run {
       // TODO: assert ACC_SUPER
-      val modifiers = Flags.toModifiers(Flags.classFlags(node.access))
+      val modifiers = Flag.toModifiers(Flag.classFlags(node.access))
       val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
         node.visibleAnnotations,
         node.invisibleAnnotations,

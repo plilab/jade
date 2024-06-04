@@ -71,9 +71,9 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   // Other bookkeeping variables
   var copyOperationPosition: Int = 0 // For `copyOperation()`
   var originInsn: AbstractInsnNode? = null // For `merge`
-  var returnTypeValue: ReturnVar? = null // There is no getReturn method on frames, so we save it here
+  var returnTypeValue: Var.Return? = null // There is no getReturn method on frames, so we save it here
 
-  fun phiInputs(key: PhiVar, insn: AbstractInsnNode?, value: Var?, ignoreNull: Boolean = false) {
+  fun phiInputs(key: Var.Phi, insn: AbstractInsnNode?, value: Var?, ignoreNull: Boolean = false) {
     if (!ignoreNull || value != null) {
       val usedKey = key.change()
       val entry = insn!! to value
@@ -84,23 +84,23 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   override fun newValue(type: Type): Var = Errors.fatal("Impossible call of newValue on $type")
 
   override fun newParameterValue(isInstanceMethod: Boolean, local: Int, type: Type): Var =
-    ParameterVar(TypedBasicInterpreter.newValue(type)!!, local)
+    Var.Parameter(TypedBasicInterpreter.newValue(type)!!, local)
 
   override fun newReturnTypeValue(type: Type): Var? {
     // ASM requires that we return null when type is Type.VOID_TYPE
     this.returnTypeValue =
-      if (type == Type.VOID_TYPE) null else ReturnVar(TypedBasicInterpreter.newReturnTypeValue(type))
+      if (type == Type.VOID_TYPE) null else Var.Return(TypedBasicInterpreter.newReturnTypeValue(type))
     return this.returnTypeValue
   }
 
-  override fun newEmptyValue(local: Int): Var = EmptyVar
+  override fun newEmptyValue(local: Int): Var = Var.Empty
 
   override fun newExceptionValue(
     tryCatchBlockNode: TryCatchBlockNode,
     handlerFrame: Frame<Var>,
     exceptionType: Type
   ): Var =
-    ExceptionVar(
+    Var.Exception(
       // TODO: wrong cast?
       TypedBasicInterpreter.newExceptionValue(tryCatchBlockNode, handlerFrame as Frame<BasicValue>, exceptionType),
       Insn(method, tryCatchBlockNode.handler)
@@ -113,7 +113,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
 
   @Throws(AnalyzerException::class)
   override fun newOperation(insn: AbstractInsnNode): Var =
-    record(insn, listOf(), InstructionVar(TypedBasicInterpreter.newOperation(insn), Insn(method, insn)))
+    record(insn, listOf(), Var.Instruction(TypedBasicInterpreter.newOperation(insn), Insn(method, insn)))
 
   @Throws(AnalyzerException::class)
   override fun copyOperation(insn: AbstractInsnNode, value: Var): Var {
@@ -121,7 +121,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     return record(
       insn,
       listOf(value),
-      CopyVar(
+      Var.Copy(
         TypedBasicInterpreter.copyOperation(insn, value.basicValue),
         Insn(method, insn),
         this.copyOperationPosition
@@ -134,7 +134,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     record(
       insn,
       listOf(value),
-      InstructionVar(TypedBasicInterpreter.unaryOperation(insn, value.basicValue), Insn(method, insn))
+      Var.Instruction(TypedBasicInterpreter.unaryOperation(insn, value.basicValue), Insn(method, insn))
     )
 
   @Throws(AnalyzerException::class)
@@ -142,7 +142,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     record(
       insn,
       listOf(value1, value2),
-      InstructionVar(
+      Var.Instruction(
         TypedBasicInterpreter.binaryOperation(insn, value1.basicValue, value2.basicValue),
         Insn(method, insn)
       )
@@ -153,7 +153,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     record(
       insn,
       listOf(value1, value2, value3),
-      InstructionVar(
+      Var.Instruction(
         TypedBasicInterpreter.ternaryOperation(insn, value1.basicValue, value2.basicValue, value3.basicValue),
         Insn(method, insn)
       )
@@ -164,7 +164,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     record(
       insn,
       values,
-      InstructionVar(
+      Var.Instruction(
         TypedBasicInterpreter.naryOperation(insn, values.map { it.basicValue }),
         Insn(method, insn)
       )
@@ -182,13 +182,13 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
 
   override fun merge(value1: Var, value2: Var): Var {
     when {
-      value1 is PhiVar -> {
+      value1 is Var.Phi -> {
         val newValue1 = value1.change()
         phiInputs(newValue1, this.originInsn, value2)
         return newValue1
       }
-      value1 === EmptyVar -> return value2
-      value2 === EmptyVar -> return value1
+      value1 === Var.Empty -> return value2
+      value2 === Var.Empty -> return value1
       value1 === value2 -> return value1
       else -> throw Exception("unexpected merge: value1: $value1 value2: $value2")
     }
@@ -218,18 +218,18 @@ private class SsaAnalyzer(val cfg: ControlFlowGraph, val interpreter: SsaInterpr
         // Note that Frame.returnValue is null until `frame.setReturn` later in this method
         for (i in 0 until cfgFrame.locals) {
           assert((insnIndex == 0) == (frame.getLocal(i) != null))
-          val phiVar = PhiVar(cfgFrame.getLocal(i), Insn(method, insn), i) // Note: not `.used`
-          this.interpreter.phiInputs(phiVar.change(), this.interpreter.originInsn, frame.getLocal(i), true)
-          frame.setLocal(i, phiVar)
+          val phi = Var.Phi(cfgFrame.getLocal(i), Insn(method, insn), i) // Note: not `.used`
+          this.interpreter.phiInputs(phi.change(), this.interpreter.originInsn, frame.getLocal(i), true)
+          frame.setLocal(i, phi)
         }
         // Note that we use `push` instead of `setStack` as the `Frame` constructor
         // starts with an empty stack regardless of `stackSize`
         assert(frame.stackSize == 0)
         for (i in 0 until cfgFrame.stackSize) {
           assert((insnIndex == 0) == (frame.getStack(i) != null))
-          val phiVar = PhiVar(cfgFrame.getStack(i), Insn(method, insn), i + frame.locals)
-          this.interpreter.phiInputs(phiVar.change(), this.interpreter.originInsn, frame.getStack(i), true)
-          frame.push(phiVar)
+          val phi = Var.Phi(cfgFrame.getStack(i), Insn(method, insn), i + frame.locals)
+          this.interpreter.phiInputs(phi.change(), this.interpreter.originInsn, frame.getStack(i), true)
+          frame.push(phi)
         }
         this.frames[insnIndex] = frame
       }

@@ -98,11 +98,11 @@ object DecompileStatement {
         // ASSUMPTION: we ignore allocs but implement the constructors
         val (retVal, decompiled) = DecompileInsn.decompileInsn(insn.insn, ssa)
         return when (decompiled) {
-          is DecompiledIf -> {
+          is DecompiledInsn.If -> {
             // this.log.debug("IF: " + decompiled.labelNode + "///" + decompiled.labelNode.getLabel)
             IfStmt(decompiled.condition, BreakStmt(labelString(decompiled.labelNode)), null)
           }
-          is DecompiledGoto ->
+          is DecompiledInsn.Goto ->
             BreakStmt(labelString(decompiled.labelNode)) // TODO: use instruction number?
           else -> DecompileInsn.decompileInsn(retVal, decompiled)
         }
@@ -119,12 +119,12 @@ object DecompileStatement {
           val (stmt, newPending) = structuredBlock(insn)
           addPending(newPending)
           when (block.kind) {
-            is Structure.Loop -> {
+            is Structure.Kind.Loop -> {
               val label = labelString(insn.insn as LabelNode) // TODO: do better
               LabeledStmt(label, WhileStmt(BooleanLiteralExpr(true), stmt))
             }
-            is Structure.Exception -> TODO()
-            is Structure.Synchronized -> TODO()
+            is Structure.Kind.Exception -> TODO()
+            is Structure.Kind.Synchronized -> TODO()
           }
         } else {
           simpleStmt(insn)

@@ -41,20 +41,21 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
   data class Block(val kind: Kind, val headInsn: Insn)
   // case class Block(kind: Kind, headInsn: Insn, var parent: Block = null)
 
-  sealed interface Kind // TODO: structural type
-  object Loop : Kind
-  object Exception : Kind
+  sealed interface Kind { // TODO: structural type
+    object Loop : Kind
+    object Exception : Kind
 
-  // case class Exception(insns: List[Insn], handlers: List[(Insn, Type)]) extends Kind
-  // handlers: dominated by head insn
-  // body: dominated by head but not handlers
-  // finally: ignore until refactoring pass
-  // try ResourceSpecification Block [Catches] [Finally]
+    // case class Exception(insns: List[Insn], handlers: List[(Insn, Type)]) extends Kind
+    // handlers: dominated by head insn
+    // body: dominated by head but not handlers
+    // finally: ignore until refactoring pass
+    // try ResourceSpecification Block [Catches] [Finally]
 
-  object Synchronized : Kind
+    object Synchronized : Kind
 
-  // Syncronized involves a try-finally pattern
-  // case class Synchronized(value) extends Kind
+    // Syncronized involves a try-finally pattern
+    // case class Synchronized(value) extends Kind
+  }
 
   companion object {
     fun make(cfg: ControlFlowGraph): Structure {

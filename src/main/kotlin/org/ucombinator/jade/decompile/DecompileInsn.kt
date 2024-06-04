@@ -62,35 +62,26 @@ CommonLibrary
 Generators
  */
 
-/*
-  scalafmt: {
-    maxColumn = 300,
-    align.preset = some,
-    align.multiline = true,
-    align.tokens.add = [{
-      code = "extends", owner = "Defn.(Class|Trait|Object)",
-    }],
-  }
- */
-
-// TODO: ktlint: alligned forms
+// TODO: ktlint: aligned forms
 // TODO: ktlint: two-line if
-// TODO: use nested classes for sealed
-sealed class DecompiledInsn(val usesNextInsn: Boolean = true)
-data class DecompiledStatement(val statement: Statement, val usesNextInsnArg: Boolean = true) :
-  DecompiledInsn(usesNextInsnArg)
-data class DecompiledExpression(val expression: Expression) : DecompiledInsn()
-data class DecompiledStackOperation(val insn: AbstractInsnNode) : DecompiledInsn()
-data class DecompiledIf(val labelNode: LabelNode, val condition: Expression) : DecompiledInsn()
-data class DecompiledGoto(val labelNode: LabelNode) : DecompiledInsn(false)
-data class DecompiledSwitch(val labels: Map<Int, LabelNode>, val default: LabelNode) : DecompiledInsn(false)
-data class DecompiledNew(val descriptor: ClassOrInterfaceType) : DecompiledInsn()
-data class DecompiledMonitorEnter(val expression: Expression) : DecompiledInsn()
-data class DecompiledMonitorExit(val expression: Expression) : DecompiledInsn()
-data class DecompiledLabel(val node: LabelNode) : DecompiledInsn()
-data class DecompiledFrame(val node: FrameNode) : DecompiledInsn()
-data class DecompiledLineNumber(val node: LineNumberNode) : DecompiledInsn()
-data class DecompiledUnsupported(val insn: AbstractInsnNode) : DecompiledInsn()
+// TODO: alternatives to type aliases?
+typealias JPStatement = com.github.javaparser.ast.stmt.Statement
+typealias JPExpression = com.github.javaparser.ast.expr.Expression
+sealed class DecompiledInsn(val usesNextInsn: Boolean = true) {
+  data class Statement(val statement: JPStatement, val usesNextInsnArg: Boolean = true) : DecompiledInsn(usesNextInsnArg)
+  data class Expression(val expression: JPExpression) : DecompiledInsn()
+  data class StackOperation(val insn: AbstractInsnNode) : DecompiledInsn()
+  data class If(val labelNode: LabelNode, val condition: JPExpression) : DecompiledInsn()
+  data class Goto(val labelNode: LabelNode) : DecompiledInsn(false)
+  data class Switch(val labels: Map<Int, LabelNode>, val default: LabelNode) : DecompiledInsn(false)
+  data class New(val descriptor: ClassOrInterfaceType) : DecompiledInsn()
+  data class MonitorEnter(val expression: JPExpression) : DecompiledInsn()
+  data class MonitorExit(val expression: JPExpression) : DecompiledInsn()
+  data class Label(val node: LabelNode) : DecompiledInsn()
+  data class Frame(val node: FrameNode) : DecompiledInsn()
+  data class LineNumber(val node: LineNumberNode) : DecompiledInsn()
+  data class Unsupported(val insn: AbstractInsnNode) : DecompiledInsn()
+}
 
 // TODO: typo in Opcodes.java: visiTableSwitchInsn -> visitTableSwitchInsn
 // TODO: typo in javaparser BlockComment: can has -> can have
@@ -103,7 +94,6 @@ data class DecompiledUnsupported(val insn: AbstractInsnNode) : DecompiledInsn()
 /**
  * Handles decompiling individual instructions.
  */
-@Suppress("LONG_LINE")
 object DecompileInsn {
   fun decompileVar(variable: Var): NameExpr = NameExpr(variable.name)
 
@@ -117,19 +107,19 @@ object DecompileInsn {
   fun decompileInsn(retVar: Var?, insn: DecompiledInsn): Statement =
     @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "ktlint:standard:no-multi-spaces")
     when (insn) {
-      is DecompiledStatement      -> insn.statement
-      is DecompiledExpression     -> decompileExpression(retVar, insn.expression)
-      is DecompiledStackOperation -> JavaParser.noop("Operand Stack Operation: $insn")
-      is DecompiledIf             -> IfStmt(insn.condition, BreakStmt(insn.labelNode.toString()), null)
-      is DecompiledGoto           -> BreakStmt(insn.labelNode.toString()) // TODO: use instruction number?
-      is DecompiledSwitch         -> JavaParser.noop("Switch ${insn.labels} ${insn.default}")
-      is DecompiledNew            -> JavaParser.noop("new ${insn.descriptor}")
-      is DecompiledMonitorEnter   -> JavaParser.noop("Monitor Enter: ${insn.expression}")
-      is DecompiledMonitorExit    -> JavaParser.noop("Monitor Exit: ${insn.expression}")
-      is DecompiledLabel          -> JavaParser.noop("Label: ${insn.node.label}")
-      is DecompiledFrame          -> JavaParser.noop("Frame: ${insn.node.local} ${insn.node.stack}")
-      is DecompiledLineNumber     -> JavaParser.noop("Line number: ${insn.node.line}")
-      is DecompiledUnsupported    -> JavaParser.noop("Unsupported: $insn")
+      is DecompiledInsn.Statement      -> insn.statement
+      is DecompiledInsn.Expression     -> decompileExpression(retVar, insn.expression)
+      is DecompiledInsn.StackOperation -> JavaParser.noop("Operand Stack Operation: $insn")
+      is DecompiledInsn.If             -> IfStmt(insn.condition, BreakStmt(insn.labelNode.toString()), null)
+      is DecompiledInsn.Goto           -> BreakStmt(insn.labelNode.toString()) // TODO: use instruction number?
+      is DecompiledInsn.Switch         -> JavaParser.noop("Switch ${insn.labels} ${insn.default}")
+      is DecompiledInsn.New            -> JavaParser.noop("new ${insn.descriptor}")
+      is DecompiledInsn.MonitorEnter   -> JavaParser.noop("Monitor Enter: ${insn.expression}")
+      is DecompiledInsn.MonitorExit    -> JavaParser.noop("Monitor Exit: ${insn.expression}")
+      is DecompiledInsn.Label          -> JavaParser.noop("Label: ${insn.node.label}")
+      is DecompiledInsn.Frame          -> JavaParser.noop("Frame: ${insn.node.local} ${insn.node.stack}")
+      is DecompiledInsn.LineNumber     -> JavaParser.noop("Line number: ${insn.node.line}")
+      is DecompiledInsn.Unsupported    -> JavaParser.noop("Unsupported: $insn")
     }
 
   @Suppress("MORE_THAN_ONE_STATEMENT_PER_LINE", "TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "MaxLineLength")
@@ -148,7 +138,7 @@ object DecompileInsn {
 
     fun instanceCall(node: AbstractInsnNode): DecompiledInsn {
       val (insn, argumentTypes, typeArguments) = call(node)
-      return DecompiledExpression(
+      return DecompiledInsn.Expression(
         MethodCallExpr(
           /*TODO: cast to insn.owner?*/ args(0),
           typeArguments,
@@ -160,7 +150,7 @@ object DecompileInsn {
 
     fun staticCall(node: AbstractInsnNode): DecompiledInsn {
       val (insn, argumentTypes, typeArguments) = call(node)
-      return DecompiledExpression(
+      return DecompiledInsn.Expression(
         MethodCallExpr(
           ClassName.classNameExpr(insn.owner),
           typeArguments,
@@ -179,169 +169,169 @@ object DecompileInsn {
       )
       when (node.opcode) {
         // InsnNode
-        Opcodes.NOP         -> DecompiledStatement(EmptyStmt())
-        Opcodes.ACONST_NULL -> DecompiledExpression(NullLiteralExpr())
-        Opcodes.ICONST_M1   -> DecompiledExpression(IntegerLiteralExpr("-1"))
-        Opcodes.ICONST_0    -> DecompiledExpression(IntegerLiteralExpr("0"))
-        Opcodes.ICONST_1    -> DecompiledExpression(IntegerLiteralExpr("1"))
-        Opcodes.ICONST_2    -> DecompiledExpression(IntegerLiteralExpr("2"))
-        Opcodes.ICONST_3    -> DecompiledExpression(IntegerLiteralExpr("3"))
-        Opcodes.ICONST_4    -> DecompiledExpression(IntegerLiteralExpr("4"))
-        Opcodes.ICONST_5    -> DecompiledExpression(IntegerLiteralExpr("5"))
-        Opcodes.LCONST_0    -> DecompiledExpression(LongLiteralExpr("0L"))
-        Opcodes.LCONST_1    -> DecompiledExpression(LongLiteralExpr("1L"))
-        Opcodes.FCONST_0    -> DecompiledExpression(DoubleLiteralExpr("0.0"))
-        Opcodes.FCONST_1    -> DecompiledExpression(DoubleLiteralExpr("1.0"))
-        Opcodes.FCONST_2    -> DecompiledExpression(DoubleLiteralExpr("2.0"))
-        Opcodes.DCONST_0    -> DecompiledExpression(DoubleLiteralExpr("0.0D"))
-        Opcodes.DCONST_1    -> DecompiledExpression(DoubleLiteralExpr("1.0D"))
+        Opcodes.NOP         -> DecompiledInsn.Statement(EmptyStmt())
+        Opcodes.ACONST_NULL -> DecompiledInsn.Expression(NullLiteralExpr())
+        Opcodes.ICONST_M1   -> DecompiledInsn.Expression(IntegerLiteralExpr("-1"))
+        Opcodes.ICONST_0    -> DecompiledInsn.Expression(IntegerLiteralExpr("0"))
+        Opcodes.ICONST_1    -> DecompiledInsn.Expression(IntegerLiteralExpr("1"))
+        Opcodes.ICONST_2    -> DecompiledInsn.Expression(IntegerLiteralExpr("2"))
+        Opcodes.ICONST_3    -> DecompiledInsn.Expression(IntegerLiteralExpr("3"))
+        Opcodes.ICONST_4    -> DecompiledInsn.Expression(IntegerLiteralExpr("4"))
+        Opcodes.ICONST_5    -> DecompiledInsn.Expression(IntegerLiteralExpr("5"))
+        Opcodes.LCONST_0    -> DecompiledInsn.Expression(LongLiteralExpr("0L"))
+        Opcodes.LCONST_1    -> DecompiledInsn.Expression(LongLiteralExpr("1L"))
+        Opcodes.FCONST_0    -> DecompiledInsn.Expression(DoubleLiteralExpr("0.0"))
+        Opcodes.FCONST_1    -> DecompiledInsn.Expression(DoubleLiteralExpr("1.0"))
+        Opcodes.FCONST_2    -> DecompiledInsn.Expression(DoubleLiteralExpr("2.0"))
+        Opcodes.DCONST_0    -> DecompiledInsn.Expression(DoubleLiteralExpr("0.0D"))
+        Opcodes.DCONST_1    -> DecompiledInsn.Expression(DoubleLiteralExpr("1.0D"))
         // IntInsnNode
-        Opcodes.BIPUSH -> DecompiledStackOperation(node)
-        Opcodes.SIPUSH -> DecompiledStackOperation(node)
+        Opcodes.BIPUSH -> DecompiledInsn.StackOperation(node)
+        Opcodes.SIPUSH -> DecompiledInsn.StackOperation(node)
         // LdcInsnNode
-        Opcodes.LDC -> DecompiledExpression(DecompileClass.decompileLiteral((node as LdcInsnNode).cst)!!)
+        Opcodes.LDC -> DecompiledInsn.Expression(DecompileClass.decompileLiteral((node as LdcInsnNode).cst)!!)
         // VarInsnNode
-        Opcodes.ILOAD -> DecompiledExpression(args(0))
-        Opcodes.LLOAD -> DecompiledExpression(args(0))
-        Opcodes.FLOAD -> DecompiledExpression(args(0))
-        Opcodes.DLOAD -> DecompiledExpression(args(0))
-        Opcodes.ALOAD -> DecompiledExpression(args(0))
+        Opcodes.ILOAD -> DecompiledInsn.Expression(args(0))
+        Opcodes.LLOAD -> DecompiledInsn.Expression(args(0))
+        Opcodes.FLOAD -> DecompiledInsn.Expression(args(0))
+        Opcodes.DLOAD -> DecompiledInsn.Expression(args(0))
+        Opcodes.ALOAD -> DecompiledInsn.Expression(args(0))
         // InsnNode
-        Opcodes.IALOAD -> DecompiledExpression(ArrayAccessExpr(args(0), args(1)))
-        Opcodes.LALOAD -> DecompiledExpression(ArrayAccessExpr(args(0), args(1)))
-        Opcodes.FALOAD -> DecompiledExpression(ArrayAccessExpr(args(0), args(1)))
-        Opcodes.DALOAD -> DecompiledExpression(ArrayAccessExpr(args(0), args(1)))
-        Opcodes.AALOAD -> DecompiledExpression(ArrayAccessExpr(args(0), args(1)))
-        Opcodes.BALOAD -> DecompiledExpression(ArrayAccessExpr(args(0), args(1)))
-        Opcodes.CALOAD -> DecompiledExpression(ArrayAccessExpr(args(0), args(1)))
-        Opcodes.SALOAD -> DecompiledExpression(ArrayAccessExpr(args(0), args(1)))
+        Opcodes.IALOAD -> DecompiledInsn.Expression(ArrayAccessExpr(args(0), args(1)))
+        Opcodes.LALOAD -> DecompiledInsn.Expression(ArrayAccessExpr(args(0), args(1)))
+        Opcodes.FALOAD -> DecompiledInsn.Expression(ArrayAccessExpr(args(0), args(1)))
+        Opcodes.DALOAD -> DecompiledInsn.Expression(ArrayAccessExpr(args(0), args(1)))
+        Opcodes.AALOAD -> DecompiledInsn.Expression(ArrayAccessExpr(args(0), args(1)))
+        Opcodes.BALOAD -> DecompiledInsn.Expression(ArrayAccessExpr(args(0), args(1)))
+        Opcodes.CALOAD -> DecompiledInsn.Expression(ArrayAccessExpr(args(0), args(1)))
+        Opcodes.SALOAD -> DecompiledInsn.Expression(ArrayAccessExpr(args(0), args(1)))
         // VarInsnNode
-        Opcodes.ISTORE -> DecompiledExpression(args(0))
-        Opcodes.LSTORE -> DecompiledExpression(args(0))
-        Opcodes.FSTORE -> DecompiledExpression(args(0))
-        Opcodes.DSTORE -> DecompiledExpression(args(0))
-        Opcodes.ASTORE -> DecompiledExpression(args(0))
+        Opcodes.ISTORE -> DecompiledInsn.Expression(args(0))
+        Opcodes.LSTORE -> DecompiledInsn.Expression(args(0))
+        Opcodes.FSTORE -> DecompiledInsn.Expression(args(0))
+        Opcodes.DSTORE -> DecompiledInsn.Expression(args(0))
+        Opcodes.ASTORE -> DecompiledInsn.Expression(args(0))
         // InsnNode
-        Opcodes.IASTORE -> DecompiledExpression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
-        Opcodes.LASTORE -> DecompiledExpression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
-        Opcodes.FASTORE -> DecompiledExpression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
-        Opcodes.DASTORE -> DecompiledExpression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
-        Opcodes.AASTORE -> DecompiledExpression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
-        Opcodes.BASTORE -> DecompiledExpression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
-        Opcodes.CASTORE -> DecompiledExpression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
-        Opcodes.SASTORE -> DecompiledExpression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
-        Opcodes.POP     -> DecompiledStackOperation(node)
-        Opcodes.POP2    -> DecompiledStackOperation(node)
-        Opcodes.DUP     -> DecompiledStackOperation(node)
-        Opcodes.DUP_X1  -> DecompiledStackOperation(node)
-        Opcodes.DUP_X2  -> DecompiledStackOperation(node)
-        Opcodes.DUP2    -> DecompiledStackOperation(node)
-        Opcodes.DUP2_X1 -> DecompiledStackOperation(node)
-        Opcodes.DUP2_X2 -> DecompiledStackOperation(node)
-        Opcodes.SWAP    -> DecompiledStackOperation(node)
-        Opcodes.IADD    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.PLUS))
-        Opcodes.LADD    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.PLUS))
-        Opcodes.FADD    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.PLUS))
-        Opcodes.DADD    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.PLUS))
-        Opcodes.ISUB    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MINUS))
-        Opcodes.LSUB    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MINUS))
-        Opcodes.FSUB    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MINUS))
-        Opcodes.DSUB    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MINUS))
-        Opcodes.IMUL    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MULTIPLY))
-        Opcodes.LMUL    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MULTIPLY))
-        Opcodes.FMUL    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MULTIPLY))
-        Opcodes.DMUL    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MULTIPLY))
-        Opcodes.IDIV    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.DIVIDE))
-        Opcodes.LDIV    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.DIVIDE))
-        Opcodes.FDIV    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.DIVIDE))
-        Opcodes.DDIV    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.DIVIDE))
-        Opcodes.IREM    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.REMAINDER))
-        Opcodes.LREM    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.REMAINDER))
-        Opcodes.FREM    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.REMAINDER))
-        Opcodes.DREM    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.REMAINDER))
-        Opcodes.INEG    -> DecompiledExpression(UnaryExpr(args(0), UnaryExpr.Operator.MINUS))
-        Opcodes.LNEG    -> DecompiledExpression(UnaryExpr(args(0), UnaryExpr.Operator.MINUS))
-        Opcodes.FNEG    -> DecompiledExpression(UnaryExpr(args(0), UnaryExpr.Operator.MINUS))
-        Opcodes.DNEG    -> DecompiledExpression(UnaryExpr(args(0), UnaryExpr.Operator.MINUS))
-        Opcodes.ISHL    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.LEFT_SHIFT))
-        Opcodes.LSHL    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.LEFT_SHIFT))
-        Opcodes.ISHR    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.SIGNED_RIGHT_SHIFT))
-        Opcodes.LSHR    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.SIGNED_RIGHT_SHIFT))
-        Opcodes.IUSHR   -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.UNSIGNED_RIGHT_SHIFT))
-        Opcodes.LUSHR   -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.UNSIGNED_RIGHT_SHIFT))
-        Opcodes.IAND    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.BINARY_AND))
-        Opcodes.LAND    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.BINARY_AND))
-        Opcodes.IOR     -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.BINARY_OR))
-        Opcodes.LOR     -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.BINARY_OR))
-        Opcodes.IXOR    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.XOR))
-        Opcodes.LXOR    -> DecompiledExpression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.XOR))
+        Opcodes.IASTORE -> DecompiledInsn.Expression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
+        Opcodes.LASTORE -> DecompiledInsn.Expression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
+        Opcodes.FASTORE -> DecompiledInsn.Expression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
+        Opcodes.DASTORE -> DecompiledInsn.Expression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
+        Opcodes.AASTORE -> DecompiledInsn.Expression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
+        Opcodes.BASTORE -> DecompiledInsn.Expression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
+        Opcodes.CASTORE -> DecompiledInsn.Expression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
+        Opcodes.SASTORE -> DecompiledInsn.Expression(AssignExpr(ArrayAccessExpr(args(0), args(1)), args(2), AssignExpr.Operator.ASSIGN))
+        Opcodes.POP     -> DecompiledInsn.StackOperation(node)
+        Opcodes.POP2    -> DecompiledInsn.StackOperation(node)
+        Opcodes.DUP     -> DecompiledInsn.StackOperation(node)
+        Opcodes.DUP_X1  -> DecompiledInsn.StackOperation(node)
+        Opcodes.DUP_X2  -> DecompiledInsn.StackOperation(node)
+        Opcodes.DUP2    -> DecompiledInsn.StackOperation(node)
+        Opcodes.DUP2_X1 -> DecompiledInsn.StackOperation(node)
+        Opcodes.DUP2_X2 -> DecompiledInsn.StackOperation(node)
+        Opcodes.SWAP    -> DecompiledInsn.StackOperation(node)
+        Opcodes.IADD    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.PLUS))
+        Opcodes.LADD    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.PLUS))
+        Opcodes.FADD    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.PLUS))
+        Opcodes.DADD    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.PLUS))
+        Opcodes.ISUB    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MINUS))
+        Opcodes.LSUB    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MINUS))
+        Opcodes.FSUB    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MINUS))
+        Opcodes.DSUB    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MINUS))
+        Opcodes.IMUL    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MULTIPLY))
+        Opcodes.LMUL    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MULTIPLY))
+        Opcodes.FMUL    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MULTIPLY))
+        Opcodes.DMUL    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.MULTIPLY))
+        Opcodes.IDIV    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.DIVIDE))
+        Opcodes.LDIV    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.DIVIDE))
+        Opcodes.FDIV    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.DIVIDE))
+        Opcodes.DDIV    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.DIVIDE))
+        Opcodes.IREM    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.REMAINDER))
+        Opcodes.LREM    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.REMAINDER))
+        Opcodes.FREM    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.REMAINDER))
+        Opcodes.DREM    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.REMAINDER))
+        Opcodes.INEG    -> DecompiledInsn.Expression(UnaryExpr(args(0), UnaryExpr.Operator.MINUS))
+        Opcodes.LNEG    -> DecompiledInsn.Expression(UnaryExpr(args(0), UnaryExpr.Operator.MINUS))
+        Opcodes.FNEG    -> DecompiledInsn.Expression(UnaryExpr(args(0), UnaryExpr.Operator.MINUS))
+        Opcodes.DNEG    -> DecompiledInsn.Expression(UnaryExpr(args(0), UnaryExpr.Operator.MINUS))
+        Opcodes.ISHL    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.LEFT_SHIFT))
+        Opcodes.LSHL    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.LEFT_SHIFT))
+        Opcodes.ISHR    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.SIGNED_RIGHT_SHIFT))
+        Opcodes.LSHR    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.SIGNED_RIGHT_SHIFT))
+        Opcodes.IUSHR   -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.UNSIGNED_RIGHT_SHIFT))
+        Opcodes.LUSHR   -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.UNSIGNED_RIGHT_SHIFT))
+        Opcodes.IAND    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.BINARY_AND))
+        Opcodes.LAND    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.BINARY_AND))
+        Opcodes.IOR     -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.BINARY_OR))
+        Opcodes.LOR     -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.BINARY_OR))
+        Opcodes.IXOR    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.XOR))
+        Opcodes.LXOR    -> DecompiledInsn.Expression(BinaryExpr(args(0), args(1), BinaryExpr.Operator.XOR))
         // IincInsnNode
         // TODO: double check that iinc works (because it is a strange instruction)
-        Opcodes.IINC -> DecompiledExpression(BinaryExpr(args(0), IntegerLiteralExpr((node as IincInsnNode).incr.toString()), BinaryExpr.Operator.PLUS))
+        Opcodes.IINC -> DecompiledInsn.Expression(BinaryExpr(args(0), IntegerLiteralExpr((node as IincInsnNode).incr.toString()), BinaryExpr.Operator.PLUS))
         // InsnNode
-        Opcodes.I2L   -> DecompiledExpression(CastExpr(PrimitiveType.longType(), args(0)))
-        Opcodes.I2F   -> DecompiledExpression(CastExpr(PrimitiveType.floatType(), args(0)))
-        Opcodes.I2D   -> DecompiledExpression(CastExpr(PrimitiveType.doubleType(), args(0)))
-        Opcodes.L2I   -> DecompiledExpression(CastExpr(PrimitiveType.intType(), args(0)))
-        Opcodes.L2F   -> DecompiledExpression(CastExpr(PrimitiveType.floatType(), args(0)))
-        Opcodes.L2D   -> DecompiledExpression(CastExpr(PrimitiveType.doubleType(), args(0)))
-        Opcodes.F2I   -> DecompiledExpression(CastExpr(PrimitiveType.intType(), args(0)))
-        Opcodes.F2L   -> DecompiledExpression(CastExpr(PrimitiveType.longType(), args(0)))
-        Opcodes.F2D   -> DecompiledExpression(CastExpr(PrimitiveType.doubleType(), args(0)))
-        Opcodes.D2I   -> DecompiledExpression(CastExpr(PrimitiveType.intType(), args(0)))
-        Opcodes.D2L   -> DecompiledExpression(CastExpr(PrimitiveType.longType(), args(0)))
-        Opcodes.D2F   -> DecompiledExpression(CastExpr(PrimitiveType.floatType(), args(0)))
-        Opcodes.I2B   -> DecompiledExpression(CastExpr(PrimitiveType.byteType(), args(0)))
-        Opcodes.I2C   -> DecompiledExpression(CastExpr(PrimitiveType.charType(), args(0)))
-        Opcodes.I2S   -> DecompiledExpression(CastExpr(PrimitiveType.shortType(), args(0)))
-        Opcodes.LCMP  -> DecompiledExpression(MethodCallExpr(null, null, SimpleName("<lcmp>"), NodeList(args(0), args(1))))
-        Opcodes.FCMPL -> DecompiledExpression(MethodCallExpr(null, null, SimpleName("<fcmpl>"), NodeList(args(0), args(1))))
-        Opcodes.FCMPG -> DecompiledExpression(MethodCallExpr(null, null, SimpleName("<fcmpg>"), NodeList(args(0), args(1))))
-        Opcodes.DCMPL -> DecompiledExpression(MethodCallExpr(null, null, SimpleName("<dcmpl>"), NodeList(args(0), args(1))))
-        Opcodes.DCMPG -> DecompiledExpression(MethodCallExpr(null, null, SimpleName("<dcmpg>"), NodeList(args(0), args(1))))
+        Opcodes.I2L   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.longType(), args(0)))
+        Opcodes.I2F   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.floatType(), args(0)))
+        Opcodes.I2D   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.doubleType(), args(0)))
+        Opcodes.L2I   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.intType(), args(0)))
+        Opcodes.L2F   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.floatType(), args(0)))
+        Opcodes.L2D   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.doubleType(), args(0)))
+        Opcodes.F2I   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.intType(), args(0)))
+        Opcodes.F2L   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.longType(), args(0)))
+        Opcodes.F2D   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.doubleType(), args(0)))
+        Opcodes.D2I   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.intType(), args(0)))
+        Opcodes.D2L   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.longType(), args(0)))
+        Opcodes.D2F   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.floatType(), args(0)))
+        Opcodes.I2B   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.byteType(), args(0)))
+        Opcodes.I2C   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.charType(), args(0)))
+        Opcodes.I2S   -> DecompiledInsn.Expression(CastExpr(PrimitiveType.shortType(), args(0)))
+        Opcodes.LCMP  -> DecompiledInsn.Expression(MethodCallExpr(null, null, SimpleName("<lcmp>"), NodeList(args(0), args(1))))
+        Opcodes.FCMPL -> DecompiledInsn.Expression(MethodCallExpr(null, null, SimpleName("<fcmpl>"), NodeList(args(0), args(1))))
+        Opcodes.FCMPG -> DecompiledInsn.Expression(MethodCallExpr(null, null, SimpleName("<fcmpg>"), NodeList(args(0), args(1))))
+        Opcodes.DCMPL -> DecompiledInsn.Expression(MethodCallExpr(null, null, SimpleName("<dcmpl>"), NodeList(args(0), args(1))))
+        Opcodes.DCMPG -> DecompiledInsn.Expression(MethodCallExpr(null, null, SimpleName("<dcmpg>"), NodeList(args(0), args(1))))
         // JumpInsnNode
-        Opcodes.IFEQ      -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.EQUALS))
-        Opcodes.IFNE      -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.NOT_EQUALS))
-        Opcodes.IFLT      -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.LESS))
-        Opcodes.IFGE      -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.GREATER_EQUALS))
-        Opcodes.IFGT      -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.GREATER))
-        Opcodes.IFLE      -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.LESS_EQUALS))
-        Opcodes.IF_ICMPEQ -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.EQUALS))
-        Opcodes.IF_ICMPNE -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.NOT_EQUALS))
-        Opcodes.IF_ICMPLT -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.LESS))
-        Opcodes.IF_ICMPGE -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.GREATER_EQUALS))
-        Opcodes.IF_ICMPGT -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.GREATER))
-        Opcodes.IF_ICMPLE -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.LESS_EQUALS))
-        Opcodes.IF_ACMPEQ -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.EQUALS))
-        Opcodes.IF_ACMPNE -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.NOT_EQUALS))
-        Opcodes.GOTO      -> DecompiledGoto((node as JumpInsnNode).label)
-        Opcodes.JSR       -> DecompiledUnsupported(node)
+        Opcodes.IFEQ      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.EQUALS))
+        Opcodes.IFNE      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.NOT_EQUALS))
+        Opcodes.IFLT      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.LESS))
+        Opcodes.IFGE      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.GREATER_EQUALS))
+        Opcodes.IFGT      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.GREATER))
+        Opcodes.IFLE      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.LESS_EQUALS))
+        Opcodes.IF_ICMPEQ -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.EQUALS))
+        Opcodes.IF_ICMPNE -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.NOT_EQUALS))
+        Opcodes.IF_ICMPLT -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.LESS))
+        Opcodes.IF_ICMPGE -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.GREATER_EQUALS))
+        Opcodes.IF_ICMPGT -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.GREATER))
+        Opcodes.IF_ICMPLE -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.LESS_EQUALS))
+        Opcodes.IF_ACMPEQ -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.EQUALS))
+        Opcodes.IF_ACMPNE -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), args(0), BinaryExpr.Operator.NOT_EQUALS))
+        Opcodes.GOTO      -> DecompiledInsn.Goto((node as JumpInsnNode).label)
+        Opcodes.JSR       -> DecompiledInsn.Unsupported(node)
         // VarInsnNode
-        Opcodes.RET -> DecompiledUnsupported(node)
+        Opcodes.RET -> DecompiledInsn.Unsupported(node)
         // TableSwitchInsnNode
         Opcodes.TABLESWITCH -> {
           val insn = node as TableSwitchInsnNode
           assert(insn.labels.size == insn.max - insn.min)
-          DecompiledSwitch(insn.labels.mapIndexed { i, l -> insn.min + i to l }.toMap(), insn.dflt)
+          DecompiledInsn.Switch(insn.labels.mapIndexed { i, l -> insn.min + i to l }.toMap(), insn.dflt)
         }
         // LookupSwitch
         Opcodes.LOOKUPSWITCH -> {
           val insn = node as LookupSwitchInsnNode
           assert(insn.labels.size == insn.keys.size)
-          DecompiledSwitch(insn.keys.zip(insn.labels).toMap(), insn.dflt)
+          DecompiledInsn.Switch(insn.keys.zip(insn.labels).toMap(), insn.dflt)
         }
         // InsnNode
-        Opcodes.IRETURN -> DecompiledStatement(ReturnStmt(args(0)), false)
-        Opcodes.LRETURN -> DecompiledStatement(ReturnStmt(args(0)), false)
-        Opcodes.FRETURN -> DecompiledStatement(ReturnStmt(args(0)), false)
-        Opcodes.DRETURN -> DecompiledStatement(ReturnStmt(args(0)), false)
-        Opcodes.ARETURN -> DecompiledStatement(ReturnStmt(args(0)), false)
-        Opcodes.RETURN  -> DecompiledStatement(ReturnStmt(/*Nothing*/), false)
+        Opcodes.IRETURN -> DecompiledInsn.Statement(ReturnStmt(args(0)), false)
+        Opcodes.LRETURN -> DecompiledInsn.Statement(ReturnStmt(args(0)), false)
+        Opcodes.FRETURN -> DecompiledInsn.Statement(ReturnStmt(args(0)), false)
+        Opcodes.DRETURN -> DecompiledInsn.Statement(ReturnStmt(args(0)), false)
+        Opcodes.ARETURN -> DecompiledInsn.Statement(ReturnStmt(args(0)), false)
+        Opcodes.RETURN  -> DecompiledInsn.Statement(ReturnStmt(/*Nothing*/), false)
         // FieldInsnNode
-        Opcodes.GETSTATIC -> { val insn = node as FieldInsnNode; DecompiledExpression(FieldAccessExpr(ClassName.classNameExpr(insn.owner), /*TODO*/ NodeList(), SimpleName(insn.name))) }
-        Opcodes.PUTSTATIC -> { val insn = node as FieldInsnNode; DecompiledExpression(AssignExpr(FieldAccessExpr(ClassName.classNameExpr(insn.owner), /*TODO*/ NodeList(), SimpleName(insn.name)), args(0), AssignExpr.Operator.ASSIGN)) }
-        Opcodes.GETFIELD  -> { val insn = node as FieldInsnNode; DecompiledExpression(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(insn.name))) }
-        Opcodes.PUTFIELD  -> { val insn = node as FieldInsnNode; DecompiledExpression(AssignExpr(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(insn.name)), args(1), AssignExpr.Operator.ASSIGN)) }
+        Opcodes.GETSTATIC -> { val insn = node as FieldInsnNode; DecompiledInsn.Expression(FieldAccessExpr(ClassName.classNameExpr(insn.owner), /*TODO*/ NodeList(), SimpleName(insn.name))) }
+        Opcodes.PUTSTATIC -> { val insn = node as FieldInsnNode; DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(ClassName.classNameExpr(insn.owner), /*TODO*/ NodeList(), SimpleName(insn.name)), args(0), AssignExpr.Operator.ASSIGN)) }
+        Opcodes.GETFIELD  -> { val insn = node as FieldInsnNode; DecompiledInsn.Expression(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(insn.name))) }
+        Opcodes.PUTFIELD  -> { val insn = node as FieldInsnNode; DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(insn.name)), args(1), AssignExpr.Operator.ASSIGN)) }
         // MethodInsnNode
         Opcodes.INVOKEVIRTUAL   -> instanceCall(node)
         Opcodes.INVOKESPECIAL   -> instanceCall(node) // TODO: only for <init> (new, this, and super)?
@@ -350,7 +340,7 @@ object DecompileInsn {
         // InvokeDynamicInsnNode
         Opcodes.INVOKEDYNAMIC -> TODO() // TODO: lambda
         // TypeInsnNode
-        Opcodes.NEW -> DecompiledNew(ClassName.classNameType((node as TypeInsnNode).desc)) // TODO: pair with <init>
+        Opcodes.NEW -> DecompiledInsn.New(ClassName.classNameType((node as TypeInsnNode).desc)) // TODO: pair with <init>
         // IntInsnNode
         Opcodes.NEWARRAY -> {
           val type = when ((node as IntInsnNode).operand) {
@@ -364,22 +354,22 @@ object DecompileInsn {
             Opcodes.T_LONG    -> PrimitiveType.longType()
             else              -> TODO()
           }
-          DecompiledExpression(ArrayCreationExpr(type, NodeList(ArrayCreationLevel(args(0), NodeList())), null))
+          DecompiledInsn.Expression(ArrayCreationExpr(type, NodeList(ArrayCreationLevel(args(0), NodeList())), null))
         }
         // TypeInsnNode
         Opcodes.ANEWARRAY -> {
           val type = ClassName.classNameType((node as TypeInsnNode).desc)
-          DecompiledExpression(ArrayCreationExpr(type, NodeList(ArrayCreationLevel(args(0), NodeList())), null))
+          DecompiledInsn.Expression(ArrayCreationExpr(type, NodeList(ArrayCreationLevel(args(0), NodeList())), null))
         }
         // InsnNode
-        Opcodes.ARRAYLENGTH -> DecompiledExpression(FieldAccessExpr(args(0), NodeList(), SimpleName("length")))
-        Opcodes.ATHROW      -> DecompiledStatement(ThrowStmt(args(0)), false)
+        Opcodes.ARRAYLENGTH -> DecompiledInsn.Expression(FieldAccessExpr(args(0), NodeList(), SimpleName("length")))
+        Opcodes.ATHROW      -> DecompiledInsn.Statement(ThrowStmt(args(0)), false)
         // TypeInsnNode
-        Opcodes.CHECKCAST  -> DecompiledExpression(CastExpr(ClassName.classNameType((node as TypeInsnNode).desc), args(0))) // TODO: check if works
-        Opcodes.INSTANCEOF -> DecompiledExpression(InstanceOfExpr(args(0), ClassName.classNameType((node as TypeInsnNode).desc)))
+        Opcodes.CHECKCAST  -> DecompiledInsn.Expression(CastExpr(ClassName.classNameType((node as TypeInsnNode).desc), args(0))) // TODO: check if works
+        Opcodes.INSTANCEOF -> DecompiledInsn.Expression(InstanceOfExpr(args(0), ClassName.classNameType((node as TypeInsnNode).desc)))
         // InsnNode
-        Opcodes.MONITORENTER -> DecompiledMonitorEnter(args(0))
-        Opcodes.MONITOREXIT  -> DecompiledMonitorExit(args(0))
+        Opcodes.MONITORENTER -> DecompiledInsn.MonitorEnter(args(0))
+        Opcodes.MONITOREXIT  -> DecompiledInsn.MonitorExit(args(0))
         // MultiANewArrayInsnNode
         Opcodes.MULTIANEWARRAY -> {
           // TODO: use asm.Type functions
@@ -398,17 +388,17 @@ object DecompileInsn {
           val dimArgs = argsArray.toList().subList(0, dims).map { ArrayCreationLevel(it, NodeList()) }
           val nonDimArgs = (dims until expectedDims).map { ArrayCreationLevel(null, NodeList()) }
           val levels = NodeList(dimArgs.plus(nonDimArgs))
-          DecompiledExpression(ArrayCreationExpr(type, levels, null)) // TODO: replace null initializer
+          DecompiledInsn.Expression(ArrayCreationExpr(type, levels, null)) // TODO: replace null initializer
         }
         // JumpInsnNode
-        Opcodes.IFNULL    -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), NullLiteralExpr(), BinaryExpr.Operator.EQUALS))
-        Opcodes.IFNONNULL -> DecompiledIf((node as JumpInsnNode).label, BinaryExpr(args(0), NullLiteralExpr(), BinaryExpr.Operator.NOT_EQUALS))
+        Opcodes.IFNULL    -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), NullLiteralExpr(), BinaryExpr.Operator.EQUALS))
+        Opcodes.IFNONNULL -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), NullLiteralExpr(), BinaryExpr.Operator.NOT_EQUALS))
         // Synthetic instructions
         else ->
           when (node) {
-            is LabelNode      -> DecompiledLabel(node)
-            is FrameNode      -> DecompiledFrame(node)
-            is LineNumberNode -> DecompiledLineNumber(node)
+            is LabelNode      -> DecompiledInsn.Label(node)
+            is FrameNode      -> DecompiledInsn.Frame(node)
+            is LineNumberNode -> DecompiledInsn.LineNumber(node)
             else              -> throw Exception("unknown instruction type: $node")
           }
       }

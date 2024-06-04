@@ -27,7 +27,7 @@ data class StaticSingleAssignment(
   val insnVars: Map<AbstractInsnNode, Pair<Var, List<Var>>>,
   val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>, // TODO: change Set to Map?
 ) {
-
+  companion object {
     /**
      * Performs a static single assignment (SSA) analysis on the given method and returns the result.
      *
@@ -36,7 +36,6 @@ data class StaticSingleAssignment(
      * @param cfg The control flow graph of the method.
      * @return The result of the SSA analysis, represented as a [StaticSingleAssignment] object.
      */
-  companion object {
     fun make(owner: String, method: MethodNode, cfg: ControlFlowGraph): StaticSingleAssignment {
       val interpreter = SsaInterpreter(method)
 

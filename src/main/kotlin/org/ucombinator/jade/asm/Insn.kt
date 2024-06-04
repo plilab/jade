@@ -12,7 +12,6 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.reflect.Modifier
 
-
 /**
  * Represents a single instruction in a method. Wrapper for `org.objectweb.asm.tree.AbstractInsnNode`.
  *

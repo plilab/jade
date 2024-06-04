@@ -31,7 +31,6 @@ import java.io.File
 object Decompile {
   private val log = Log {}
 
-
   // Maps decompiled tree nodes to ASM nodes
   val classes = mutableMapOf<CompilationUnit, ClassNode>()
   val methods = mutableMapOf<BodyDeclaration<out BodyDeclaration<*>>, Pair<ClassNode, MethodNode>>()
@@ -122,9 +121,7 @@ object Decompile {
             name,
             descriptor,
             object : MethodVisitor(Opcodes.ASM9, super.visitMethod(access, name, descriptor, signature, exceptions)) {
-              override fun visitInsn(opcode: Int) {
-                return super.visitInsn(opcode)
-              }
+              override fun visitInsn(opcode: Int) = super.visitInsn(opcode)
             }
           )
         }

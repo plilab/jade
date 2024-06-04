@@ -1,39 +1,41 @@
 # Module Jade app
 
-Jade app
+TODO: Jade app
+
+TODO: contains multiple command for not just decompiling
 
 # Package org.ucombinator.jade.analysis
 
-Contains intermediate representations for decompiling control flows.
+Algorithms for analyzing code
 
 # Package org.ucombinator.jade.asm
 
-Contains wrappers around ASM library used for reading bytecodes
+Wrappers around ASM library, a library for manipulating JVM bytecode / `.class` file
 
 # Package org.ucombinator.jade.classfile
 
-Contains data structures for representing class-level constructs
+Code for parsing data from JVM bytecode / `.class` files
 
 # Package org.ucombinator.jade.decompile
 
-Contains logic to decompile various Java constructs
+Decompile JVM bytecode
 
 # Package org.ucombinator.jade.javaparser
 
-Contains wrappers around data structures from JavaParser library for abstract syntax tree of Java code
+Wrappers around JavaParser library, a library for representing Java ASTs
 
 # Package org.ucombinator.jade.jgrapht
 
-Contains wrappers around JGraphT library for working with graphs.
+Wrappers around JGraphT library, a library for vertex-edge graphs
 
 # Package org.ucombinator.jade.main
 
-Contains Jade Clikt commands which serves as command line interface entrypoint for Jade's various tools.
+Main command-line entry point
 
 # Package org.ucombinator.jade.maven
 
-Contains tools used to acquire and test against Maven bytecodes.
+Code for downloading and testing againt Maven repositories
 
 # Package org.ucombinator.jade.util
 
- Contains miscellaneous utilities such as logging, debugging and internal data structures for convenience.
+Utility classes

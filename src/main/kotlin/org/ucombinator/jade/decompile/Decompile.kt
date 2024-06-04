@@ -104,7 +104,7 @@ object Decompile {
    * @param i The index of the class file within the list to be decompiled.
    * @return The decompiled CompilationUnit, or null if there's an error.
    */
-  fun decompileClassFile(name: String, owner: String, cr: ClassReader, i: Int): CompilationUnit? {
+  fun decompileClassFile(name: String, owner: String, cr: ClassReader, i: Int): CompilationUnit {
     val classNode = object : ClassNode(Opcodes.ASM9) {
       override fun visitMethod(
         access: Int,

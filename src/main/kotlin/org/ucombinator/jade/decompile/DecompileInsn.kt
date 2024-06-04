@@ -99,6 +99,10 @@ data class DecompiledUnsupported(val insn: AbstractInsnNode) : DecompiledInsn()
 // TODO: use `|` patterns
 // TODO: UnaryExpr.Operator.BITWISE_COMPLEMENT: 0: iload_1; 1: iconst_m1; 2: ixor
 
+/**
+ * Handles decompiling individual instructions.
+ */
+@Suppress("LONG_LINE")
 object DecompileInsn {
   fun decompileVar(variable: Var): NameExpr = NameExpr(variable.name)
 

@@ -10,6 +10,14 @@ import org.objectweb.asm.tree.analysis.Frame
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.asm.TypedBasicInterpreter
 
+/**
+ * Represents a control flow graph for a method.
+ *
+ * @property entry The entry instruction of the control flow graph.
+ * @property graph Basic control flow graph version.
+ * @property graphWithExceptions Control flow graph version with exceptions.
+ * @property frames An array of ASM `Frame` objects representing states of variables.
+ */
 data class ControlFlowGraph(
   val entry: Insn,
   val graph: DirectedPseudograph<Insn, Edge>,

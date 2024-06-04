@@ -28,7 +28,9 @@ import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Log
 import java.io.PrintWriter
 import java.io.StringWriter
-
+/**
+ * Handles decompiling method bodies within classes.
+ */
 object DecompileMethodBody {
   private val log = Log {}
 

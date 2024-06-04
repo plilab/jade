@@ -22,6 +22,12 @@ Non-linear expressions
 
 typealias Nesting = List<Structure.Block>
 
+/**
+ * Represents the domination structure in the CFG.
+ *
+ * @property nesting A map that associates each instruction with its nesting level within the CFG.
+ * @property backEdges A set of edges in the CFG that keeps track of back edges.
+ */
 // TODO: rename to CodeStructure or CodeNesting or BlockNesting
 data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<ControlFlowGraph.Edge>) {
   // TODO: Instead of MyersList use the following or one of the others in that package:

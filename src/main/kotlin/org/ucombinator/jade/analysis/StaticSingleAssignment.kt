@@ -15,11 +15,27 @@ import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.asm.TypedBasicInterpreter
 import org.ucombinator.jade.util.Errors
 
+/**
+ * Represents the result of static single assignment (SSA) analysis.
+ *
+ * @property frames An array of ASM `Frame` objects representing states of variables.
+ * @property insnVars A map that represents instruction nodes. Its keys are the instruction nodes and values are a pair whose first element is the variable and second element the list of versions of that variable.
+ * @property phiInputs A map that represents Phi nodes. Its keys are target variables of the phi nodes and values are the set of (instruction, variable) pairs that are inputs to the Phi function.
+ */
 data class StaticSingleAssignment(
   val frames: Array<Frame<Var>>,
   val insnVars: Map<AbstractInsnNode, Pair<Var, List<Var>>>,
   val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>, // TODO: change Set to Map?
 ) {
+
+    /**
+     * Performs a static single assignment (SSA) analysis on the given method and returns the result.
+     *
+     * @param owner The name of the class that owns the method.
+     * @param method The method to analyze.
+     * @param cfg The control flow graph of the method.
+     * @return The result of the SSA analysis, represented as a [StaticSingleAssignment] object.
+     */
   companion object {
     fun make(owner: String, method: MethodNode, cfg: ControlFlowGraph): StaticSingleAssignment {
       val interpreter = SsaInterpreter(method)

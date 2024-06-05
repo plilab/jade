@@ -67,13 +67,14 @@ Generators
 // TODO: alternatives to type aliases?
 typealias JPStatement = com.github.javaparser.ast.stmt.Statement
 typealias JPExpression = com.github.javaparser.ast.expr.Expression
-sealed class DecompiledInsn(val usesNextInsn: Boolean = true) {
-  data class Statement(val statement: JPStatement, val usesNextInsnArg: Boolean = true) : DecompiledInsn(usesNextInsnArg)
+sealed class DecompiledInsn {
+  open val usesNextInsn: Boolean = true
+  data class Statement(val statement: JPStatement, override val usesNextInsn: Boolean = true) : DecompiledInsn()
   data class Expression(val expression: JPExpression) : DecompiledInsn()
   data class StackOperation(val insn: AbstractInsnNode) : DecompiledInsn()
   data class If(val labelNode: LabelNode, val condition: JPExpression) : DecompiledInsn()
-  data class Goto(val labelNode: LabelNode) : DecompiledInsn(false)
-  data class Switch(val labels: Map<Int, LabelNode>, val default: LabelNode) : DecompiledInsn(false)
+  data class Goto(val labelNode: LabelNode) : DecompiledInsn() { override val usesNextInsn = false }
+  data class Switch(val labels: Map<Int, LabelNode>, val default: LabelNode) : DecompiledInsn() { override val usesNextInsn = false }
   data class New(val descriptor: ClassOrInterfaceType) : DecompiledInsn()
   data class MonitorEnter(val expression: JPExpression) : DecompiledInsn()
   data class MonitorExit(val expression: JPExpression) : DecompiledInsn()

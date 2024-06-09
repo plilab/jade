@@ -2,30 +2,33 @@
 root = true
 
 [*]
-indent_style = space
 indent_size = 2
-
-end_of_line = lf
-charset = utf-8
-trim_trailing_whitespace = true
-insert_final_newline = true
+indent_style = space
 
 [*.md]
+# Trailing whitespace has semantic meaning in Markdown
 trim_trailing_whitespace = false
 
 [*.{kt,kts}]
-# add kotlinx to end of import order
+# Add kotlinx to end of import order
 ij_kotlin_imports_layout=*,java.**,javax.**,kotlin.**,kotlinx.**,^
-# use a large number to disable effect
+# Use a large number to disable effect
 ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = 1000
+# Allow multiple annotations on a line
 ktlint_standard_annotation = disabled
 # Allow inline block comments
 ktlint_standard_comment-wrapping = disabled
 ktlint_standard_multiline-expression-wrapping = disabled
+# Allow blank lines, so we can logically group list elements
 ktlint_standard_no-blank-line-in-list = disabled
+# We actually prefer `${x}` over `$x`
 ktlint_standard_string-template = disabled
+# Do not require newline before multi-line string
+ktlint_standard_string-template-indent = disabled
 ktlint_standard_trailing-comma-on-call-site = disabled
 ktlint_standard_trailing-comma-on-declaration-site = disabled
+# Do not require separate lines for type arguments that have comments
+ktlint_standard_type-argument-comment = disabled
 max_line_length = 120
 
 # Disable ktlint in generated files

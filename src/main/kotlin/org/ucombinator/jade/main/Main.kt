@@ -154,7 +154,8 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
   // TODO: --long --short
   override fun run() {
     with(BuildInformation) {
-      echo("""
+      echo(
+        """
           $versionMessage
           Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
           Build time: $buildTime
@@ -170,10 +171,10 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
       echo("  ${l.first}=${l.second}")
     }
     echo("Runtime system properties:")
-    for (p in System.getProperties().toList()
+    val properties = System.getProperties().toList()
       .sortedBy { it.first.toString() }
       .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) }
-    ) {
+    for (p in properties) {
       echo("  ${p.first}=${p.second}")
     }
   }

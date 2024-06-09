@@ -161,6 +161,7 @@ class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisito
 }
 
 @Suppress(
+  "MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:max-line-length",
@@ -189,6 +190,7 @@ class ClassSignatureVisitor : FormalTypeParameterVisitor() {
 }
 
 @Suppress(
+  "MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:function-signature",

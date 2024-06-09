@@ -116,6 +116,7 @@ object Exceptions {
 // TODO: Map vs LinkedHashMap
 // TODO: remove Fiveple
 typealias CacheKey<T> = Fiveple<String, String, String, String, T>
+
 class Cache<T> : LinkedHashMap<CacheKey<T>, Pair<String, String>>(16, 0.75F, true) {
   override fun removeEldestEntry(eldest: Map.Entry<CacheKey<T>, Pair<String, String>>): Boolean = this.size > 100_000
 }
@@ -142,10 +143,10 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
       request.metadata.nature,
     )
 
-    var i = 1
-    @Suppress("MAGIC_NUMBER")
     val maxTries = 10
-    while (true) {
+    val maxSilentTries = 10
+    var i = 1
+    while (true) { // TODO: change to 'for' loop
       val ex = cache.get(key)
       if (ex != null) throw CachedException(ex.first, ex.second)
 
@@ -159,10 +160,10 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
           log.error("Failed after $i tries: metadata ${request.metadata}")
           throw MetadataWriteLockException(request.metadata, e)
         } else {
-          if (i >= 10) log.warn("Retrying ($i of $maxTries) metadata ${request.metadata}")
+          if (i >= maxSilentTries) log.warn("Retrying ($i of $maxTries) metadata ${request.metadata}")
           Thread.sleep(i * Random.nextLong(500, 1_000))
-          i += 1
-          continue
+          i++ // TODO: put in 'for' loop
+          continue // TODO: remove
         }
       } catch (e: MetadataNotFoundException) {
         // val stringWriter = StringWriter()
@@ -191,12 +192,9 @@ class CachingArtifactResolver : ArtifactResolver {
   val cache = Collections.synchronizedMap(Cache<String>())
 
   override fun resolveArtifact(session: RepositorySystemSession, request: ArtifactRequest): ArtifactResult {
-    if (request.artifact.groupId.contains("\${") ||
-      request.artifact.artifactId.contains("\${") ||
-      request.artifact.version.contains("\${") ||
-      request.artifact.classifier.contains("\${") ||
-      request.artifact.extension.contains("\${")
-    ) throw DollarInCoordinateException(request.artifact)
+    if ("\${" in with(request.artifact) { "${groupId}${artifactId}${version}${classifier}${extension}" }) {
+      throw DollarInCoordinateException(request.artifact)
+    }
 
     if (request.artifact.version.startsWith('^')) throw CaretInVersionException(request.artifact)
 
@@ -234,18 +232,11 @@ class CachingArtifactResolver : ArtifactResolver {
     }
     request.repositories = repositories
 
-    val key = Fiveple(
-      request.artifact.groupId,
-      request.artifact.artifactId,
-      request.artifact.baseVersion,
-      request.artifact.classifier,
-      request.artifact.extension,
-    )
+    val key = with(request.artifact) { Fiveple(groupId, artifactId, baseVersion, classifier, extension) }
 
-    var i = 1
-    @Suppress("MAGIC_NUMBER")
     val maxTries = 10
-    while (true) {
+    var i = 1
+    while (true) { // TODO: use for loop
       val ex = cache.get(key)
       if (ex != null) throw CachedException(ex.first, ex.second)
 
@@ -259,7 +250,7 @@ class CachingArtifactResolver : ArtifactResolver {
         } else {
           if (i >= 10) log.warn("Retrying ($i of $maxTries) artifact ${request.artifact}")
           Thread.sleep(i * Random.nextLong(500, 1_000))
-          i += 1
+          i++
           continue
         }
       } catch (e: ArtifactResolutionException) {
@@ -346,8 +337,15 @@ class DownloadMaven(
       .addHostnameVerifier(NoopHostnameVerifier())
       .build()
 
-  @Suppress("ktlint:standard:comment-wrapping", "ktlint:standard:max-line-length", "MaxLineLength")
+  @Suppress(
+    "MaxLineLength",
+    "ktlint:standard:comment-wrapping",
+    "ktlint:standard:max-line-length",
+    "ktlint:standard:no-consecutive-comments",
+  )
   val remotes = listOf(
+    // TODO: List taken from https://mvnrepository.com/repos??
+
     // We do not use springio-* or spring-* repositories as they no longer allow anonymous access.
     // See https://spring.io/blog/2020/10/29/notice-of-permissions-changes-to-repo-spring-io-fall-and-winter-2020
 
@@ -670,8 +668,8 @@ class DownloadMaven(
     if (m.versioning == null) throw NoVersioningTagException(groupId, artifactId)
     if (m.versioning.release != null) return m.versioning.release
     if (m.versioning.latest != null) return m.versioning.latest
-    val versions = m.versioning.versions
-    return versions.maxByOrNull(versionScheme::parseVersion) ?: throw NoVersionsInVersioningTagException(groupId, artifactId)
+    return m.versioning.versions.maxByOrNull(versionScheme::parseVersion)
+      ?: throw NoVersionsInVersioningTagException(groupId, artifactId)
   }
 
   // TODO: classifier?
@@ -868,11 +866,10 @@ class DownloadMaven(
 
   fun isA(exception: Throwable?, vararg classes: kotlin.reflect.KClass<*>): Boolean {
     var e: Throwable? = exception
-    while (
-      e is org.apache.maven.model.resolution.UnresolvableModelException ||
-        e is org.eclipse.aether.collection.DependencyCollectionException ||
-        e is org.eclipse.aether.resolution.ArtifactDescriptorException ||
-        e is org.eclipse.aether.resolution.ArtifactResolutionException
+    while (e is org.apache.maven.model.resolution.UnresolvableModelException ||
+      e is org.eclipse.aether.collection.DependencyCollectionException ||
+      e is org.eclipse.aether.resolution.ArtifactDescriptorException ||
+      e is org.eclipse.aether.resolution.ArtifactResolutionException
     ) {
       e = e.cause
     }
@@ -884,8 +881,7 @@ class DownloadMaven(
     return e == null
   }
 
-  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT", "VariableNaming")
-  private val UNSOLVABLE_ORG_WEBJARS_NPM_ARTIFACTS = listOf(
+  private val unsolvableOrgWebjarsNpmArtifacts = listOf(
     "3dmol",
     "admin-lte",
     "adminlte-reactjs",
@@ -1085,5 +1081,5 @@ class DownloadMaven(
   )
 
   fun unsolvable(groupId: String, artifactId: String): Boolean =
-    groupId == "org.webjars.npm" && UNSOLVABLE_ORG_WEBJARS_NPM_ARTIFACTS.contains(artifactId)
+    groupId == "org.webjars.npm" && unsolvableOrgWebjarsNpmArtifacts.contains(artifactId)
 }

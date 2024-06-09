@@ -520,7 +520,8 @@ style:
     active: true
     includeElvis: true
   ClassOrdering:
-    active: true
+    # This design choice belongs to the programmer, and there are often more logical orders
+    active: false
   CollapsibleIfStatements:
     active: true
   DataClassContainsFunctions:

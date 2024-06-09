@@ -85,8 +85,11 @@ data class SystemDependencyException(val root: Artifact, val dependency: Artifac
 data class CachedException(val name: String, val stackTrace: String) :
   Exception("CachedException: $name\n$stackTrace")
 
+// TODO: add command to clear locks
 // $ find ~/a/local/jade2/maven '(' -name \*.part -o -name \*.lock -o -size 0 ')' -type f -print0 | xargs -0 rm -v
 // $ find ~/a/local/jade2/jar-lists/ -size 0 -type f -print0 | xargs -0 rm -v
+
+// TODO: add sizes (from index) to starting and ending outputs
 
 object Exceptions {
   fun name(exception: Throwable): String {
@@ -325,13 +328,13 @@ class DownloadMaven(
   val system = locator.getService(RepositorySystem::class.java)
   val versionScheme = GenericVersionScheme() // locator.getService(VersionScheme::class.java)
   val modelBuilder = DefaultModelBuilderFactory().newInstance() // TODO: locator
+  val localRepo = LocalRepository(localRepoDir)
   val session = MavenRepositorySystemUtils.newSession().apply {
     localRepositoryManager = system.newLocalRepositoryManager(this, localRepo)
     val transformer =
       ConflictResolver(NearestVersionSelector(), JavaScopeSelector(), SimpleOptionalitySelector(), JavaScopeDeriver())
     dependencyGraphTransformer = ChainedDependencyGraphTransformer(transformer, JavaDependencyContextRefiner())
   }
-  val localRepo = LocalRepository(localRepoDir)
 
   val remote = RemoteRepository
     .Builder("google-maven-central", "default", "https://maven-central-asia.storage-download.googleapis.com/maven2")
@@ -838,6 +841,10 @@ class DownloadMaven(
   fun writeJarList(artifactResults: List<ArtifactResult>, jarListFile: File) {
     val builder = StringBuilder()
     for (result in artifactResults) {
+      // java.lang.IllegalArgumentException: this and base files have different roots: /home/adamsmd/r/utah/jade/jade2/../jade2-maven-data/local-repo/aero/t2s/mode-s/0.2.5/mode-s-0.2.5.jar and ../jade2-maven-data/local-repo.
+      // at kotlin.io.FilesKt__UtilsKt.toRelativeString(Utils.kt:117)
+      // at kotlin.io.FilesKt__UtilsKt.relativeTo(Utils.kt:128)
+      // at org.ucombinator.jade.maven.DownloadMaven.writeJarList(DownloadMaven.kt:841)
       builder.append("${result.artifact.file.relativeTo(localRepoDir).toString()}\t${result.repository}\n")
     }
     try {

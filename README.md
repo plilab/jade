@@ -41,6 +41,8 @@ TODO: explain the following
 
     $ ./gradlew run --args=--help
 
+    $ ./build/install/jade/bin/jade download-maven $(realpath ../jade2-maven-data/index/index) $(realpath ../jade2-maven-data/local-repo/) $(realpath ../jade2-maven-data/jar-lists/)
+
 ## Developer Guide
 
 For more details on Jade's codebase, refer to Developer Guide which can be found at `docs/Developer Guide.md`

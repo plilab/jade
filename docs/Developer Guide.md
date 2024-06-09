@@ -2,7 +2,7 @@
 
 This document details the design and implementation of Jade. For detailed documentations of submodules and classes with Kotlin KDoc, refer to {link to generated KDoc/ Dokka}.
 
-### Decompilation
+## Decompilation
 
 At a high level, Jade works as follows:
 - First, Jade takes a path to a Java `.class` file as input.

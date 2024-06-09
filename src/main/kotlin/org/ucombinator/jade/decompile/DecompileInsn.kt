@@ -67,6 +67,13 @@ Generators
 // TODO: alternatives to type aliases?
 typealias JPStatement = com.github.javaparser.ast.stmt.Statement
 typealias JPExpression = com.github.javaparser.ast.expr.Expression
+
+@Suppress(
+  "ktlint:standard:blank-line-before-declaration",
+  "ktlint:standard:max-line-length",
+  "ktlint:standard:parameter-list-wrapping",
+  "ktlint:standard:statement-wrapping",
+)
 sealed class DecompiledInsn {
   open val usesNextInsn: Boolean = true
   data class Statement(val statement: JPStatement, override val usesNextInsn: Boolean = true) : DecompiledInsn()
@@ -167,6 +174,7 @@ object DecompileInsn {
         "ktlint:standard:argument-list-wrapping",
         "ktlint:standard:max-line-length",
         "ktlint:standard:no-multi-spaces",
+        "ktlint:standard:wrapping",
       )
       when (node.opcode) {
         // InsnNode
@@ -329,10 +337,10 @@ object DecompileInsn {
         Opcodes.ARETURN -> DecompiledInsn.Statement(ReturnStmt(args(0)), false)
         Opcodes.RETURN  -> DecompiledInsn.Statement(ReturnStmt(/*Nothing*/), false)
         // FieldInsnNode
-        Opcodes.GETSTATIC -> { val insn = node as FieldInsnNode; DecompiledInsn.Expression(FieldAccessExpr(ClassName.classNameExpr(insn.owner), /*TODO*/ NodeList(), SimpleName(insn.name))) }
-        Opcodes.PUTSTATIC -> { val insn = node as FieldInsnNode; DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(ClassName.classNameExpr(insn.owner), /*TODO*/ NodeList(), SimpleName(insn.name)), args(0), AssignExpr.Operator.ASSIGN)) }
-        Opcodes.GETFIELD  -> { val insn = node as FieldInsnNode; DecompiledInsn.Expression(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(insn.name))) }
-        Opcodes.PUTFIELD  -> { val insn = node as FieldInsnNode; DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(insn.name)), args(1), AssignExpr.Operator.ASSIGN)) }
+        Opcodes.GETSTATIC -> (node as FieldInsnNode).let { DecompiledInsn.Expression(FieldAccessExpr(ClassName.classNameExpr(it.owner), /*TODO*/ NodeList(), SimpleName(it.name))) }
+        Opcodes.PUTSTATIC -> (node as FieldInsnNode).let { DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(ClassName.classNameExpr(it.owner), /*TODO*/ NodeList(), SimpleName(it.name)), args(0), AssignExpr.Operator.ASSIGN)) }
+        Opcodes.GETFIELD  -> (node as FieldInsnNode).let { DecompiledInsn.Expression(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(it.name))) }
+        Opcodes.PUTFIELD  -> (node as FieldInsnNode).let { DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(it.name)), args(1), AssignExpr.Operator.ASSIGN)) }
         // MethodInsnNode
         Opcodes.INVOKEVIRTUAL   -> instanceCall(node)
         Opcodes.INVOKESPECIAL   -> instanceCall(node) // TODO: only for <init> (new, this, and super)?
@@ -373,8 +381,6 @@ object DecompileInsn {
         Opcodes.MONITOREXIT  -> DecompiledInsn.MonitorExit(args(0))
         // MultiANewArrayInsnNode
         Opcodes.MULTIANEWARRAY -> {
-          // TODO: use asm.Type functions
-          val dims = (node as MultiANewArrayInsnNode).dims
           fun unwrap(type: Type): Pair<Type, Int> {
             // TODO: is this simpler if we use recursion instead of iteration? or maybe something like `.fold()`
             var t = type
@@ -385,6 +391,9 @@ object DecompileInsn {
             }
             return Pair(t, levels)
           }
+
+          // TODO: use asm.Type functions
+          val dims = (node as MultiANewArrayInsnNode).dims
           val (type, expectedDims) = unwrap(Descriptor.fieldDescriptor(node.desc))
           val dimArgs = argsArray.toList().subList(0, dims).map { ArrayCreationLevel(it, NodeList()) }
           val nonDimArgs = (dims until expectedDims).map { ArrayCreationLevel(null, NodeList()) }

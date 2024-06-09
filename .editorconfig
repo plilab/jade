@@ -14,9 +14,13 @@ insert_final_newline = true
 trim_trailing_whitespace = false
 
 [*.{kt,kts}]
-# uses a large number to disable effect
+# add kotlinx to end of import order
+ij_kotlin_imports_layout=*,java.**,javax.**,kotlin.**,kotlinx.**,^
+# use a large number to disable effect
 ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than = 1000
 ktlint_standard_annotation = disabled
+# Allow inline block comments
+ktlint_standard_comment-wrapping = disabled
 ktlint_standard_multiline-expression-wrapping = disabled
 ktlint_standard_no-blank-line-in-list = disabled
 ktlint_standard_string-template = disabled

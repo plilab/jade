@@ -230,7 +230,6 @@ class DownloadIndex : CliktCommand(help = "Download index of all files") {
   val pageSize: Long by option().long().default(0)
   val prefix: String? by option()
   val startOffset: String? by option()
-  @Suppress("MAGIC_NUMBER")
   val flushFrequency: Long by option().long().default(1L shl 14)
 
   override fun run() {

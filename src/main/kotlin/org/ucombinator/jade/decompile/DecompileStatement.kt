@@ -185,6 +185,7 @@ object DecompileStatement {
     val (stmt, pendingOutside) = structuredBlock(cfg.entry)
     if (pendingOutside.isNotEmpty()) Errors.fatal("Non-empty pending $pendingOutside")
     val variables = ssa.insnVars.values.map(Pair<Var, List<Var>>::first) + ssa.phiInputs.keys
+
     fun decompileVarDecl(v: Var): Statement =
       // TODO: handle the mutability and nullability of v.basicValue in a better way
       v.basicValue.let { basicValue ->
@@ -196,6 +197,7 @@ object DecompileStatement {
           ExpressionStmt(VariableDeclarationExpr(t, v.name))
         }
       }
+
     val declarations = variables.map(::decompileVarDecl)
 
     val statements = NodeList<Statement>(declarations.toList())

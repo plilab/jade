@@ -9,6 +9,7 @@ import org.ucombinator.jade.asm.Insn
  *
  * @property name The name of the variable.
  */
+@Suppress("ktlint:standard:blank-line-before-declaration", "ktlint:standard:statement-wrapping")
 sealed class Var(val name: String) : Value {
   // TODO @property basicValue The value of the variable.
   abstract val basicValue: BasicValue?

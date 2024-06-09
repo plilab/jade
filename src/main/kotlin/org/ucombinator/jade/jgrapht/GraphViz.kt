@@ -56,9 +56,11 @@ object GraphViz {
     out.write("digraph {\n")
 
     val ids = mutableMapOf<V, String>()
+
     fun id(v: V): String = ids.getOrPut(v, { "n${ids.size}" })
 
     var cluster = 0
+
     fun go(indent: String, v: V, backgroundColor: Boolean, soleChild: Boolean) {
       cluster += 1
       // NOTE: subgraph must have a name starting with "cluster" to get GraphViz to draw a box around it

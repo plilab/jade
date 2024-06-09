@@ -877,7 +877,7 @@ class DownloadMaven(
     return e == null
   }
 
-  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT")
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT", "VariableNaming")
   private val UNSOLVABLE_ORG_WEBJARS_NPM_ARTIFACTS = listOf(
     "3dmol",
     "admin-lte",

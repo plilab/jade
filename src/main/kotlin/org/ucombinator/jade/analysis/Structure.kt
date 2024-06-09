@@ -22,13 +22,14 @@ Non-linear expressions
 
 typealias Nesting = List<Structure.Block>
 
+// TODO: rename Structure to CodeStructure or CodeNesting or BlockNesting
+
 /**
  * Represents the domination structure in the CFG.
  *
  * @property nesting A map that associates each instruction with its nesting level within the CFG.
  * @property backEdges A set of edges in the CFG that keeps track of back edges.
  */
-// TODO: rename to CodeStructure or CodeNesting or BlockNesting
 data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<ControlFlowGraph.Edge>) {
   // TODO: Instead of MyersList use the following or one of the others in that package:
   //  * https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/lca/EulerTourRMQLCAFinder.html
@@ -43,18 +44,19 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
 
   sealed interface Kind { // TODO: structural type
     object Loop : Kind
-    object Exception : Kind
 
+    // TODO:
     // case class Exception(insns: List[Insn], handlers: List[(Insn, Type)]) extends Kind
     // handlers: dominated by head insn
     // body: dominated by head but not handlers
     // finally: ignore until refactoring pass
     // try ResourceSpecification Block [Catches] [Finally]
+    object Exception : Kind
 
-    object Synchronized : Kind
-
+    // TODO:
     // Syncronized involves a try-finally pattern
     // case class Synchronized(value) extends Kind
+    object Synchronized : Kind
   }
 
   companion object {

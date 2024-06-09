@@ -88,7 +88,15 @@ object Signature {
 
 // TODO: wrap in checked visitor and catch exceptions to detect malformed signatures (and add these to tests)
 // TODO: document: we use this so we can dynamically change what visitor is running
-@Suppress("ktlint:standard:blank-line-before-declaration", "ktlint:standard:statement-wrapping", "MaxLineLength")
+@Suppress(
+  "MaxLineLength",
+  "ktlint:standard:argument-list-wrapping",
+  "ktlint:standard:blank-line-before-declaration",
+  "ktlint:standard:max-line-length",
+  "ktlint:standard:parameter-list-wrapping",
+  "ktlint:standard:statement-wrapping",
+  "ktlint:standard:wrapping",
+)
 data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : SignatureVisitor(Opcodes.ASM9) {
   override fun visitFormalTypeParameter(name: String) { delegate = delegate!!.visitFormalTypeParameter(name) }
   override fun visitClassBound(): SignatureVisitor { delegate = delegate!!.visitClassBound(); return this }
@@ -136,7 +144,15 @@ open class DelegateSignatureVisitor {
 }
 
 typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
-@Suppress("MaxLineLength", "ktlint:standard:function-signature")
+
+@Suppress(
+  "MaxLineLength",
+  "ktlint:standard:argument-list-wrapping",
+  "ktlint:standard:blank-line-before-declaration",
+  "ktlint:standard:function-signature",
+  "ktlint:standard:max-line-length",
+  "ktlint:standard:parameter-list-wrapping",
+)
 class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisitor() {
   override fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? = receiver(descriptorToType(descriptor))
   override fun visitTypeVariable(name: String): DelegateSignatureVisitor? = receiver(TypeParameter(ClassName.identifier(name)))
@@ -144,6 +160,12 @@ class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisito
   override fun visitClassType(name: String): DelegateSignatureVisitor? = ClassTypeVisitor(receiver, name)
 }
 
+@Suppress(
+  "ktlint:standard:argument-list-wrapping",
+  "ktlint:standard:blank-line-before-declaration",
+  "ktlint:standard:max-line-length",
+  "ktlint:standard:wrapping",
+)
 abstract class FormalTypeParameterVisitor : DelegateSignatureVisitor() {
   val typeParameters = mutableListOf<TypeParameter>()
 
@@ -155,7 +177,7 @@ abstract class FormalTypeParameterVisitor : DelegateSignatureVisitor() {
     TypeSignatureVisitor { this.apply { typeParameters.last().getTypeBound().add(it.cast<ClassOrInterfaceType>("non-interface in interface bound")) } }
 }
 
-// TODO: wrap in checked visitor and catch exceptions to detect malformed signatures (and add these to tests)
+@Suppress("ktlint:standard:blank-line-before-declaration")
 class ClassSignatureVisitor : FormalTypeParameterVisitor() {
   var superclass = null as ClassOrInterfaceType?
   val interfaces = mutableListOf<ClassOrInterfaceType>()
@@ -166,7 +188,14 @@ class ClassSignatureVisitor : FormalTypeParameterVisitor() {
     TypeSignatureVisitor { this.apply { interfaces.add(it.cast<ClassOrInterfaceType>("non-class in interface")) } }
 }
 
-@Suppress("ktlint:standard:function-signature")
+@Suppress(
+  "ktlint:standard:argument-list-wrapping",
+  "ktlint:standard:blank-line-before-declaration",
+  "ktlint:standard:function-signature",
+  "ktlint:standard:max-line-length",
+  "ktlint:standard:statement-wrapping",
+  "ktlint:standard:wrapping",
+)
 class MethodSignatureVisitor : FormalTypeParameterVisitor() {
   val parameterTypes = mutableListOf<Type>()
   var returnType = null as Type?
@@ -181,7 +210,11 @@ class MethodSignatureVisitor : FormalTypeParameterVisitor() {
 }
 
 // TODO: TypeReceiver -> ClassOrInterfaceTypeReceiver??
-@Suppress("WRONG_OVERLOADING_FUNCTION_ARGUMENTS", "ktlint:standard:function-signature")
+@Suppress(
+  "WRONG_OVERLOADING_FUNCTION_ARGUMENTS",
+  "ktlint:standard:blank-line-before-declaration",
+  "ktlint:standard:function-signature",
+)
 class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSignatureVisitor() {
   var result = ClassName.classNameType(name)
 

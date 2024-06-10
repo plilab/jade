@@ -65,7 +65,7 @@ object DecompileStatement {
       // Any instruction could require a "break" or "continue" attached to it.
       // Only loops are allowed to be continue targets.
 
-      val headStructure = structure.nesting.getValue(head)
+      // val headStructure = structure.nesting.getValue(head)
 
       // worklist of vertexes with no more incoming edges that are inside the current loop (back edges do not count)
       // NOTE: We use TreeSet so we have `minOption()`

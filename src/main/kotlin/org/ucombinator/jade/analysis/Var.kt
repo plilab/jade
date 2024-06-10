@@ -30,11 +30,12 @@ sealed class Var(val name: String) : Value {
     Var("copyVar${insn.index()}_${version}")
   data class Phi(override val basicValue: BasicValue, val insn: Insn, val index: Int, var changed: Boolean = false) :
     Var("phiVar${insn.index()}_${index}") {
+    // TODO: could `changed` be a val?
     // TODO: use private constructor to hide `changed`
     // Note that `changed` has to be in the parameters so that the analysis sees that the value has changed
     private var changedPhiVar: Phi? = null
     fun change(): Phi {
-      if (this.changedPhiVar == null) this.changedPhiVar = this.copy(changed = true).apply { changedPhiVar = this }
+      if (this.changedPhiVar == null) this.changedPhiVar = this.copy(changed = true).also { changedPhiVar = it }
       return this.changedPhiVar!!
     }
   }

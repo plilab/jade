@@ -7,22 +7,17 @@ import java.io.IOException
 import javax.xml.parsers.DocumentBuilderFactory
 
 object Xml {
-  private val log = Log {}
-
   fun readXml(file: File, rootTag: String): Element? {
-    val document = try {
+    val document = @Suppress("SwallowedException") try {
       DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
     } catch (e: IOException) {
-      // log.error(e) { "Failed to read $file" }
       return null
     } catch (e: SAXException) {
-      // log.error(e) { "Failed to parse $file" }
       return null
     }
 
     val root = document.documentElement
     if (root.tagName != rootTag) {
-      // log.error("Wrong root tag '${root.tagName} in $file")
       return null
     }
 

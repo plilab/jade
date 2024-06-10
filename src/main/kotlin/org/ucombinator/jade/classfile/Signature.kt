@@ -97,7 +97,7 @@ object Signature {
   "ktlint:standard:statement-wrapping",
   "ktlint:standard:wrapping",
 )
-data class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : SignatureVisitor(Opcodes.ASM9) {
+class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : SignatureVisitor(Opcodes.ASM9) {
   override fun visitFormalTypeParameter(name: String) { delegate = delegate!!.visitFormalTypeParameter(name) }
   override fun visitClassBound(): SignatureVisitor { delegate = delegate!!.visitClassBound(); return this }
   override fun visitInterfaceBound(): SignatureVisitor { delegate = delegate!!.visitInterfaceBound(); return this }

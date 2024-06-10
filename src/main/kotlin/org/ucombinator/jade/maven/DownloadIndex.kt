@@ -9,8 +9,10 @@ import java.io.RandomAccessFile
 
 // TODO: can this be parallelized?
 // TODO: repos/central/data is old version of maven2?
-// $ gsutil -o Credentials:gs_service_key_file=../smooth-splicer-342907-2a129f6f3cd4.json ls -l 'gs://maven-central/maven2/**'
-// TDOO: trailing commas
+// $ gsutil -o Credentials:gs_service_key_file=../smooth-splicer-342907-2a129f6f3cd4.json \
+//     ls -l 'gs://maven-central/maven2/**'
+// TODO: trailing commas
+// TODO: search to "TODO" typos
 object DownloadIndex {
   private val log = Log {}
 
@@ -45,6 +47,7 @@ object DownloadIndex {
       if (prefix != null) options += Storage.BlobListOption.prefix(prefix)
       if (trueStartOffset != null) options += Storage.BlobListOption.startOffset(trueStartOffset)
 
+      @Suppress("SpreadOperator") // the array will always be short
       val blobs = bucket.list(*options.toTypedArray()).iterateAll()
 
       var checkStartOffset = resume

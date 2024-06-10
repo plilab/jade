@@ -51,6 +51,7 @@ import org.ucombinator.jade.analysis.Var
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.javaparser.JavaParser
+import org.ucombinator.jade.util.Errors
 
 /*
 Nestings
@@ -69,6 +70,7 @@ typealias JPStatement = com.github.javaparser.ast.stmt.Statement
 typealias JPExpression = com.github.javaparser.ast.expr.Expression
 
 @Suppress(
+  "MaxLineLength",
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:max-line-length",
   "ktlint:standard:parameter-list-wrapping",
@@ -409,7 +411,7 @@ object DecompileInsn {
             is LabelNode      -> DecompiledInsn.Label(node)
             is FrameNode      -> DecompiledInsn.Frame(node)
             is LineNumberNode -> DecompiledInsn.LineNumber(node)
-            else              -> throw Exception("unknown instruction type: $node")
+            else              -> Errors.unmatchedType(node)
           }
       }
     )

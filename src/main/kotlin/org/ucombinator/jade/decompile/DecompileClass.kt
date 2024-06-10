@@ -46,6 +46,7 @@ import org.ucombinator.jade.classfile.Flag
 import org.ucombinator.jade.classfile.MethodSignature
 import org.ucombinator.jade.classfile.Signature
 import org.ucombinator.jade.javaparser.JavaParser
+import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Lists.pairs
 import org.ucombinator.jade.util.Lists.tail
 import org.ucombinator.jade.util.Lists.zipAll
@@ -54,7 +55,8 @@ import org.ucombinator.jade.util.Tuples.Fourple
 // TODO: rename package to `translate` or `transform` or `transformation`?
 
 /**
- * Handles decompiling class-level constructs. It contains various methods that builds JavaParser abstract syntax tree data structures from corresponding ASM data structures.
+ * Handles decompiling class-level constructs. It contains various methods that builds JavaParser abstract syntax tree
+ * data structures from corresponding ASM data structures.
  */
 object DecompileClass {
   @Suppress("VARIABLE_NAME_INCORRECT_FORMAT") val CLASS_NODE = object : DataKey<ClassNode>() {}
@@ -70,7 +72,7 @@ object DecompileClass {
       is Double -> DoubleLiteralExpr("${node}D")
       is String -> StringLiteralExpr(node)
       is org.objectweb.asm.Type -> ClassExpr(Descriptor.fieldDescriptor(node.descriptor))
-      else -> throw Exception("unimplemented literal '$node'")
+      else -> Errors.unmatchedType(node)
     }
 
   private fun typeToName(t: Type?): Name? =

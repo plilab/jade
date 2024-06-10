@@ -26,7 +26,8 @@ import java.io.File
 // TODO: skip over ct.jar as it is just signatures.  Maybe don't skip second load if it is better.
 
 /**
- * Handles processing files and decomposing them into classes and methods. Processing of class-level constructs and method bodies are delegated to `DecompileClass` and `DecompileMethodBody` respectively.
+ * Handles processing files and decomposing them into classes and methods.  Processing of class-level constructs and
+ * method bodies are delegated to `DecompileClass` and `DecompileMethodBody` respectively.
  */
 object Decompile {
   private val log = Log {}

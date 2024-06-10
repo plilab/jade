@@ -349,7 +349,8 @@ naming:
     active: true
     mustBeFirst: true
   MemberNameEqualsClassName:
-    active: true
+    # This design choice belongs to the programmer
+    active: false
     ignoreOverridden: true
   NoNameShadowing:
     active: true

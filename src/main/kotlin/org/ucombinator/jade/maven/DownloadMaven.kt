@@ -454,23 +454,17 @@ class DownloadMaven(
         println("fail  $fail")
         println("abort $abort")
 
-        println()
-        println("Cached fails: ${cachedFails.toList().map(Pair<String, Int>::second).sum()}\n")
-        for ((key, value) in cachedFails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-          println("$value\t$key")
+        fun <T : Comparable<T>> printFails(type: String, entries: Map<T, Int>) {
+          println()
+          println("$type: ${entries.toList().map(Pair<T, Int>::second).sum()}\n")
+          for ((key, value) in entries.toList().sortedBy(Pair<T, Int>::first).sortedBy(Pair<T, Int>::second)) {
+            println("$value\t$key")
+          }
         }
 
-        println()
-        println("Fails: ${fails.toList().map(Pair<String, Int>::second).sum()}\n")
-        for ((key, value) in fails.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-          println("$value\t$key")
-        }
-
-        println()
-        println("Aborts: ${aborts.toList().map(Pair<String, Int>::second).sum()}\n")
-        for ((key, value) in aborts.toList().sortedBy(Pair<String, Int>::first).sortedBy(Pair<String, Int>::second)) {
-          println("$value\t$key")
-        }
+        printFails("Cached fails", cachedFails)
+        printFails("Fails", fails)
+        printFails("Aborts", aborts)
 
         println()
         println("Running: ${running.size} / $remaining\n")
@@ -551,6 +545,7 @@ class DownloadMaven(
     val groupId = groupIdPath.replace('/', '.')
     val name = "$groupId:$artifactId"
     val startTime = System.nanoTime()
+    @Suppress("TooGenericExceptionCaught")
     try {
       running.put(Pair(groupIdPath, artifactId), startTime)
       println("running +${running.size} / $remaining")
@@ -576,7 +571,7 @@ class DownloadMaven(
       writeJarList(artifactResults, jarListFile)
       pass.incrementAndGet()
       println("pass  ${time(startTime)} $name")
-    } catch (e: Exception) {
+    } catch (e: Exception) { // TODO: why not throwable?
       val t = time(startTime)
       if (isFailure(e)) {
         println("fail  $t $name")
@@ -584,14 +579,14 @@ class DownloadMaven(
         fails.merge(exceptionName(e), 1, Int::plus)
         val stringWriter = StringWriter()
         val printWriter = PrintWriter(stringWriter)
-        e.printStackTrace(printWriter)
+        @Suppress("PrintStackTrace") e.printStackTrace(printWriter)
         printWriter.flush()
         val content =
           "!" + exceptionName(e) + "\n" +
             stringWriter.toString().replace("^".toRegex(RegexOption.MULTILINE), "# ")
         try {
           AtomicWriteFile.write(jarListFile, content, true)
-        } catch (e: Throwable) {
+        } catch (e: Throwable) { // TODO: could this be more specific?
           log.error(e) { "Failed to write permanent errors to file $jarListFile" }
         }
       } else {
@@ -839,7 +834,9 @@ class DownloadMaven(
   fun writeJarList(artifactResults: List<ArtifactResult>, jarListFile: File) {
     val builder = StringBuilder()
     for (result in artifactResults) {
-      // java.lang.IllegalArgumentException: this and base files have different roots: /home/adamsmd/r/utah/jade/jade2/../jade2-maven-data/local-repo/aero/t2s/mode-s/0.2.5/mode-s-0.2.5.jar and ../jade2-maven-data/local-repo.
+      // java.lang.IllegalArgumentException: this and base files have different roots:
+      //   /home/adamsmd/r/utah/jade/jade2/../jade2-maven-data/local-repo/aero/t2s/mode-s/0.2.5/mode-s-0.2.5.jar and
+      //   ../jade2-maven-data/local-repo.
       // at kotlin.io.FilesKt__UtilsKt.toRelativeString(Utils.kt:117)
       // at kotlin.io.FilesKt__UtilsKt.relativeTo(Utils.kt:128)
       // at org.ucombinator.jade.maven.DownloadMaven.writeJarList(DownloadMaven.kt:841)

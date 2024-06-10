@@ -19,8 +19,10 @@ import org.ucombinator.jade.util.Errors
  * Represents the result of static single assignment (SSA) analysis.
  *
  * @property frames An array of ASM `Frame` objects representing states of variables.
- * @property insnVars A map that represents instruction nodes. Its keys are the instruction nodes and values are a pair whose first element is the variable and second element the list of versions of that variable.
- * @property phiInputs A map that represents Phi nodes. Its keys are target variables of the phi nodes and values are the set of (instruction, variable) pairs that are inputs to the Phi function.
+ * @property insnVars A map that represents instruction nodes. Its keys are the instruction nodes and values are a pair
+ *   whose first element is the variable and second element the list of versions of that variable.
+ * @property phiInputs A map that represents Phi nodes. Its keys are target variables of the phi nodes and values are
+ *   the set of (instruction, variable) pairs that are inputs to the Phi function.
  */
 data class StaticSingleAssignment(
   val frames: Array<Frame<Var>>,

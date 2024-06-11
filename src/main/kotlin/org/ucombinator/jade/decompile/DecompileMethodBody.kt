@@ -48,7 +48,7 @@ object DecompileMethodBody {
         comment
       )
     )
-    if (true) { // TODO: option for generating compilable versus uncompilable stub bodies
+    if (false) { // TODO: option for generating compilable versus uncompilable stub bodies
       statements.add(
         JavaParser.setComment(
           EmptyStmt(),

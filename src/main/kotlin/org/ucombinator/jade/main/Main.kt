@@ -189,8 +189,14 @@ class Decompile : CliktCommand(help = "Decompile a class file") {
     help = "Files or directories to decompile",
   ).file(mustExist = true).multiple(required = true)
 
+
+  val outputDir: File by argument(
+    name = "PATH",
+    help = "Directory to write to",
+  ).file(mustExist = true)
+
   override fun run() {
-    org.ucombinator.jade.decompile.Decompile.main(files)
+    org.ucombinator.jade.decompile.Decompile.main(files, outputDir)
   }
 }
 

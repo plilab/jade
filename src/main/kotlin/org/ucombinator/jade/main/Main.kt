@@ -184,6 +184,8 @@ class Decompile : CliktCommand(help = "Decompile a class file") {
   // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
   // --filter=+dir=
 
+  // TODO: File vs Path vs other
+
   val files: List<File> by argument(
     name = "PATH",
     help = "Files or directories to decompile",

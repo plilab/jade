@@ -11,6 +11,7 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import org.ucombinator.jade.util.Log
 import java.io.File
+import org.ucombinator.jade.util.AtomicWriteFile
 
 // import org.objectweb.asm.util.Textifier
 // import org.objectweb.asm.util.TraceClassVisitor
@@ -41,12 +42,30 @@ object Decompile {
    *
    * @param files The list of files to decompile.
    */
-  fun main(files: List<File>) {
+  fun main(files: List<File>, outputDir: File) {
     // Temporary code that decompiles only one .class file
     require(files.size == 1)
     val file = files.first()
     val classReader = ClassReader(file.readBytes())
     val compilationUnit = decompileClassFile(file.toString(), file.toString(), classReader, 0)
+    
+    log.debug("stubCompilationUnit\n${compilationUnit}")
+
+    // Write to .java file of the same name as .class file (e.g. SampleClass.class -> SampleClass.java)
+    val classFileName = file.getName()
+
+    if (!classFileName.endsWith(".class")) {
+        throw Exception("Invalid file name: file $classFileName does not end with .class")
+    }
+
+    // TODO: the /tmp must be replaced with argument passed into decompile command
+    val javaFileName = "tmp/" + classFileName.replace(".class", ".java")
+
+    val fileToWrite = File(javaFileName)
+
+    AtomicWriteFile.write(fileToWrite, "${compilationUnit}", false) 
+    
+    // Log to debug log
     for (type in compilationUnit.types) {
       log.debug("type: ${type.javaClass}")
       if (type is ClassOrInterfaceDeclaration) {
@@ -61,6 +80,8 @@ object Decompile {
         TODO()
       }
     }
+
+    log.debug("compilationUnit\n${compilationUnit}")
 
     // val readFiles = ReadFiles()
     // for (file in files) {

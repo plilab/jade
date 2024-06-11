@@ -55,13 +55,11 @@ object Log {
 }
 
 class RelativeLoggerConverter : ClassicConverter() {
-  lateinit var prefix: String
-
-  override fun start() {
-    val x = getOptionList()
-    check(x.size == 1) { "Expected exactly one option but got: ${x}" }
-    prefix = x[0]
-    super.start()
+  val prefix: String by lazy {
+    val options = this.optionList
+    check(options != null) { "Options not set" }
+    check(options.size == 1) { "Expected exactly one option but got: ${options}" }
+    options[0]
   }
 
   override fun convert(event: ILoggingEvent): String {

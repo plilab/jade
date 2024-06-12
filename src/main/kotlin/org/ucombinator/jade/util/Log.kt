@@ -15,7 +15,7 @@ import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as Ol
 import org.slf4j.Logger as Slf4jLogger
 
 object Log {
-  private val log = Log {}
+  private val log = Log {} // TODO: lazy?
 
   operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
 

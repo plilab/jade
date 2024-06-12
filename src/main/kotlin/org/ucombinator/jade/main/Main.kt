@@ -38,7 +38,6 @@ import java.io.File
 
 fun main(args: Array<String>): Unit =
   Jade().subcommands(
-    TestLog(),
     BuildInfo(),
     Decompile(),
     Compile(),
@@ -129,27 +128,6 @@ class Jade : CliktCommand() {
 // /////////////////////////////////////////////////////////////
 // Sub-commands
 
-// TODO: `hidden` parameter
-class TestLog : CliktCommand() {
-  inner class Bar {
-    private val log = Log {} // TODO: lazy?
-
-    fun f() {
-      echo(this.javaClass.name)
-      log.error("error")
-      log.warn("warn")
-      log.info("info")
-      log.debug("debug")
-      log.trace("trace")
-    }
-  }
-
-  override fun run() {
-    echo("executing")
-    Bar().f()
-  }
-}
-
 class BuildInfo : CliktCommand(help = "Display information about how `jade` was built") {
   // TODO: --long --short
   override fun run() {
@@ -236,8 +214,21 @@ class Diff : CliktCommand(help = "Compare class files") {
 }
 
 class Loggers : CliktCommand(help = "Lists available loggers") {
+  val test: Boolean by option(help = "TODO").flag(default = false)
+
   override fun run() {
-    for (l in Log.loggers()) echo(l.name)
+    // TODO: shows only initialized loggers
+    for (log in Log.loggers()) {
+      echo(log.name)
+      if (test) {
+        log.error("error in ${log}")
+        log.warn("warn in ${log}")
+        log.info("info in ${log}")
+        log.debug("debug in ${log}")
+        log.trace("trace in ${log}")
+        echo()
+      }
+    }
   }
 }
 

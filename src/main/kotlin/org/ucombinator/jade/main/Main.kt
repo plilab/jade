@@ -220,8 +220,18 @@ class Compile : CliktCommand(help = "Compile a java file") {
 // TODO: commands for decompiling with other decompilers
 
 class Diff : CliktCommand(help = "Compare class files") {
+  val old: File by argument(
+    name = "PATH",
+    help = "TODO",
+  ).file(mustExist = true)
+
+  val new: File by argument(
+    name = "PATH",
+    help = "TODO",
+  ).file(mustExist = true)
+
   override fun run() {
-    TODO("implement diff")
+    org.ucombinator.jade.diff.Diff.main(old, new)
   }
 }
 

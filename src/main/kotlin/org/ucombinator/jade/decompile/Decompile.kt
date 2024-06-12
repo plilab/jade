@@ -9,6 +9,7 @@ import org.objectweb.asm.util.Textifier
 import org.objectweb.asm.util.TraceClassVisitor
 import org.ucombinator.jade.util.AtomicWriteFile
 import org.ucombinator.jade.util.Log
+import org.ucombinator.jade.util.ReadFiles
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -30,51 +31,49 @@ object Decompile {
    * The main entry point for the decompiler. It takes a list of files as input and attempts to decompile them.
    *
    * @param files The list of files to decompile.
+   * @param outputDir TODO
    */
   fun main(files: List<File>, outputDir: File) {
-    // Temporary code that decompiles only one .class file
-    require(files.size == 1)
-    val file = files.first()
-    val classReader = ClassReader(file.readBytes())
-    val compilationUnit = decompileClassFile(file.toString(), classReader, 0)
+    val readFiles = ReadFiles()
+    for (file in files) readFiles.dir(file)
+    readFiles.result.entries.forEachIndexed { i, (filePath, bytes) ->
+      val file = filePath.last() // TODO: temporary code: multiple file paths due to nested archives
+      val classReader = ClassReader(bytes)
 
-    log.debug("stubCompilationUnit\n${compilationUnit}")
+      log.info("Decompiling [${i + 1} of ${readFiles.result.size}] ${classReader.className} from ${filePath}")
+      val compilationUnit = decompileClassReader(classReader)
 
-    // Write to .java file of the same name as .class file (e.g. SampleClass.class -> SampleClass.java)
-    val suffix = Regex("\\.class$")
-    val classFileName = file.getName()
+      log.debug("stubCompilationUnit\n${compilationUnit}")
 
-    if (!classFileName.contains(suffix)) {
-      throw Exception("Invalid file name: file $classFileName does not end with .class")
-    }
+      // TODO: use class name to create directory hierarchy (may need CLI options to control this)
+      // Write to .java file of the same name as .class file (e.g. SampleClass.class -> SampleClass.java)
+      val suffix = Regex("\\.class$")
+      val classFileName = file.getName()
 
-    AtomicWriteFile.write(File(outputDir, classFileName.replace(suffix, ".java")), "${compilationUnit}", false)
-
-    // Log to debug log
-    for (type in compilationUnit.types) {
-      log.debug("type: ${type.javaClass}")
-      if (type is ClassOrInterfaceDeclaration) {
-        val classNode = type.getData(DecompileClass.CLASS_NODE)!!
-        // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
-        for (callable in type.constructors + type.methods) {
-          val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
-          DecompileMethodBody.decompileBody(classNode, methodNode, callable)
-          log.debug("method: $callable")
-        }
-      } else {
-        TODO()
+      if (!classFileName.contains(suffix)) {
+        throw Exception("Invalid file name: file $classFileName does not end with .class")
       }
+
+      // TODO: options for handling whether to override the existing file
+      AtomicWriteFile.write(File(outputDir, classFileName.replace(suffix, ".java")), "${compilationUnit}", false)
+
+      for (type in compilationUnit.types) {
+        log.debug("type: ${type.javaClass}")
+        if (type is ClassOrInterfaceDeclaration) {
+          val classNode = type.getData(DecompileClass.CLASS_NODE)!!
+          // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
+          for (callable in type.constructors + type.methods) {
+            val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
+            DecompileMethodBody.decompileBody(classNode, methodNode, callable)
+            log.debug("method: $callable")
+          }
+        } else {
+          TODO()
+        }
+      }
+
+      log.debug("compilationUnit\n${compilationUnit}")
     }
-
-    log.debug("compilationUnit\n${compilationUnit}")
-
-    // val readFiles = ReadFiles()
-    // for (file in files) {
-    //   readFiles.dir(file)
-    // }
-    // for ((k, _) in readFiles.result) {
-    //   println("k $k")
-    // }
 
     // for (((name, readers), classIndex) <- VFS.classes.zipWithIndex) {
     //   for ((path, classReader) <- readers) { // TODO: pick "best" classReader
@@ -104,15 +103,12 @@ object Decompile {
   /**
    * Decompiles a class file and returns the corresponding CompilationUnit.
    *
-   * @param file the `.class` file
-   * @param cr The ClassReader object for the class file.
-   * @param i The index of the class file within the list to be decompiled.
-   * @return The decompiled CompilationUnit, or null if there's an error.
+   * @param classReader The ClassReader object for the class file
+   * @return The decompiled CompilationUnit
    */
-  fun decompileClassFile(file: String, cr: ClassReader, i: Int): CompilationUnit {
-    log.info("Decompiling [${i + 1} of TODO] ${cr.className} from ${file}") // TODO: move to outer class
+  fun decompileClassReader(classReader: ClassReader): CompilationUnit {
     val classNode = ClassNode(Opcodes.ASM9)
-    cr.accept(classNode, ClassReader.EXPAND_FRAMES) // TODO: Do we actually need ClassReader.EXPAND_FRAMES?
+    classReader.accept(classNode, ClassReader.EXPAND_FRAMES) // TODO: Do we actually need ClassReader.EXPAND_FRAMES?
 
     log.debug("class name: " + classNode.name)
     log.debug {

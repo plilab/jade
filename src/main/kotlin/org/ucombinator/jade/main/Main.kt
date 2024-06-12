@@ -46,7 +46,6 @@ fun main(args: Array<String>): Unit =
     DownloadIndex(),
     DownloadMaven(),
     CompletionCommand(),
-    // classOf[ManPageGenerator],
   ).main(args)
 
 // TODO: optionalValue()
@@ -161,6 +160,7 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
 class Decompile : CliktCommand(help = "Decompile a class file") {
   // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
   // --filter=+dir=
+  // TODO: --classpath
 
   // TODO: File vs Path vs other
 
@@ -168,7 +168,6 @@ class Decompile : CliktCommand(help = "Decompile a class file") {
     name = "PATH",
     help = "Files or directories to decompile",
   ).file(mustExist = true).multiple(required = true)
-
 
   val outputDir: File by argument(
     name = "PATH",

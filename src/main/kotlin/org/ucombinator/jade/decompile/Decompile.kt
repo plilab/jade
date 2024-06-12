@@ -1,14 +1,10 @@
 package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import org.objectweb.asm.ClassReader
-import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
-import org.objectweb.asm.commons.AnalyzerAdapter
 import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.util.Textifier
 import org.objectweb.asm.util.TraceClassVisitor
 import org.ucombinator.jade.util.AtomicWriteFile

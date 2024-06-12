@@ -4,6 +4,8 @@ import org.ucombinator.jade.gradle.GitVersionPlugin
 import java.text.SimpleDateFormat
 import java.util.Date
 
+// TODO: fix warning: :jar: No valid plugin descriptors were found in META-INF/gradle-plugins
+
 repositories {
   mavenCentral()
 }

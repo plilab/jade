@@ -22,12 +22,25 @@ import org.ucombinator.jade.util.Errors
 
 // TODO: use Delegates.notNull (or custom). See https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.properties/-delegates/not-null.html
 
+/** TODO:doc.
+ *
+ * @property typeParameters TODO:doc
+ * @property superclass TODO:doc
+ * @property interfaces TODO:doc
+ */
 data class ClassSignature(
   val typeParameters: List<TypeParameter>,
   val superclass: ClassOrInterfaceType,
   val interfaces: List<ClassOrInterfaceType>
 )
 
+/** TODO:doc.
+ *
+ * @property typeParameters TODO:doc
+ * @property parameterTypes TODO:doc
+ * @property returnType TODO:doc
+ * @property exceptionTypes TODO:doc
+ */
 data class MethodSignature(
   val typeParameters: List<TypeParameter>,
   val parameterTypes: List<Type>,
@@ -35,6 +48,7 @@ data class MethodSignature(
   val exceptionTypes: List<ReferenceType>
 )
 
+/** TODO:doc. */
 object Signature {
   // TODO: document: Check that SignatureReader parses to the end of the string without error
   private fun checkSignature(string: String, accept: (SignatureReader, SignatureWriter) -> Unit) {
@@ -49,6 +63,11 @@ object Signature {
     require(string == result) { """Unexpected "${string.removePrefix(result)}" at end of signature "${string}".""" }
   }
 
+  /** TODO:doc.
+   *
+   * @param string TODO:doc
+   * @return TODO:doc
+   */
   fun typeSignature(string: String): Type {
     checkSignature(string, SignatureReader::acceptType)
     var type = null as Type?
@@ -56,6 +75,11 @@ object Signature {
     return requireNotNull(type) { "no type for signature \"$string\"" }
   }
 
+  /** TODO:doc.
+   *
+   * @param string TODO:doc
+   * @return TODO:doc
+   */
   fun classSignature(string: String): ClassSignature {
     checkSignature(string, SignatureReader::accept)
     val visitor = ClassSignatureVisitor()
@@ -68,6 +92,12 @@ object Signature {
   }
 
   // TODO: rename arg to signature
+
+  /** TODO:doc.
+   *
+   * @param string TODO:doc
+   * @return TODO:doc
+   */
   fun methodSignature(string: String): MethodSignature {
     checkSignature(string, SignatureReader::accept)
     val visitor = MethodSignatureVisitor()
@@ -87,7 +117,11 @@ object Signature {
 // Signature Visitors
 
 // TODO: wrap in checked visitor and catch exceptions to detect malformed signatures (and add these to tests)
-// TODO: document: we use this so we can dynamically change what visitor is running
+
+/** TODO:doc: we use this so we can dynamically change what visitor is running.
+ *
+ * @property delegate TODO:doc
+ */
 @Suppress(
   "MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
@@ -119,6 +153,7 @@ class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : Sign
 // /////////////////////////////////////
 // Delegate visitors
 
+/** TODO:doc. */
 @Suppress(
   "ThrowingExceptionsWithoutMessageOrCause",
   "WRONG_OVERLOADING_FUNCTION_ARGUMENTS",
@@ -145,6 +180,10 @@ open class DelegateSignatureVisitor {
 
 typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
 
+/** TODO:doc.
+ *
+ * @property receiver TODO:doc
+ */
 @Suppress(
   "MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
@@ -160,6 +199,7 @@ class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisito
   override fun visitClassType(name: String): DelegateSignatureVisitor? = ClassTypeVisitor(receiver, name)
 }
 
+/** TODO:doc. */
 @Suppress(
   "MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
@@ -178,6 +218,7 @@ abstract class FormalTypeParameterVisitor : DelegateSignatureVisitor() {
     TypeSignatureVisitor { this.apply { typeParameters.last().getTypeBound().add(it.cast<ClassOrInterfaceType>("non-interface in interface bound")) } }
 }
 
+/** TODO:doc. */
 @Suppress("ktlint:standard:blank-line-before-declaration")
 class ClassSignatureVisitor : FormalTypeParameterVisitor() {
   var superclass = null as ClassOrInterfaceType?
@@ -189,6 +230,7 @@ class ClassSignatureVisitor : FormalTypeParameterVisitor() {
     TypeSignatureVisitor { this.apply { interfaces.add(it.cast<ClassOrInterfaceType>("non-class in interface")) } }
 }
 
+/** TODO:doc. */
 @Suppress(
   "MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
@@ -212,6 +254,12 @@ class MethodSignatureVisitor : FormalTypeParameterVisitor() {
 }
 
 // TODO: TypeReceiver -> ClassOrInterfaceTypeReceiver??
+
+/** TODO:doc.
+ *
+ * @param name TODO:doc
+ * @property receiver TODO:doc
+ */
 @Suppress(
   "WRONG_OVERLOADING_FUNCTION_ARGUMENTS",
   "ktlint:standard:blank-line-before-declaration",

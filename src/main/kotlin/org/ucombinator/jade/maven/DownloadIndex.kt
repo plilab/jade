@@ -13,9 +13,22 @@ import java.io.RandomAccessFile
 //     ls -l 'gs://maven-central/maven2/**'
 // TODO: trailing commas
 // TODO: search to "TODO" typos
+
+/** TODO:doc. */
 object DownloadIndex {
   private val log = Log {}
 
+  /** TODO:doc.
+   *
+   * @param indexFile TODO:doc
+   * @param authFile TODO:doc
+   * @param resume TODO:doc
+   * @param maxResults TODO:doc
+   * @param pageSize TODO:doc
+   * @param prefix TODO:doc
+   * @param startOffset TODO:doc
+   * @param flushFrequency TODO:doc
+   */
   fun main(
     indexFile: File,
     authFile: File? = null,
@@ -68,6 +81,11 @@ object DownloadIndex {
     }
   }
 
+  /** TODO:doc.
+   *
+   * @param file TODO:doc
+   * @return TODO:doc
+   */
   fun lastFullLine(file: File): String {
     RandomAccessFile(file, "rw").use { input ->
       fun newlineBefore(end: Long): Long? =

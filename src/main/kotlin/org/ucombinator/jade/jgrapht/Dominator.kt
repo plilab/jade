@@ -7,18 +7,57 @@ import org.ucombinator.jade.util.Errors
 
 typealias DominatorTree<V> = Graph<V, Dominator.Edge<V>>
 
+/** TODO:doc.
+ *
+ * @param V TODO:doc
+ * @property tree TODO:doc
+ * @property root TODO:doc
+ */
 data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
   private val lca = EulerTourRMQLCAFinder(tree, root)
 
+  /** TODO:doc.
+   *
+   * @param a TODO:doc
+   * @param b TODO:doc
+   * @return TODO:doc
+   */
   fun dominates(a: V, b: V): Boolean = lca.getLCA(a, b) == a
 
+  /** TODO:doc.
+   *
+   * @param a TODO:doc
+   * @param b TODO:doc
+   * @return TODO:doc
+   */
   fun dominatesSource(a: V, b: Dominator.Edge<V>): Boolean = lca.getLCA(a, tree.getEdgeSource(b)) == a
 
+  /** TODO:doc.
+   *
+   * @param a TODO:doc
+   * @param b TODO:doc
+   * @return TODO:doc
+   */
   fun dominatesTarget(a: V, b: Dominator.Edge<V>): Boolean = lca.getLCA(a, tree.getEdgeSource(b)) == a
 
+  /** TODO:doc.
+   *
+   * @param V TODO:doc
+   * @property source TODO:doc
+   * @property target TODO:doc
+   */
   final data class Edge<V>(val source: V, val target: V)
 
   companion object {
+    /** TODO:doc.
+     *
+     * @param V TODO:doc
+     * @param E TODO:doc
+     * @param tree TODO:doc
+     * @param v1 TODO:doc
+     * @param v2 TODO:doc
+     * @return TODO:doc
+     */
     fun <V, E> isDominator(tree: Graph<V, E>, v1: V, v2: V): Boolean =
       if (v1 == v2) {
         true
@@ -31,16 +70,36 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
         }
       }
 
-    // This implements the algorithm in the paper:
-    //   THOMAS LENGAUER and ROBERT ENDRE TARJAN. A Fast Algorithm for Finding Dominators in a Flowgraph.
-    //   ACM Transactions on Programming Languages and Systems, Vol. 1, No. 1, July 1979, Pages 121-141.
-    // Based on the code at https://gist.github.com/yuzeh/a5e6602dfdb0db3c2130c10537db54d7
-    // A useful description: https://eden.dei.uc.pt/~amilcar/pdf/CompilerInJava.pdf
+    /** TODO:doc.
+     *
+     * This implements the algorithm in the paper:
+     *   THOMAS LENGAUER and ROBERT ENDRE TARJAN. A Fast Algorithm for Finding Dominators in a Flowgraph.
+     *   ACM Transactions on Programming Languages and Systems, Vol. 1, No. 1, July 1979, Pages 121-141.
+     * Based on the code at https://gist.github.com/yuzeh/a5e6602dfdb0db3c2130c10537db54d7
+     * A useful description: https://eden.dei.uc.pt/~amilcar/pdf/CompilerInJava.pdf
+     *
+     * @param V TODO:doc
+     * @param E TODO:doc
+     * @param graph TODO:doc
+     * @param start TODO:doc
+     * @return TODO:doc
+     */
     @Suppress("LOCAL_VARIABLE_EARLY_DECLARATION")
     fun <V, E> dominatorTree(graph: Graph<V, E>, start: V): DominatorTree<V> {
       // The original algorithm dealt in Ints, not Vs.
+
+      /** TODO:doc.
+       *
+       * @param v TODO:doc
+       * @return TODO:doc
+       */
       fun successors(v: V): Iterable<V> = graph.outgoingEdgesOf(v).map(graph::getEdgeTarget)
 
+      /** TODO:doc.
+       *
+       * @param v TODO:doc
+       * @return TODO:doc
+       */
       fun predecessors(v: V): Iterable<V> = graph.incomingEdgesOf(v).map(graph::getEdgeSource)
 
       val numNodes: Int = graph.vertexSet().size
@@ -61,7 +120,13 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
       val samedom = mutableMapOf<V, V>() // The node determined to have same idom
       val best = mutableMapOf<V, V>() // The ancestor of V with lowest semidominator
 
-      // Finds the ancestor of v with the lowest semidominator. Uses path compression to keep runtime down.
+      /** TODO:doc.
+       *
+       * Finds the ancestor of v with the lowest semidominator. Uses path compression to keep runtime down.
+       *
+       * @param v TODO:doc
+       * @return TODO:doc
+       */
       fun ancestorWithLowestSemi(v: V): V {
         val a = ancestor.getValue(v) // ancestor initially means parent; only modified here
         if (ancestor.contains(a)) { // if defined
@@ -74,7 +139,14 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
         return best.getValue(v)
       }
 
-      // Helper function: p is parent of n
+      /** TODO:doc.
+       *
+       * Helper function: p is parent of n
+       *
+       * @param p TODO:doc
+       * @param n TODO:doc
+       * @return TODO:doc
+       */
       fun link(p: V, n: V) {
         ancestor.put(n, p)
         best.put(n, n)

@@ -12,19 +12,34 @@ import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.reflect.Modifier
 
-/**
- * Represents a single instruction in a method. Wrapper for `org.objectweb.asm.tree.AbstractInsnNode`.
+/** Represents a single instruction in a method. Wrapper for `org.objectweb.asm.tree.AbstractInsnNode`.
  *
  * @property method The method that this instruction belongs to.
  * @property insn The actual instruction.
  */
 data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable<Insn> {
+  /** TODO:doc.
+   *
+   * @return TODO:doc
+   */
   fun index(): Int = method.instructions.indexOf(insn)
 
+  /** TODO:doc.
+   *
+   * @return TODO:doc
+   */
   fun next(): Insn = Insn(method, insn.next)
 
+  /** TODO:doc.
+   *
+   * @return TODO:doc
+   */
   fun shortString(): String = InsnTextifier.shortString(method, insn)
 
+  /** TODO:doc.
+   *
+   * @return TODO:doc
+   */
   fun longString(): String = InsnTextifier.longString(method, insn)
 
   override fun toString(): String = InsnTextifier.longString(method, insn)
@@ -40,15 +55,37 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
     }
   }
 
+  /** TODO:doc. */
   companion object InsnTextifier : Textifier(Opcodes.ASM9) {
+    /** TODO:doc. */
     private val stringWriter = StringWriter()
+
+    /** TODO:doc. */
     private val stringBuffer = stringWriter.buffer
+
+    /** TODO:doc. */
     private val printWriter = PrintWriter(stringWriter)
+
+    /** TODO:doc. */
     private val methodVisitor = TraceMethodVisitor(this)
+
+    /** TODO:doc. */
     private var insnList: InsnList? = null
 
+    /** TODO:doc.
+     *
+     * @param method TODO:doc
+     * @param insn TODO:doc
+     * @return TODO:doc
+     */
     fun shortString(method: MethodNode, insn: AbstractInsnNode): String = shortString(method.instructions, insn)
 
+    /** TODO:doc.
+     *
+     * @param insnList TODO:doc (TODO: rename to insns?)
+     * @param insn TODO:doc
+     * @return TODO:doc
+     */
     fun shortString(insnList: InsnList, insn: AbstractInsnNode): String {
       // Ensure labels have the correct name
       if (insnList !== this.insnList) {
@@ -70,8 +107,20 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
       return string
     }
 
+    /** TODO:doc.
+     *
+     * @param method TODO:doc
+     * @param insn TODO:doc
+     * @return TODO:doc
+     */
     fun longString(method: MethodNode, insn: AbstractInsnNode): String = longString(method.instructions, insn)
 
+    /** TODO:doc.
+     *
+     * @param insnList TODO:doc (TODO: rename to insns?)
+     * @param insn TODO:doc
+     * @return TODO:doc
+     */
     fun longString(insnList: InsnList, insn: AbstractInsnNode): String {
       val index = insnList.indexOf(insn)
       val string = shortString(insnList, insn)
@@ -89,6 +138,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
       return "$index:$string ($typeString)"
     }
 
+    /** TODO:doc. */
     val typeToInt: Map<String, Int> = AbstractInsnNode::class.java.declaredFields.filter {
       // As of ASM 7.1, all final public static int members of AbstractInsNode are ones we want. Updates beware.
       it.type == Int::class.java && it.modifiers == (Modifier.FINAL or Modifier.PUBLIC or Modifier.STATIC)
@@ -97,6 +147,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
       Pair<String, Int>(it.name, x)
     }.toMap()
 
+    /** TODO:doc. */
     val intToType: Map<Int, String> = typeToInt.toList().map { it.second to it.first }.toMap()
   }
 }

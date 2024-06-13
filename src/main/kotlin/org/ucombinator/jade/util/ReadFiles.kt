@@ -51,6 +51,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 
+/** TODO:doc. */
 class ReadFiles {
   @Suppress("MAGIC_NUMBER", "VARIABLE_NAME_INCORRECT_FORMAT")
   companion object {
@@ -62,9 +63,17 @@ class ReadFiles {
 
   // TODO: keep list of already traversed paths
 
+  /** TODO:doc. */
   val result = mutableMapOf<List<File>, ByteArray>()
+
+  /** TODO:doc. */
   val seen = mutableSetOf<File>()
 
+  /** TODO:doc.
+   *
+   * @param file TODO:doc
+   * @return TODO:doc
+   */
   fun dir(file: File) {
     file
       .walk()
@@ -82,6 +91,12 @@ class ReadFiles {
       .forEach { name -> FileInputStream(name).use { read(listOf(name), it) } }
   }
 
+  /** TODO:doc.
+   *
+   * @param inputStream TODO:doc
+   * @param header TODO:doc
+   * @return TODO:doc
+   */
   fun headerMatches(inputStream: InputStream, header: List<Byte>): Boolean {
     require(inputStream.markSupported()) { "InputStream does not support mark: ${inputStream}" }
     inputStream.mark(header.size)
@@ -92,6 +107,13 @@ class ReadFiles {
   }
 
   // TODO: better handling of closing input streams
+
+  /** TODO:doc.
+   *
+   * @param name TODO:doc
+   * @param inputStream TODO:doc
+   * @return TODO:doc
+   */
   fun read(name: List<File>, inputStream: InputStream) {
     // We wrap in a BufferedInputStream to ensure we have support for `mark()` and `reset()`
     var input = BufferedInputStream(inputStream)

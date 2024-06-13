@@ -22,9 +22,18 @@ import kotlinx.coroutines.runBlocking
 // import javax.xml.parsers.DocumentBuilderFactory
 
 // See https://googleapis.dev/java/google-cloud-storage/latest/overview-summary.html
+
+/** TODO:doc. */
 object MavenRepo {
   private val log = Log {}
 
+  /** TODO:doc.
+   *
+   * @param files TODO:doc
+   * @param destDir TODO:doc
+   * @param authFile TODO:doc
+   * @return TODO:doc
+   */
   fun download(files: List<File>, destDir: File, authFile: File? = null) {
     log.info("Connecting to Maven repository")
     val bucket = GcsBucket.open(authFile)
@@ -52,6 +61,11 @@ object MavenRepo {
     }
   }
 
+  /** TODO:doc.
+   *
+   * @param element TODO:doc
+   * @return TODO:doc
+   */
   fun getCoord(element: Element): Triple<String?, String?, String?> {
     val groupId = element.getChildByTagName("groupId")?.textContent?.trim()
     val artifactId = element.getChildByTagName("artifactId")?.textContent?.trim()
@@ -59,6 +73,14 @@ object MavenRepo {
     return Triple(groupId, artifactId, version)
   }
 
+  /** TODO:doc.
+   *
+   * @param dir TODO:doc
+   * @param groupId TODO:doc
+   * @param artifactId TODO:doc
+   * @param version TODO:doc
+   * @return TODO:doc
+   */
   fun pomFile(dir: File, groupId: String, artifactId: String, version: String): File =
     File("$dir/${groupId.replace(".", "/")}/$artifactId/$version/$artifactId-$version.pom")
 
@@ -103,6 +125,13 @@ object MavenRepo {
   //   return Fiveple(groupId, artifactId, latest, release, versions)
   // }
 
+  /** TODO:doc.
+   *
+   * @param T TODO:doc
+   * @param indexFile TODO:doc
+   * @param block TODO:doc
+   * @return TODO:doc
+   */
   fun <T> listArtifacts(indexFile: File, block: (Sequence<Pair<String, String>>) -> T): T {
     fun f(line: String): Pair<String, String>? {
       val metadataSuffix = "/maven-metadata.xml"
@@ -118,6 +147,15 @@ object MavenRepo {
     return readIndex(indexFile, ::f, block)
   }
 
+  /** TODO:doc.
+   *
+   * @param S TODO:doc
+   * @param T TODO:doc
+   * @param indexFile TODO:doc
+   * @param f TODO:doc
+   * @param block TODO:doc
+   * @return TODO:doc
+   */
   fun <S, T> readIndex(indexFile: File, f: (String) -> S?, block: (Sequence<S>) -> T): T =
     indexFile.useLines { lines ->
       val data = lines.mapNotNull {

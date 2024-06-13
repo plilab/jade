@@ -24,8 +24,7 @@ typealias Nesting = List<Structure.Block>
 
 // TODO: rename Structure to CodeStructure or CodeNesting or BlockNesting
 
-/**
- * Represents the domination structure in the CFG.
+/** Represents the domination structure in the CFG.
  *
  * @property nesting A map that associates each instruction with its nesting level within the CFG.
  * @property backEdges A set of edges in the CFG that keeps track of back edges.
@@ -39,10 +38,17 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
   //      Query Space complexity: O(1)
   // TODO: name to NestingPath or StructurePath or BlockPath
 
+  /** TODO:doc.
+   *
+   * @property kind TODO:doc
+   * @property headInsn TODO:doc
+   */
   data class Block(val kind: Kind, val headInsn: Insn)
   // case class Block(kind: Kind, headInsn: Insn, var parent: Block = null)
 
+  /** TODO:doc. */
   sealed interface Kind { // TODO: structural type
+    /** TODO:doc. */
     object Loop : Kind
 
     // TODO:
@@ -51,15 +57,24 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
     // body: dominated by head but not handlers
     // finally: ignore until refactoring pass
     // try ResourceSpecification Block [Catches] [Finally]
+
+    /** TODO:doc. */
     object Exception : Kind
 
     // TODO:
     // Syncronized involves a try-finally pattern
     // case class Synchronized(value) extends Kind
+
+    /** TODO:doc. */
     object Synchronized : Kind
   }
 
   companion object {
+    /** TODO:doc.
+     *
+     * @param cfg TODO:doc
+     * @return TODO:doc
+     */
     fun make(cfg: ControlFlowGraph): Structure {
       // // This dummy works only on code with no loops, try/catches, or synchronized blocks
       // val backEdges = Set[ControlFlowGraph.Edge]()
@@ -122,6 +137,7 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
   }
 }
 
+/** TODO:doc. */
 object Exceptions {
   // def apply(cfg: ControlFlowGraph): Unit = {
   //   // TODO: check that handlers properly nest

@@ -20,15 +20,13 @@ import java.io.StringWriter
 // TODO: support stdin for files to decompile
 // TODO: skip over ct.jar as it is just signatures.  Maybe don't skip second load if it is better.
 
-/**
- * Handles processing files and decomposing them into classes and methods.  Processing of class-level constructs and
+/** Handles processing files and decomposing them into classes and methods.  Processing of class-level constructs and
  * method bodies are delegated to `DecompileClass` and `DecompileMethodBody` respectively.
  */
 object Decompile {
   private val log = Log {}
 
-  /**
-   * The main entry point for the decompiler. It takes a list of files as input and attempts to decompile them.
+  /** The main entry point for the decompiler. It takes a list of files as input and attempts to decompile them.
    *
    * @param files The list of files to decompile.
    * @param outputDir TODO
@@ -100,8 +98,7 @@ object Decompile {
     // }
   }
 
-  /**
-   * Decompiles a class file and returns the corresponding CompilationUnit.
+  /** Decompiles a class file and returns the corresponding CompilationUnit.
    *
    * @param classReader The ClassReader object for the class file
    * @return The decompiled CompilationUnit

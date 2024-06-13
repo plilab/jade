@@ -30,6 +30,7 @@ import org.ucombinator.jade.util.Errors
 // import com.github.javaparser.ast.type.Type as JavaParserType
 // import org.objectweb.asm.Type as AsmType
 
+/** TODO:doc. */
 object DecompileStatement {
   /*
   As long as one is jumping forwards, we can always encode as a sequence of breaks
@@ -39,6 +40,13 @@ object DecompileStatement {
   is it a loop head, which loop head is this part of
    */
 
+  /** TODO:doc.
+   *
+   * @param cfg TODO:doc
+   * @param ssa TODO:doc
+   * @param structure TODO:doc
+   * @return TODO:doc
+   */
   fun make(cfg: ControlFlowGraph, ssa: StaticSingleAssignment, structure: Structure): BlockStmt {
     // TODO: check for SCCs with multiple entry points
     // TODO: LocalClassDeclarationStmt

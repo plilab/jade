@@ -27,6 +27,10 @@ import org.ucombinator.jade.util.Log
 // TODO: have build generate documentation
 // TODO: throw ProgramResult(statusCode)
 
+/** TODO:doc.
+ *
+ * @param args TODO:doc
+ */
 fun main(args: Array<String>): Unit =
   Main().subcommands(
     BuildInfo(),
@@ -46,6 +50,8 @@ fun main(args: Array<String>): Unit =
 //   commandLine.setOverwrittenOptionsAllowed(true)
 //   showAtFileInUsageHelp = true,
 //   showEndOfOptionsDelimiterInUsageHelp = true,
+
+/** TODO:doc. */
 class Main : CliktCommand() {
   init {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
@@ -54,8 +60,10 @@ class Main : CliktCommand() {
     context { helpFormatter = { MordantHelpFormatter(it, showRequiredTag = true, showDefaultValues = true) } }
   }
 
+  /** TODO:doc. */
   data class LogSetting(val name: String, val lvl: Level)
 
+  /** TODO:doc. */
   val log: List<LogSetting> by option(
     metavar = "LEVEL",
     help = """
@@ -74,13 +82,16 @@ class Main : CliktCommand() {
     }
   }.default(listOf())
 
+  /** TODO:doc. */
   val logCallerDepth: Int by option(
     metavar = "DEPTH",
     help = "Number of callers to print after log messages",
   ).int().default(0)
 
+  /** TODO:doc. */
   val ioThreads: Int? by option().int()
 
+  /** TODO:doc. */
   val wait: Boolean by option(
     help = "Wait for input from user before running.  This allows time for a debugger to attach to this process."
   ).flag(

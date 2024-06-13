@@ -54,14 +54,21 @@ import org.ucombinator.jade.util.Tuples.Fourple
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 
-/**
- * Handles decompiling class-level constructs. It contains various methods that builds JavaParser abstract syntax tree
+/** Handles decompiling class-level constructs. It contains various methods that builds JavaParser abstract syntax tree
  * data structures from corresponding ASM data structures.
  */
 object DecompileClass {
+  /** TODO:doc. */
   @Suppress("VARIABLE_NAME_INCORRECT_FORMAT") val CLASS_NODE = object : DataKey<ClassNode>() {}
+
+  /** TODO:doc. */
   @Suppress("VARIABLE_NAME_INCORRECT_FORMAT") val METHOD_NODE = object : DataKey<MethodNode>() {}
 
+  /** TODO:doc.
+   *
+   * @param node TODO:doc
+   * @return TODO:doc
+   */
   fun decompileLiteral(node: Any?): Expression? =
     when (node) {
       // TODO: improve formatting of literals?
@@ -75,6 +82,11 @@ object DecompileClass {
       else -> Errors.unmatchedType(node)
     }
 
+  /** TODO:doc.
+   *
+   * @param t TODO:doc
+   * @return TODO:doc
+   */
   private fun typeToName(t: Type?): Name? =
     when (t) {
       null -> null
@@ -82,6 +94,11 @@ object DecompileClass {
       else -> throw Exception("failed to convert type $t to a name")
     }
 
+  /** TODO:doc.
+   *
+   * @param node TODO:doc
+   * @return TODO:doc
+   */
   private fun decompileAnnotation(node: AnnotationNode): AnnotationExpr {
     val name = typeToName(Descriptor.fieldDescriptor(node.desc))
     val vs = node.values
@@ -96,9 +113,19 @@ object DecompileClass {
     }
   }
 
+  /** TODO:doc.
+   *
+   * @param nodes TODO:doc
+   * @return TODO:doc
+   */
   private fun decompileAnnotations(vararg nodes: List<AnnotationNode>?): NodeList<AnnotationExpr> =
     NodeList<AnnotationExpr>(nodes.filterNotNull().flatMap { it.map(::decompileAnnotation) })
 
+  /** TODO:doc.
+   *
+   * @param node TODO:doc
+   * @return TODO:doc
+   */
   private fun decompileField(node: FieldNode): FieldDeclaration {
     // attrs (ignore?)
     val modifiers = Flag.toModifiers(Flag.fieldFlags(node.access))
@@ -118,6 +145,14 @@ object DecompileClass {
   }
 
   // TODO: flatten Pair<Pair<...>>
+
+  /** TODO:doc.
+   *
+   * @param method TODO:doc
+   * @param paramCount TODO:doc
+   * @param parameter TODO:doc
+   * @return TODO:doc
+   */
   private fun decompileParameter(
     method: MethodNode,
     paramCount: Int,
@@ -135,6 +170,13 @@ object DecompileClass {
     return Parameter(modifiers, annotations, type, isVarArgs, varArgsAnnotations, name)
   }
 
+  /** TODO:doc.
+   *
+   * @param desc TODO:doc
+   * @param sig TODO:doc
+   * @param params TODO:doc
+   * @return TODO:doc
+   */
   fun parameterTypes(desc: List<Type>, sig: List<Type>, params: List<ParameterNode>): List<Type> =
     when {
       desc.isNotEmpty() && params.isNotEmpty() &&
@@ -147,9 +189,22 @@ object DecompileClass {
       else -> throw Exception("failed to construct parameter types: $desc, $sig, $params")
     }
 
+  /** TODO:doc.
+   *
+   * @param A TODO:doc
+   * @param x TODO:doc
+   * @return TODO:doc
+   */
   fun <A> nullToSeq(x: List<A>?): List<A> = if (x == null) listOf() else x
 
   // TODO: rename node to methodNode
+
+  /** TODO:doc.
+   *
+   * @param classNode TODO:doc
+   * @param node TODO:doc
+   * @return TODO:doc
+   */
   fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
     // attr (ignore?)
     // instructions
@@ -228,6 +283,11 @@ object DecompileClass {
     return bodyDeclaration
   }
 
+  /** TODO:doc.
+   *
+   * @param node TODO:doc
+   * @return TODO:doc
+   */
   fun decompileClass(node: ClassNode): CompilationUnit {
     val comment = BlockComment(
       """

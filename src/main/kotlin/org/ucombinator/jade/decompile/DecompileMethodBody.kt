@@ -29,12 +29,16 @@ import org.ucombinator.jade.util.Log
 import java.io.PrintWriter
 import java.io.StringWriter
 
-/**
- * Handles decompiling method bodies within classes.
- */
+/** Handles decompiling method bodies within classes. */
 object DecompileMethodBody {
   private val log = Log {}
 
+  /** TODO:doc.
+   *
+   * @param message TODO:doc
+   * @param comment TODO:doc
+   * @return TODO:doc
+   */
   private fun stubBody(message: String, comment: BlockComment?): BlockStmt {
     val statements = NodeList<Statement>(
       JavaParser.setComment(
@@ -59,6 +63,11 @@ object DecompileMethodBody {
     return BlockStmt(statements)
   }
 
+  /** TODO:doc.
+   *
+   * @param node TODO:doc
+   * @return TODO:doc
+   */
   fun decompileBodyStub(node: MethodNode): BlockStmt {
     val instructions = run {
       if (node.instructions.size() == 0) {
@@ -87,6 +96,12 @@ object DecompileMethodBody {
     )
   }
 
+  /** TODO:doc.
+   *
+   * @param declaration TODO:doc
+   * @param body TODO:doc
+   * @return TODO:doc
+   */
   fun setDeclarationBody(declaration: BodyDeclaration<out BodyDeclaration<*>>, body: BlockStmt) {
     when (declaration) {
       is InitializerDeclaration -> declaration.setBody(body)
@@ -96,6 +111,13 @@ object DecompileMethodBody {
     }
   }
 
+  /** TODO:doc.
+   *
+   * @param classNode TODO:doc
+   * @param method TODO:doc
+   * @param declaration TODO:doc
+   * @return TODO:doc
+   */
   fun decompileBody(classNode: ClassNode, method: MethodNode, declaration: BodyDeclaration<out BodyDeclaration<*>>) {
     if (method.instructions.size() == 0) {
       // The method has no body as even methods with empty bodies have a `return` instruction

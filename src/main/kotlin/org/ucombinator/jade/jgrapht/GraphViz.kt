@@ -8,15 +8,36 @@ import org.ucombinator.jade.asm.Insn
 import java.io.StringWriter
 import java.io.Writer
 
+/** TODO:doc. */
 object GraphViz {
+  /** TODO:doc.
+   *
+   * @param string TODO:doc
+   * @return TODO:doc
+   */
   fun escape(string: String): String = string.replace("\\\\", """\\\\""").replace("\"", """\\"""")
 
+  /** TODO:doc.
+   *
+   * @param N TODO:doc (TODO: rename to V?)
+   * @param E TODO:doc
+   * @param graph TODO:doc
+   * @return TODO:doc
+   */
   fun <N, E> toString(graph: Graph<N, E>): String {
     val writer = StringWriter()
     print(writer, graph)
     return writer.toString()
   }
 
+  /** TODO:doc.
+   *
+   * @param N TODO:doc (TODO: rename to V?)
+   * @param E TODO:doc
+   * @param writer TODO:doc
+   * @param graph TODO:doc
+   * @return TODO:doc
+   */
   fun <N, E> print(writer: Writer, graph: Graph<N, E>) {
     val dotExporter = DOTExporter<N, E>()
     dotExporter.setVertexAttributeProvider {
@@ -25,12 +46,23 @@ object GraphViz {
     dotExporter.exportGraph(graph, writer)
   }
 
+  /** TODO:doc.
+   *
+   * @param graph TODO:doc
+   * @return TODO:doc
+   */
   fun toString(graph: ControlFlowGraph): String {
     val writer = StringWriter()
     print(writer, graph)
     return writer.toString()
   }
 
+  /** TODO:doc.
+   *
+   * @param writer TODO:doc
+   * @param graph TODO:doc
+   * @return TODO:doc
+   */
   fun print(writer: Writer, graph: ControlFlowGraph) {
     val dotExporter = DOTExporter<Insn, ControlFlowGraph.Edge>()
     dotExporter.setVertexAttributeProvider {
@@ -39,12 +71,35 @@ object GraphViz {
     dotExporter.exportGraph(graph.graph, writer)
   }
 
+  /** TODO:doc.
+   *
+   * @param V TODO:doc
+   * @param GE TODO:doc
+   * @param TE TODO:doc
+   * @param graph TODO:doc
+   * @param tree TODO:doc
+   * @param root TODO:doc
+   * @return TODO:doc
+   */
   fun <V, GE, TE> nestingTree(graph: Graph<V, GE>, tree: Graph<V, TE>, root: V): String {
     val writer = StringWriter()
     nestingTree(writer, graph, tree, root)
     return writer.toString()
   }
 
+  /** TODO:doc.
+   *
+   * @param V TODO:doc
+   * @param GE TODO:doc
+   * @param TE TODO:doc
+   * @param out TODO:doc
+   * @param graph TODO:doc
+   * @param tree TODO:doc
+   * @param root TODO:doc
+   * @param alternateBackgroundColor TODO:doc
+   * @param flatten TODO:doc
+   * @return TODO:doc
+   */
   fun <V, GE, TE> nestingTree(
     out: Writer,
     graph: Graph<V, GE>,

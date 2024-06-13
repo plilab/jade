@@ -59,29 +59,90 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 
+/** TODO:doc.
+ *
+ * @property artifact TODO:doc
+ */
 data class CaretInVersionException(val artifact: Artifact) :
   Exception("Caret in version for artifact $artifact")
+
+/** TODO:doc.
+ *
+ * @property artifact TODO:doc
+ */
 data class DollarInCoordinateException(val artifact: Artifact) :
   Exception("Dollar in coordinate $artifact")
+
+/** TODO:doc.
+ *
+ * @property groupIdPath TODO:doc
+ * @property artifactId TODO:doc
+ */
 data class DotInGroupIdException(val groupIdPath: String, val artifactId: String) :
   Exception("File path for groupId contains a dot: $groupIdPath (artifactId = $artifactId)")
+
+/** TODO:doc.
+ *
+ * @property file TODO:doc
+ */
 data class ModelParsingException(val file: File) :
   Exception("Could not parse POM file $file")
+
+/** TODO:doc.
+ *
+ * @property groupId TODO:doc
+ * @property artifactId TODO:doc
+ */
 data class NoVersioningTagException(val groupId: String, val artifactId: String) :
   Exception("No <versioning> tag in POM for $groupId:$artifactId")
+
+/** TODO:doc.
+ *
+ * @property groupId TODO:doc
+ * @property artifactId TODO:doc
+ */
 data class NoVersionsInVersioningTagException(val groupId: String, val artifactId: String) :
   Exception("No versions in POM for for $groupId:$artifactId")
+
+/** TODO:doc.
+ *
+ * @property groupId TODO:doc
+ * @property artifactId TODO:doc
+ */
 data class UnsolvableArtifactException(val groupId: String, val artifactId: String) :
   Exception("Skipped artifact with unsolvable dependencies: $groupId:$artifactId")
 // data class VersionDoesNotExistException(val artifact: Artifact, val e: ArtifactResolutionException) :
 //   Exception("Artifact version does not exist: $artifact", e)
+
+/** TODO:doc.
+ *
+ * @property artifact TODO:doc
+ * @property e TODO:doc
+ */
 data class ArtifactWriteLockException(val artifact: Artifact, val e: IllegalStateException) :
   Exception("Could not aquire write lock for $artifact", e)
+
+/** TODO:doc.
+ *
+ * @property metadata TODO:doc
+ * @property e TODO:doc
+ */
 data class MetadataWriteLockException(val metadata: Metadata, val e: IllegalStateException) :
   Exception("Could not aquire write lock for $metadata", e)
+
+/** TODO:doc.
+ *
+ * @property root TODO:doc
+ * @property dependency TODO:doc
+ */
 data class SystemDependencyException(val root: Artifact, val dependency: Artifact) :
   Exception("Dependency on system provided artifact $dependency by $root")
 
+/** TODO:doc.
+ *
+ * @property name TODO:doc
+ * @property stackTrace TODO:doc
+ */
 data class CachedException(val name: String, val stackTrace: String) :
   Exception("CachedException: $name\n$stackTrace")
 
@@ -91,7 +152,13 @@ data class CachedException(val name: String, val stackTrace: String) :
 
 // TODO: add sizes (from index) to starting and ending outputs
 
+/** TODO:doc. */
 object Exceptions {
+  /** TODO:doc.
+   *
+   * @param exception TODO:doc
+   * @return TODO:doc
+   */
   fun name(exception: Throwable): String {
     var e: Throwable? = exception
     var l = listOf<String>()
@@ -104,6 +171,11 @@ object Exceptions {
     return l.joinToString(":")
   }
 
+  /** TODO:doc.
+   *
+   * @param exception TODO:doc
+   * @return TODO:doc
+   */
   fun stackTrace(exception: Throwable): String {
     val stringWriter = StringWriter()
     val printWriter = PrintWriter(stringWriter)
@@ -115,16 +187,25 @@ object Exceptions {
 
 // TODO: Map vs LinkedHashMap
 // TODO: remove Fiveple
+
+/** TODO:doc. */
 typealias CacheKey<T> = Fiveple<String, String, String, String, T>
 
+/** TODO:doc.
+ *
+ * @param T TODO:doc
+ */
 class Cache<T> : LinkedHashMap<CacheKey<T>, Pair<String, String>>(16, 0.75F, true) {
   override fun removeEldestEntry(eldest: Map.Entry<CacheKey<T>, Pair<String, String>>): Boolean = this.size > 100_000
 }
 
 // TODO: NearestVersionSelectorWrapper (DependencyNodeWrapper) https://kotlinlang.org/docs/delegation.html
+
+/** TODO:doc. */
 class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
   private val log = Log {}
 
+  /** TODO:doc. */
   val cache = Collections.synchronizedMap(Cache<Nature>())
 
   override fun resolveMetadata(
@@ -132,6 +213,15 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
     requests: MutableCollection<out MetadataRequest>
   ): List<MetadataResult> = requests.map { resolveMetadata(session, it) }
 
+  /** TODO:doc.
+   *
+   * @param session TODO:doc
+   * @param request TODO:doc
+   * @return TODO:doc
+   * @throws CachedException TODO:doc
+   * @throws IllegalStateException TODO:doc
+   * @throws MetadataNotFoundException TODO:doc
+   */
   fun resolveMetadata(session: RepositorySystemSession, request: MetadataRequest): MetadataResult {
     // log.error { "META: $request" }
 
@@ -181,14 +271,18 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
   }
 
   companion object {
+    /** TODO:doc. */
     var defaultMetadataResolver: MetadataResolver? = null
   }
 }
 
+/** TODO:doc. */
 class CachingArtifactResolver : ArtifactResolver {
   private val log = Log {}
 
   // val exists = Collections.synchronizedMap(mutableMapOf<Artifact, Boolean>())
+
+  /** TODO:doc. */
   val cache = Collections.synchronizedMap(Cache<String>())
 
   override fun resolveArtifact(session: RepositorySystemSession, request: ArtifactRequest): ArtifactResult {
@@ -280,10 +374,19 @@ class CachingArtifactResolver : ArtifactResolver {
   ): List<ArtifactResult> = requests.map { resolveArtifact(session, it) }
 
   companion object {
+    /** TODO:doc. */
     var defaultArtifactResolver: ArtifactResolver? = null
   }
 }
 
+/** TODO:doc.
+ *
+ * @property indexFile TODO:doc
+ * @property localRepoDir TODO:doc
+ * @property jarListsDir TODO:doc
+ * @property reverse TODO:doc
+ * @property shuffle TODO:doc
+ */
 class DownloadMaven(
   val indexFile: File,
   val localRepoDir: File,
@@ -293,18 +396,37 @@ class DownloadMaven(
 ) {
   private val log = Log {}
 
+  /** TODO:doc. */
   val cachedFails = Collections.synchronizedMap(mutableMapOf<String, Int>())
+
+  /** TODO:doc. */
   val fails = Collections.synchronizedMap(mutableMapOf<String, Int>())
+
+  /** TODO:doc. */
   val aborts = Collections.synchronizedMap(mutableMapOf<String, Int>())
+
+  /** TODO:doc. */
   val running = Collections.synchronizedMap(mutableMapOf<Pair<String, String>, Long>())
+
+  /** TODO:doc. */
   val remaining = AtomicInteger()
 
+  /** TODO:doc. */
   val cachedPass = AtomicInteger()
+
+  /** TODO:doc. */
   val cachedFail = AtomicInteger()
+
+  /** TODO:doc. */
   val pass = AtomicInteger()
+
+  /** TODO:doc. */
   val fail = AtomicInteger()
+
+  /** TODO:doc. */
   val abort = AtomicInteger()
 
+  /** TODO:doc. */
   val locator = MavenRepositorySystemUtils.newServiceLocator().apply {
     addService(RepositoryConnectorFactory::class.java, BasicRepositoryConnectorFactory::class.java)
     addService(TransporterFactory::class.java, FileTransporterFactory::class.java)
@@ -316,10 +438,19 @@ class DownloadMaven(
     setService<MetadataResolver>(MetadataResolver::class.java, CachingMetadataResolver::class.java)
   }
 
+  /** TODO:doc. */
   val system = locator.getService(RepositorySystem::class.java)
+
+  /** TODO:doc. */
   val versionScheme = GenericVersionScheme() // locator.getService(VersionScheme::class.java)
+
+  /** TODO:doc. */
   val modelBuilder = DefaultModelBuilderFactory().newInstance() // TODO: locator
+
+  /** TODO:doc. */
   val localRepo = LocalRepository(localRepoDir)
+
+  /** TODO:doc. */
   val session = MavenRepositorySystemUtils.newSession().apply {
     localRepositoryManager = system.newLocalRepositoryManager(this, localRepo)
     val transformer =
@@ -327,16 +458,19 @@ class DownloadMaven(
     dependencyGraphTransformer = ChainedDependencyGraphTransformer(transformer, JavaDependencyContextRefiner())
   }
 
+  /** TODO:doc. */
   val remote = RemoteRepository
     .Builder("google-maven-central", "default", "https://maven-central-asia.storage-download.googleapis.com/maven2")
     .setPolicy(RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_NEVER, RepositoryPolicy.CHECKSUM_POLICY_FAIL))
     .build()
 
+  /** TODO:doc. */
   val authentication =
     AuthenticationBuilder()
       .addHostnameVerifier(NoopHostnameVerifier())
       .build()
 
+  /** TODO:doc. */
   @Suppress(
     "MaxLineLength",
     "ktlint:standard:comment-wrapping",
@@ -444,6 +578,7 @@ class DownloadMaven(
       .build()
   }
 
+  /** TODO:doc. */
   fun run() {
     Runtime.getRuntime().addShutdownHook(
       Thread {
@@ -539,8 +674,20 @@ class DownloadMaven(
   }
   // TODO: clean repo .lock and .part files before starting
 
+  /** TODO:doc.
+   *
+   * @param startTime TODO:doc
+   * @return TODO:doc
+   */
   fun time(startTime: Long): String = "%.2f".format((System.nanoTime() - startTime).toDouble() / 1e9)
 
+  /** TODO:doc.
+   *
+   * @param groupIdPath TODO:doc
+   * @param artifactId TODO:doc
+   * @param jarListFile TODO:doc
+   * @throws DotInGroupIdException TODO:doc
+   */
   fun collectDependencies(groupIdPath: String, artifactId: String, jarListFile: File) {
     val groupId = groupIdPath.replace('/', '.')
     val name = "$groupId:$artifactId"
@@ -602,6 +749,11 @@ class DownloadMaven(
     }
   }
 
+  /** TODO:doc.
+   *
+   * @param e TODO:doc
+   * @return TODO:doc
+   */
   fun isChecksumFailure(e: Throwable?): Boolean =
     when (e) {
       null -> false
@@ -610,6 +762,11 @@ class DownloadMaven(
       else -> isChecksumFailure(e.cause)
     }
 
+  /** TODO:doc.
+   *
+   * @param e TODO:doc
+   * @return TODO:doc
+   */
   fun isFailure(e: Throwable): Boolean =
     isChecksumFailure(e) ||
       isA(
@@ -649,6 +806,14 @@ class DownloadMaven(
       e is SystemDependencyException
       // e is VersionDoesNotExistException // TODO
 
+  /** TODO:doc.
+   *
+   * @param groupId TODO:doc
+   * @param artifactId TODO:doc
+   * @return TODO:doc
+   * @throws NoVersioningTagException TODO:doc
+   * @throws NoVersionsInVersioningTagException TODO:doc
+   */
   fun getVersion(groupId: String, artifactId: String): String {
     val metadata = DefaultMetadata(groupId, artifactId, null, "maven-metadata.xml", Metadata.Nature.RELEASE)
     val metadataRequest = MetadataRequest(metadata, remote, null)
@@ -668,6 +833,14 @@ class DownloadMaven(
   }
 
   // TODO: classifier?
+
+  /** TODO:doc.
+   *
+   * @param groupId TODO:doc
+   * @param artifactId TODO:doc
+   * @param version TODO:doc
+   * @return TODO:doc
+   */
   fun getArtifactDescriptor(groupId: String, artifactId: String, version: String): ArtifactDescriptorResult {
     val artifact = DefaultArtifact(groupId, artifactId, "pom", version)
     // val artifactRequest = ArtifactRequest(artifact, listOf(remote), null)
@@ -680,11 +853,26 @@ class DownloadMaven(
     // TODO: try local first then log if having to hit remote
   }
 
+  /** TODO:doc.
+   *
+   * @param file TODO:doc
+   * @return TODO:doc
+   */
   fun getModel(file: File): Model =
     modelBuilder.buildRawModel(file, ModelBuildingRequest.VALIDATION_LEVEL_MINIMAL, false).get()
       ?: throw ModelParsingException(file)
 
   // TODO: rename extension to packaging
+
+  /** TODO:doc.
+   *
+   * @param groupId TODO:doc
+   * @param artifactId TODO:doc
+   * @param classifier TODO:doc
+   * @param extension TODO:doc
+   * @param version TODO:doc
+   * @return TODO:doc
+   */
   fun getArtifact(
     groupId: String,
     artifactId: String,
@@ -749,6 +937,12 @@ class DownloadMaven(
     throw firstException!!
   }
 
+  /** TODO:doc.
+   *
+   * @param descriptorResult TODO:doc
+   * @return TODO:doc
+   * @throws UnsolvableArtifactException TODO:doc
+   */
   fun getDependencyTree(descriptorResult: ArtifactDescriptorResult): DependencyNode {
     if (unsolvable(descriptorResult.artifact.groupId, descriptorResult.artifact.artifactId)) {
       throw UnsolvableArtifactException(descriptorResult.artifact.groupId, descriptorResult.artifact.artifactId)
@@ -766,6 +960,12 @@ class DownloadMaven(
     return collectResult.getRoot()
   }
 
+  /** TODO:doc.
+   *
+   * @param root TODO:doc
+   * @return TODO:doc
+   * @throws SystemDependencyException TODO:doc
+   */
   fun getDependencyList(root: DependencyNode): List<Fiveple<String, String, String, String, String>> {
     // root.accept(ConsoleDependencyGraphDumper())
     var artifactRequests = listOf<Fiveple<String, String, String, String, String>>()
@@ -828,9 +1028,20 @@ class DownloadMaven(
     return artifactRequests
   }
 
+  /** TODO:doc.
+   *
+   * @param artifactRequests TODO:doc
+   * @return TODO:doc
+   */
   fun downloadDependencies(artifactRequests: List<CacheKey<String>>): List<ArtifactResult> =
     artifactRequests.map { getArtifact(it._1, it._2, it._3, it._4, it._5) }
 
+  /** TODO:doc.
+   *
+   * @param artifactResults TODO:doc
+   * @param jarListFile TODO:doc
+   * @return TODO:doc
+   */
   fun writeJarList(artifactResults: List<ArtifactResult>, jarListFile: File) {
     val builder = StringBuilder()
     for (result in artifactResults) {
@@ -849,6 +1060,11 @@ class DownloadMaven(
     }
   }
 
+  /** TODO:doc.
+   *
+   * @param exception TODO:doc
+   * @return TODO:doc
+   */
   fun exceptionName(exception: Throwable): String {
     var e: Throwable? = exception
     var l = listOf<String>()
@@ -861,6 +1077,12 @@ class DownloadMaven(
     return l.joinToString(":")
   }
 
+  /** TODO:doc.
+   *
+   * @param exception TODO:doc
+   * @param classes TODO:doc
+   * @return TODO:doc
+   */
   fun isA(exception: Throwable?, vararg classes: kotlin.reflect.KClass<*>): Boolean {
     var e: Throwable? = exception
     while (e is org.apache.maven.model.resolution.UnresolvableModelException ||
@@ -878,6 +1100,7 @@ class DownloadMaven(
     return e == null
   }
 
+  /** TODO:doc. */
   private val unsolvableOrgWebjarsNpmArtifacts = listOf(
     "3dmol",
     "admin-lte",
@@ -1077,6 +1300,12 @@ class DownloadMaven(
     "wrtc",
   )
 
+  /** TODO:doc.
+   *
+   * @param groupId TODO:doc
+   * @param artifactId TODO:doc
+   * @return TODO:doc
+   */
   fun unsolvable(groupId: String, artifactId: String): Boolean =
     groupId == "org.webjars.npm" && unsolvableOrgWebjarsNpmArtifacts.contains(artifactId)
 }

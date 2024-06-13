@@ -10,8 +10,7 @@ import org.objectweb.asm.tree.analysis.Frame
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.asm.TypedBasicInterpreter
 
-/**
- * Represents a control flow graph for a method.
+/** Represents a control flow graph for a method.
  *
  * @property entry The entry instruction of the control flow graph.
  * @property graph Basic control flow graph version.
@@ -24,9 +23,20 @@ data class ControlFlowGraph(
   val graphWithExceptions: Graph<Insn, Edge>,
   val frames: Array<Frame<BasicValue>>,
 ) {
+  /** TODO:doc.
+   *
+   * @property source TODO:doc
+   * @property target TODO:doc
+   */
   final data class Edge(val source: Insn, val target: Insn)
 
   companion object {
+    /** TODO:doc.
+     *
+     * @param owner TODO:doc
+     * @param method TODO:doc
+     * @return TODO:doc
+     */
     fun make(owner: String, method: MethodNode): ControlFlowGraph {
       val graph = DirectedPseudograph<Insn, Edge>(Edge::class.java)
       for (i in method.instructions.toArray()) {
@@ -49,6 +59,11 @@ data class ControlFlowGraph(
   }
 }
 
+/** TODO:doc.
+ *
+ * @property method TODO:doc
+ * @property graph TODO:doc
+ */
 private class ControlFlowGraphAnalyzer(
   val method: MethodNode,
   val graph: DirectedPseudograph<Insn, ControlFlowGraph.Edge>,

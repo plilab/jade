@@ -69,6 +69,7 @@ Generators
 typealias JPStatement = com.github.javaparser.ast.stmt.Statement
 typealias JPExpression = com.github.javaparser.ast.expr.Expression
 
+/** TODO:doc. */
 @Suppress(
   "MaxLineLength",
   "ktlint:standard:blank-line-before-declaration",
@@ -77,19 +78,88 @@ typealias JPExpression = com.github.javaparser.ast.expr.Expression
   "ktlint:standard:statement-wrapping",
 )
 sealed class DecompiledInsn {
+  /** TODO:doc. */
   open val usesNextInsn: Boolean = true
+
+  /** TODO:doc.
+   *
+   * @property statement TODO:doc
+   * @property usesNextInsn TODO:doc
+   */
   data class Statement(val statement: JPStatement, override val usesNextInsn: Boolean = true) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property expression TODO:doc
+   */
   data class Expression(val expression: JPExpression) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property insn TODO:doc
+   */
   data class StackOperation(val insn: AbstractInsnNode) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property labelNode TODO:doc
+   * @property condition TODO:doc
+   */
   data class If(val labelNode: LabelNode, val condition: JPExpression) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property labelNode TODO:doc
+   */
   data class Goto(val labelNode: LabelNode) : DecompiledInsn() { override val usesNextInsn = false }
+
+  /** TODO:doc.
+   *
+   * @property labels TODO:doc
+   * @property default TODO:doc
+   */
   data class Switch(val labels: Map<Int, LabelNode>, val default: LabelNode) : DecompiledInsn() { override val usesNextInsn = false }
+
+  /** TODO:doc.
+   *
+   * @property descriptor TODO:doc
+   */
   data class New(val descriptor: ClassOrInterfaceType) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property expression TODO:doc
+   */
   data class MonitorEnter(val expression: JPExpression) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property expression TODO:doc
+   */
   data class MonitorExit(val expression: JPExpression) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property node TODO:doc
+   */
   data class Label(val node: LabelNode) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property node TODO:doc
+   */
   data class Frame(val node: FrameNode) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property node TODO:doc
+   */
   data class LineNumber(val node: LineNumberNode) : DecompiledInsn()
+
+  /** TODO:doc.
+   *
+   * @property insn TODO:doc
+   */
   data class Unsupported(val insn: AbstractInsnNode) : DecompiledInsn()
 }
 
@@ -101,12 +171,21 @@ sealed class DecompiledInsn {
 // TODO: use `|` patterns
 // TODO: UnaryExpr.Operator.BITWISE_COMPLEMENT: 0: iload_1; 1: iconst_m1; 2: ixor
 
-/**
- * Handles decompiling individual instructions.
- */
+/** Handles decompiling individual instructions. */
 object DecompileInsn {
+  /** TODO:doc.
+   *
+   * @param variable TODO:doc
+   * @return TODO:doc
+   */
   fun decompileVar(variable: Var): NameExpr = NameExpr(variable.name)
 
+  /** TODO:doc.
+   *
+   * @param retVar TODO:doc
+   * @param expression TODO:doc
+   * @return TODO:doc
+   */
   fun decompileExpression(retVar: Var?, expression: Expression) =
     if (retVar == null) {
       ExpressionStmt(expression)
@@ -114,6 +193,12 @@ object DecompileInsn {
       ExpressionStmt(AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN))
     }
 
+  /** TODO:doc.
+   *
+   * @param retVar TODO:doc
+   * @param insn TODO:doc
+   * @return TODO:doc
+   */
   fun decompileInsn(retVar: Var?, insn: DecompiledInsn): Statement =
     @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "ktlint:standard:no-multi-spaces")
     when (insn) {
@@ -132,6 +217,12 @@ object DecompileInsn {
       is DecompiledInsn.Unsupported    -> JavaParser.noop("Unsupported: $insn")
     }
 
+  /** TODO:doc.
+   *
+   * @param node TODO:doc
+   * @param ssa TODO:doc
+   * @return TODO:doc
+   */
   @Suppress("MORE_THAN_ONE_STATEMENT_PER_LINE", "TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "MaxLineLength")
   fun decompileInsn(node: AbstractInsnNode, ssa: StaticSingleAssignment): Pair<Var?, DecompiledInsn> {
     val (retVar, argVars) = ssa.insnVars.getOrElse(node, { Pair(null, listOf()) })

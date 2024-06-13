@@ -14,11 +14,22 @@ import ch.qos.logback.classic.Logger as LogbackLogger
 import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as OldHighlightingCompositeConverter
 import org.slf4j.Logger as Slf4jLogger
 
+/** TODO:doc. */
 object Log {
   private val log = Log {} // TODO: lazy?
 
+  /** TODO:doc.
+   *
+   * @param func TODO:doc
+   * @return TODO:doc
+   */
   operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
 
+  /** TODO:doc.
+   *
+   * @param name TODO:doc
+   * @return TODO:doc
+   */
   fun getLog(name: String): LogbackLogger {
     val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name
     return LoggerFactory.getLogger(modifiedName) as LogbackLogger
@@ -34,6 +45,10 @@ object Log {
   //   ScalaLogger(LoggerFactory.getLogger(log.underlying.getName + "." + name))
   // }
 
+  /** TODO:doc.
+   *
+   * @return TODO:doc
+   */
   fun loggers(): List<LogbackLogger> {
     // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
     // Note: toURI is required in order to handle special characters
@@ -54,7 +69,9 @@ object Log {
   }
 }
 
+/** TODO:doc. */
 class RelativeLoggerConverter : ClassicConverter() {
+  /** TODO:doc. */
   val prefix: String by lazy {
     val options = this.optionList
     check(options != null) { "Options not set" }
@@ -68,9 +85,13 @@ class RelativeLoggerConverter : ClassicConverter() {
   }
 }
 
+/** TODO:doc. */
 class DynamicCallerConverter : ClassicConverter() {
   companion object {
+    /** TODO:doc. */
     var depthStart = 0
+
+    /** TODO:doc. */
     var depthEnd = 0
   }
 
@@ -94,6 +115,7 @@ class DynamicCallerConverter : ClassicConverter() {
   }
 }
 
+/** TODO:doc. */
 class HighlightingCompositeConverter : OldHighlightingCompositeConverter() {
   protected override fun getForegroundColorCode(event: ILoggingEvent): String =
     when (event.level.toInt()) {

@@ -15,8 +15,7 @@ import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.asm.TypedBasicInterpreter
 import org.ucombinator.jade.util.Errors
 
-/**
- * Represents the result of static single assignment (SSA) analysis.
+/** Represents the result of static single assignment (SSA) analysis.
  *
  * @property frames An array of ASM `Frame` objects representing states of variables.
  * @property insnVars A map that represents instruction nodes. Its keys are the instruction nodes and values are a pair
@@ -30,8 +29,7 @@ data class StaticSingleAssignment(
   val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>, // TODO: change Set to Map?
 ) {
   companion object {
-    /**
-     * Performs a static single assignment (SSA) analysis on the given method and returns the result.
+    /** Performs a static single assignment (SSA) analysis on the given method and returns the result.
      *
      * @param owner The name of the class that owns the method.
      * @param method The method to analyze.
@@ -65,6 +63,11 @@ data class StaticSingleAssignment(
 
 // TODO: maybe handle `this` var specially (i.e., no phivar)
 // TODO: extend TypedBasicInterpreter?
+
+/** TODO:doc.
+ *
+ * @property method TODO:doc
+ */
 private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.ASM9) {
   // Variables to be put in output
   val insnVars = mutableMapOf<AbstractInsnNode, Pair<Var, List<Var>>>()
@@ -75,6 +78,13 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   var originInsn: AbstractInsnNode? = null // For `merge`
   var returnTypeValue: Var.Return? = null // There is no getReturn method on frames, so we save it here
 
+  /** TODO:doc.
+   *
+   * @param key TODO:doc
+   * @param insn TODO:doc
+   * @param value TODO:doc
+   * @param ignoreNull TODO:doc
+   */
   fun phiInputs(key: Var.Phi, insn: AbstractInsnNode?, value: Var?, ignoreNull: Boolean = false) {
     if (!ignoreNull || value != null) {
       val usedKey = key.change()
@@ -108,6 +118,13 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
       Insn(method, tryCatchBlockNode.handler)
     )
 
+  /** TODO:doc.
+   *
+   * @param insn TODO:doc
+   * @param args TODO:doc
+   * @param ret TODO:doc
+   * @return TODO:doc
+   */
   fun record(insn: AbstractInsnNode, args: List<Var>, ret: Var): Var {
     this.insnVars.put(insn, Pair(ret, args))
     return ret
@@ -197,6 +214,11 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   }
 }
 
+/** TODO:doc.
+ *
+ * @property cfg TODO:doc
+ * @property interpreter TODO:doc
+ */
 private class SsaAnalyzer(val cfg: ControlFlowGraph, val interpreter: SsaInterpreter) : Analyzer<Var>(interpreter) {
   override fun init(owner: String, method: MethodNode) {
     // We override this method because it runs near the start of `Analyzer.analyze`

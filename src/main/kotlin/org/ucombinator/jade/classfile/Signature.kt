@@ -131,7 +131,7 @@ object Signature {
   "ktlint:standard:statement-wrapping",
   "ktlint:standard:wrapping",
 )
-class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : SignatureVisitor(Opcodes.ASM9) {
+private class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : SignatureVisitor(Opcodes.ASM9) {
   override fun visitFormalTypeParameter(name: String) { delegate = delegate!!.visitFormalTypeParameter(name) }
   override fun visitClassBound(): SignatureVisitor { delegate = delegate!!.visitClassBound(); return this }
   override fun visitInterfaceBound(): SignatureVisitor { delegate = delegate!!.visitInterfaceBound(); return this }
@@ -155,11 +155,12 @@ class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?) : Sign
 
 /** TODO:doc. */
 @Suppress(
+  "MISSING_KDOC_ON_FUNCTION",
   "ThrowingExceptionsWithoutMessageOrCause",
   "WRONG_OVERLOADING_FUNCTION_ARGUMENTS",
   "ktlint:standard:blank-line-before-declaration",
 )
-open class DelegateSignatureVisitor {
+private open class DelegateSignatureVisitor {
   open fun visitFormalTypeParameter(name: String): DelegateSignatureVisitor? = throw IllegalArgumentException()
   open fun visitClassBound(): DelegateSignatureVisitor? = throw IllegalArgumentException()
   open fun visitInterfaceBound(): DelegateSignatureVisitor? = throw IllegalArgumentException()
@@ -178,7 +179,7 @@ open class DelegateSignatureVisitor {
   open fun visitEnd(): DelegateSignatureVisitor? = throw IllegalArgumentException()
 }
 
-typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
+private typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
 
 /** TODO:doc.
  *
@@ -192,11 +193,11 @@ typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
   "ktlint:standard:max-line-length",
   "ktlint:standard:parameter-list-wrapping",
 )
-class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisitor() {
+private class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisitor() {
   override fun visitBaseType(descriptor: Char): DelegateSignatureVisitor? = receiver(descriptorToType(descriptor))
   override fun visitTypeVariable(name: String): DelegateSignatureVisitor? = receiver(TypeParameter(ClassName.identifier(name)))
   override fun visitArrayType(): DelegateSignatureVisitor? = TypeSignatureVisitor { receiver(ArrayType(it)) }
-  override fun visitClassType(name: String): DelegateSignatureVisitor? = ClassTypeVisitor(receiver, name)
+  override fun visitClassType(name: String): DelegateSignatureVisitor? = ClassTypeVisitor(name, receiver)
 }
 
 /** TODO:doc. */
@@ -207,7 +208,7 @@ class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatureVisito
   "ktlint:standard:max-line-length",
   "ktlint:standard:wrapping",
 )
-abstract class FormalTypeParameterVisitor : DelegateSignatureVisitor() {
+private abstract class FormalTypeParameterVisitor : DelegateSignatureVisitor() {
   val typeParameters = mutableListOf<TypeParameter>()
 
   override fun visitFormalTypeParameter(name: String): DelegateSignatureVisitor? =
@@ -220,7 +221,7 @@ abstract class FormalTypeParameterVisitor : DelegateSignatureVisitor() {
 
 /** TODO:doc. */
 @Suppress("ktlint:standard:blank-line-before-declaration")
-class ClassSignatureVisitor : FormalTypeParameterVisitor() {
+private class ClassSignatureVisitor : FormalTypeParameterVisitor() {
   var superclass = null as ClassOrInterfaceType?
   val interfaces = mutableListOf<ClassOrInterfaceType>()
 
@@ -240,7 +241,7 @@ class ClassSignatureVisitor : FormalTypeParameterVisitor() {
   "ktlint:standard:statement-wrapping",
   "ktlint:standard:wrapping",
 )
-class MethodSignatureVisitor : FormalTypeParameterVisitor() {
+private class MethodSignatureVisitor : FormalTypeParameterVisitor() {
   val parameterTypes = mutableListOf<Type>()
   var returnType = null as Type?
   val exceptionTypes = mutableListOf<ReferenceType>()
@@ -265,7 +266,7 @@ class MethodSignatureVisitor : FormalTypeParameterVisitor() {
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:function-signature",
 )
-class ClassTypeVisitor(val receiver: TypeReceiver, name: String) : DelegateSignatureVisitor() {
+private class ClassTypeVisitor(name: String, val receiver: TypeReceiver) : DelegateSignatureVisitor() {
   var result = ClassName.classNameType(name)
 
   override fun visitInnerClassType(name: String): DelegateSignatureVisitor? =

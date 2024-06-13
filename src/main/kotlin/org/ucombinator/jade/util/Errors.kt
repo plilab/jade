@@ -22,5 +22,5 @@ object Errors {
    * @return TODO:doc
    */
   @Suppress("TooGenericExceptionThrown")
-  fun fatal(msg: String): Nothing = throw Exception("Fatal error: ${msg}")
+  fun fatal(message: String): Nothing = throw Exception("Fatal error: ${message}")
 }

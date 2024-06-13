@@ -21,7 +21,7 @@ ktlint_standard_comment-wrapping = disabled
 ktlint_standard_multiline-expression-wrapping = disabled
 # Allow blank lines, so we can logically group list elements
 ktlint_standard_no-blank-line-in-list = disabled
-# We actually prefer `${x}` over `$x`
+# We prefer `${x}` over `$x`
 ktlint_standard_string-template = disabled
 # Do not require newline before multi-line string
 ktlint_standard_string-template-indent = disabled

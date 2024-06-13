@@ -121,14 +121,14 @@ object DecompileMethodBody {
   fun decompileBody(classNode: ClassNode, method: MethodNode, declaration: BodyDeclaration<out BodyDeclaration<*>>) {
     if (method.instructions.size() == 0) {
       // The method has no body as even methods with empty bodies have a `return` instruction
-      this.log.debug("**** Method is has no body ****")
+      log.debug("**** Method is has no body ****")
 
       fun warningBody(warning: String): BlockStmt =
         if (false) { // TODO: option for fatal error vs uncompilable body vs compilable body
-          this.log.error(warning)
+          log.error(warning)
           Errors.fatal(warning) // TODO
         } else {
-          this.log.warn(warning)
+          log.warn(warning)
           stubBody(warning, null)
         }
 
@@ -159,8 +159,8 @@ object DecompileMethodBody {
         else -> Errors.unmatchedType(declaration)
       }
     } else {
-      this.log.debug("**** Method has a body with ${method.instructions.size()} instructions ****")
-      this.log.debug("**** ControlFlowGraph ****")
+      log.debug("**** Method has a body with ${method.instructions.size()} instructions ****")
+      log.debug("**** ControlFlowGraph ****")
 
       // loop via dominators (exit vs return is unclear)
       // if
@@ -170,47 +170,45 @@ object DecompileMethodBody {
 
       val cfg = ControlFlowGraph.make(classNode.name, method)
 
-      this.log.debug("++++ cfg ++++\n${GraphViz.toString(cfg)}")
+      log.debug("++++ cfg ++++\n${GraphViz.toString(cfg)}")
       for (v in cfg.graph.vertexSet()) {
-        this.log.debug("v: ${cfg.graph.incomingEdgesOf(v).size}: $v")
+        log.debug("v: ${cfg.graph.incomingEdgesOf(v).size}: $v")
       }
 
-      this.log.debug("**** SSA ****")
+      log.debug("**** SSA ****")
       val ssa = StaticSingleAssignment.make(classNode.name, method, cfg)
 
-      this.log.debug("++++ frames: ${ssa.frames.size} ++++")
+      log.debug("++++ frames: ${ssa.frames.size} ++++")
       for (i in 0 until method.instructions.size()) {
-        this.log.debug("frame($i): ${ssa.frames[i]}")
+        log.debug("frame($i): ${ssa.frames[i]}")
       }
 
-      this.log.debug("++++ results and arguments ++++")
+      log.debug("++++ results and arguments ++++")
       for (i in 0 until method.instructions.size()) {
         val insn = method.instructions[i]
-        this.log.debug("args($i): ${Insn.longString(method, insn)} --- ${ssa.insnVars[insn]}")
+        log.debug("args($i): ${Insn.longString(method, insn)} --- ${ssa.insnVars[insn]}")
       }
 
-      this.log.debug("++++ ssa map ++++")
+      log.debug("++++ ssa map ++++")
       for ((key, value) in ssa.phiInputs) {
-        this.log.debug("ssa: $key -> $value")
+        log.debug("ssa: $key -> $value")
       }
 
-      this.log.debug("**** Dominators ****")
+      log.debug("**** Dominators ****")
       val doms = Dominator.dominatorTree(cfg.graphWithExceptions, cfg.entry)
 
-      this.log.debug("++++ dominator tree ++++\n${GraphViz.toString(doms)}")
+      log.debug("++++ dominator tree ++++\n${GraphViz.toString(doms)}")
 
-      this.log.debug(
-        "++++ dominator nesting ++++\n${GraphViz.nestingTree(cfg.graphWithExceptions, doms, cfg.entry)}"
-      )
+      log.debug("++++ dominator nesting ++++\n${GraphViz.nestingTree(cfg.graphWithExceptions, doms, cfg.entry)}")
 
-      // this.log.debug("**** Structure ****")
+      // log.debug("**** Structure ****")
       // val structure = Structure.make(cfg)
 
       // TODO: JEP 334: JVM Constants API: https://openjdk.java.net/jeps/334
 
-      // this.log.debug("**** Statement ****")
+      // log.debug("**** Statement ****")
       // val statement = DecompileStatement.make(cfg, ssa, structure)
-      // this.log.debug(statement.toString())
+      // log.debug(statement.toString())
       // setDeclarationBody(declaration, statement)
 
       // var statements = List[Statement]()
@@ -218,7 +216,7 @@ object DecompileMethodBody {
       //   val (retVal, decompiled) = DecompileInsn.decompileInsn(insn, ssa)
       //   statements = statements :+ DecompileInsn.decompileInsn(retVal, decompiled)
       // }
-      // this.log.debug("++++ statements ++++\n" + statements.mkString("\n"))
+      // log.debug("++++ statements ++++\n" + statements.mkString("\n"))
       // setDeclarationBody(declaration, new BlockStmt(new NodeList[Statement](statements.asJava)))
     }
   }

@@ -23,34 +23,34 @@ object ClassName {
 
   /** TODO:doc.
    *
-   * @param string TODO:doc
+   * @param name TODO:doc
    * @return TODO:doc
    */
-  fun identifiers(string: String): List<String> = string.split('/').map(::identifier)
+  fun identifiers(name: String): List<String> = name.split('/').map(::identifier)
 
   /** TODO:doc.
    *
-   * @param string TODO:doc
+   * @param name TODO:doc
    * @return TODO:doc
    */
-  fun className(string: String): Name = identifiers(string).fold(null, ::Name)!!
+  fun className(name: String): Name = identifiers(name).fold(null, ::Name)!!
 
   /** TODO:doc.
    *
-   * @param string TODO:doc
+   * @param name TODO:doc
    * @return TODO:doc
    */
-  fun classNameExpr(string: String): Expression =
-    identifiers(string).map(::SimpleName).fold(null as Expression?) { qualifier, simpleName ->
+  fun classNameExpr(name: String): Expression =
+    identifiers(name).map(::SimpleName).fold(null as Expression?) { qualifier, simpleName ->
       if (qualifier == null) NameExpr(simpleName) else FieldAccessExpr(qualifier, /*TODO*/ NodeList(), simpleName)
     }!!
 
   /** TODO:doc.
    *
-   * @param string TODO:doc
+   * @param name TODO:doc
    * @return TODO:doc
    */
-  fun classNameType(string: String): ClassOrInterfaceType = classNameType(className(string))
+  fun classNameType(name: String): ClassOrInterfaceType = classNameType(className(name))
 
   /** TODO:doc.
    *

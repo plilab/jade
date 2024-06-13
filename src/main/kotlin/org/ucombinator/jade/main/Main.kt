@@ -16,9 +16,8 @@ import com.github.ajalt.clikt.parameters.types.int
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
 
-// TODO: analysis to ensure using only the canonical constructor (helps with
-// detecting forward version changes) (as a compiler plugin?)
-
+// TODO: analysis to ensure using only the canonical constructor (helps with detecting forward version changes) (as a
+//   compiler plugin?)
 // TODO: exit code list
 // TODO: exit codes
 // TODO: description
@@ -61,10 +60,7 @@ class Main : CliktCommand() {
   }
 
   /** TODO:doc. */
-  data class LogSetting(val name: String, val lvl: Level)
-
-  /** TODO:doc. */
-  val log: List<LogSetting> by option(
+  val log: List<Pair<String, Level>> by option(
     metavar = "LEVEL",
     help = """
       Set the logging level where LEVEL is a comma-seperated list of LVL or NAME=LVL.
@@ -75,8 +71,8 @@ class Main : CliktCommand() {
     arg.split(",").map {
       val r = it.split("=", limit = 2)
       when (r.size) {
-        1 -> LogSetting("", Level.toLevel(r[0]))
-        2 -> LogSetting(r[0], Level.toLevel(r[1]))
+        1 -> "" to Level.toLevel(r[0])
+        2 -> r[0] to Level.toLevel(r[1])
         else -> TODO("impossible")
       }
     }
@@ -104,18 +100,15 @@ class Main : CliktCommand() {
 
     DynamicCallerConverter.depthEnd = logCallerDepth
 
-    for ((name, lvl) in log) {
+    for ((name, level) in log) {
       // TODO: warn if log exists
       // TODO: warn if no such class or package (and suggest qualifications)
-      val parsedName =
-        if (name.startsWith(".")) {
-          name.substring(1)
-        } else if (name == "") {
-          ""
-        } else {
-          "org.ucombinator.jade.${lvl}" // TODO: autodetect or take from BuildInfo
-        }
-      Log.getLog(parsedName).setLevel(lvl)
+      val parsedName = when {
+        name.startsWith(".") -> name.substring(1)
+        name == "" -> ""
+        else -> "org.ucombinator.jade.${level}" // TODO: autodetect or take from BuildInfo
+      }
+      Log.getLog(parsedName).setLevel(level)
     }
 
     if (wait) {

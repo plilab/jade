@@ -28,7 +28,7 @@ data class ControlFlowGraph(
    * @property source TODO:doc
    * @property target TODO:doc
    */
-  final data class Edge(val source: Insn, val target: Insn)
+  data class Edge(val source: Insn, val target: Insn)
 
   companion object {
     /** TODO:doc.

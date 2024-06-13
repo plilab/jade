@@ -168,12 +168,12 @@ fun generateSrc(fileName: String, code: String) {
   file.writeText(code)
 }
 
+// TODO: Generate Flags.txt (see `sbt flagsTable`)
 val generateClassfileFlags by tasks.registering {
   doLast {
     // TODO: avoid running when unchanged
-    val code = GenerateClassfileFlags.code(
-      File(projectDir, "src/main/kotlin/org/ucombinator/jade/classfile/Flags.txt").readText(Charsets.UTF_8)
-    )
+    val flagsTxt = "src/main/kotlin/org/ucombinator/jade/classfile/Flags.txt"
+    val code = GenerateClassfileFlags.code(File(projectDir, flagsTxt).readText(Charsets.UTF_8))
     generateSrc("Flags.kt", code)
   }
 }
@@ -238,7 +238,7 @@ val generateBuildInfo by tasks.registering {
       |  val versionMessage = "${'$'}name version ${'$'}version (https://github.org/ucombinator/jade)"
       |}
       |
-      """.trimMargin()
+    """.trimMargin()
 
     generateSrc("BuildInformation.kt", code)
   }

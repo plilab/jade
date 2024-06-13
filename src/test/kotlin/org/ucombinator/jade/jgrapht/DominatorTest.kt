@@ -4,7 +4,7 @@ import org.jgrapht.graph.SimpleDirectedGraph
 import kotlin.test.Test
 import kotlin.test.expect
 
-typealias Vertex = Char
+private typealias Vertex = Char
 
 object DominatorTest {
   @Test fun test() {

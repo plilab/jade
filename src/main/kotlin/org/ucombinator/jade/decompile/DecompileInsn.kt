@@ -66,8 +66,8 @@ Generators
 // TODO: ktlint: aligned forms
 // TODO: ktlint: two-line if
 // TODO: alternatives to type aliases?
-typealias JPStatement = com.github.javaparser.ast.stmt.Statement
-typealias JPExpression = com.github.javaparser.ast.expr.Expression
+private typealias JPStatement = com.github.javaparser.ast.stmt.Statement
+private typealias JPExpression = com.github.javaparser.ast.expr.Expression
 
 /** TODO:doc. */
 @Suppress(
@@ -186,7 +186,7 @@ object DecompileInsn {
    * @param expression TODO:doc
    * @return TODO:doc
    */
-  fun decompileExpression(retVar: Var?, expression: Expression) =
+  fun decompileExpression(retVar: Var?, expression: Expression): ExpressionStmt =
     if (retVar == null) {
       ExpressionStmt(expression)
     } else {

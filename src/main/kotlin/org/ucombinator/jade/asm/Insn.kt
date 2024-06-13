@@ -139,7 +139,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
     }
 
     /** TODO:doc. */
-    val typeToInt: Map<String, Int> = AbstractInsnNode::class.java.declaredFields.filter {
+    private val typeToInt: Map<String, Int> = AbstractInsnNode::class.java.declaredFields.filter {
       // As of ASM 7.1, all final public static int members of AbstractInsNode are ones we want. Updates beware.
       it.type == Int::class.java && it.modifiers == (Modifier.FINAL or Modifier.PUBLIC or Modifier.STATIC)
     }.map {
@@ -148,6 +148,6 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
     }.toMap()
 
     /** TODO:doc. */
-    val intToType: Map<Int, String> = typeToInt.toList().map { it.second to it.first }.toMap()
+    private val intToType: Map<Int, String> = typeToInt.toList().map { it.second to it.first }.toMap()
   }
 }

@@ -189,7 +189,7 @@ object Exceptions {
 // TODO: remove Fiveple
 
 /** TODO:doc. */
-typealias CacheKey<T> = Fiveple<String, String, String, String, T>
+private typealias CacheKey<T> = Fiveple<String, String, String, String, T>
 
 /** TODO:doc.
  *
@@ -465,10 +465,7 @@ class DownloadMaven(
     .build()
 
   /** TODO:doc. */
-  val authentication =
-    AuthenticationBuilder()
-      .addHostnameVerifier(NoopHostnameVerifier())
-      .build()
+  val authentication = AuthenticationBuilder().addHostnameVerifier(NoopHostnameVerifier()).build()
 
   /** TODO:doc. */
   @Suppress(

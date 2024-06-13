@@ -130,6 +130,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     return ret
   }
 
+  // TODO: do we need @Throws?
   @Throws(AnalyzerException::class)
   override fun newOperation(insn: AbstractInsnNode): Var =
     record(insn, listOf(), Var.Instruction(TypedBasicInterpreter.newOperation(insn), Insn(method, insn)))

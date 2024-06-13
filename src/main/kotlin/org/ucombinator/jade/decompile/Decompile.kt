@@ -83,8 +83,8 @@ object Decompile {
     //     for (typ <- compilationUnit.types.iterator().asScala) {
     //       val members = typ.members.iterator().asScala.flatMap(x => Decompile.methods[x].map((_, x))).toList
     //       for ((((classNode, methodNode), bodyDeclaration), methodIndex) <- members.zipWithIndex) {
-    //         this.log.debug("!!!!!!!!!!!!")
-    //         this.log.info(
+    //         log.debug("!!!!!!!!!!!!")
+    //         log.info(
     //           "Decompiling [${classIndex + 1} of ${VFS.classes.size}] ${classNode.name} [${methodIndex + 1} of " +
     //           "${members.size}] ${methodNode.name} (signature = ${methodNode.signature}, " +
     //           "descriptor = ${methodNode.desc})"
@@ -93,7 +93,7 @@ object Decompile {
     //       }
     //     }
 
-    //     this.log.debug(f"compilationUnit\n${compilationUnit}")
+    //     log.debug(f"compilationUnit\n${compilationUnit}")
     //   }
     // }
   }
@@ -107,7 +107,7 @@ object Decompile {
     val classNode = ClassNode(Opcodes.ASM9)
     classReader.accept(classNode, ClassReader.EXPAND_FRAMES) // TODO: Do we actually need ClassReader.EXPAND_FRAMES?
 
-    log.debug("class name: " + classNode.name)
+    log.debug("class name: ${classNode.name}")
     log.debug {
       val stringWriter = StringWriter()
       classNode.accept(TraceClassVisitor(null, Textifier(), PrintWriter(stringWriter)))

@@ -47,7 +47,7 @@ data class Structure(val nesting: Map<Insn, Nesting>, val backEdges: Set<Control
   // case class Block(kind: Kind, headInsn: Insn, var parent: Block = null)
 
   /** TODO:doc. */
-  sealed interface Kind { // TODO: structural type
+  sealed interface Kind {
     /** TODO:doc. */
     object Loop : Kind
 

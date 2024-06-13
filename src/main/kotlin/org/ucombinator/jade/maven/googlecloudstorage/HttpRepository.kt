@@ -15,5 +15,5 @@ object HttpRepository {
    *
    * @return TODO:doc
    */
-  fun getBuilder() = RemoteRepository.Builder("google-maven-central", "default", URL)
+  fun getBuilder(): RemoteRepository.Builder = RemoteRepository.Builder("google-maven-central", "default", URL)
 }

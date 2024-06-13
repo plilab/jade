@@ -46,7 +46,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
    * @property source TODO:doc
    * @property target TODO:doc
    */
-  final data class Edge<V>(val source: V, val target: V)
+  data class Edge<V>(val source: V, val target: V)
 
   companion object {
     /** TODO:doc.

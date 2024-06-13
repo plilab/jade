@@ -6,6 +6,7 @@ import ch.qos.logback.classic.spi.CallerData
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.pattern.color.ANSIConstants
+import mu.KLogger
 import mu.KotlinLogging
 import org.slf4j.LoggerFactory
 import org.ucombinator.jade.main.Main
@@ -23,7 +24,7 @@ object Log {
    * @param func TODO:doc
    * @return TODO:doc
    */
-  operator fun invoke(func: () -> Unit) = KotlinLogging.logger(func)
+  operator fun invoke(func: () -> Unit): KLogger = KotlinLogging.logger(func)
 
   /** TODO:doc.
    *
@@ -53,14 +54,14 @@ object Log {
     // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
     // Note: toURI is required in order to handle special characters
     val jar = java.io.File(Main::class.java.protectionDomain.codeSource.location.toURI()).path
-    this.log.debug("jar: $jar")
+    log.debug("jar: $jar")
 
     for (entry in JarFile(jar).entries()) {
       if (entry.name.endsWith(".class")) {
         try {
           Class.forName(entry.name.replace("\\.class$", "").replace("/", "."))
         } catch (_: Throwable) {
-          this.log.debug("skipping: ${entry.name}") // TODO: show exception in message
+          log.debug("skipping: ${entry.name}") // TODO: show exception in message
         }
       }
     }
@@ -72,7 +73,7 @@ object Log {
 /** TODO:doc. */
 class RelativeLoggerConverter : ClassicConverter() {
   /** TODO:doc. */
-  val prefix: String by lazy {
+  private val prefix: String by lazy {
     val options = this.optionList
     check(options != null) { "Options not set" }
     check(options.size == 1) { "Expected exactly one option but got: ${options}" }

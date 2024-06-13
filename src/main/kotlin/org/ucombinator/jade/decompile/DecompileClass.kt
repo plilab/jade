@@ -189,14 +189,6 @@ object DecompileClass {
       else -> throw Exception("failed to construct parameter types: $desc, $sig, $params")
     }
 
-  /** TODO:doc.
-   *
-   * @param A TODO:doc
-   * @param x TODO:doc
-   * @return TODO:doc
-   */
-  fun <A> nullToSeq(x: List<A>?): List<A> = if (x == null) listOf() else x
-
   // TODO: rename node to methodNode
 
   /** TODO:doc.
@@ -233,7 +225,7 @@ object DecompileClass {
       } else {
         Signature.methodSignature(node.signature)
       }
-    val parameterNodes = nullToSeq(node.parameters)
+    val parameterNodes = node.parameters ?: listOf()
     if (node.parameters != null && sig.parameterTypes.size != node.parameters.size) {
       // TODO: check if always in an enum
     }
@@ -242,8 +234,8 @@ object DecompileClass {
       zipAll(
         parameterTypes(descriptor.parameterTypes, sig.parameterTypes, parameterNodes),
         parameterNodes,
-        nullToSeq(node.visibleParameterAnnotations?.toList()), // TODO: combine ?. with nullToSeq
-        nullToSeq(node.invisibleParameterAnnotations?.toList())
+        node.visibleParameterAnnotations?.toList() ?: listOf(), // TODO: remove .toList()
+        node.invisibleParameterAnnotations?.toList() ?: listOf()
       ).withIndex()
     val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig.parameterTypes.size, it) })
     val type: Type = sig.returnType
@@ -389,7 +381,7 @@ object DecompileClass {
     val compilationUnit = CompilationUnit(packageDeclaration, imports, types, module)
     JavaParser.setComment(compilationUnit, comment)
     // TODO: Decompile.classes += compilationUnit to node
-    // TODO: this.log.debug("++++ decompile class ++++\n" + compilationUnit.toString())
+    // TODO: log.debug("++++ decompile class ++++\n" + compilationUnit.toString())
 
     return compilationUnit
   }

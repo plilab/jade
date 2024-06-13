@@ -766,27 +766,27 @@ class DownloadMaven(
    */
   fun isFailure(e: Throwable): Boolean =
     isChecksumFailure(e) ||
-      isA(
+      isAn(
         e,
         org.eclipse.aether.transfer.ArtifactTransferException::class,
         org.eclipse.aether.transfer.NoRepositoryConnectorException::class,
         org.eclipse.aether.transfer.NoRepositoryConnectorException::class,
         org.eclipse.aether.transfer.NoTransporterException::class
       ) ||
-      // isA(
+      // isAn(
       //   e,
       //   org.eclipse.aether.collection.UnsolvableVersionConflictException::class,
       // ) ||
-      isA(
+      isAn(
         e,
         org.eclipse.aether.resolution.VersionRangeResolutionException::class,
       ) ||
-      isA(
+      isAn(
         e,
         org.eclipse.aether.resolution.VersionRangeResolutionException::class,
         org.eclipse.aether.version.InvalidVersionSpecificationException::class,
       ) ||
-      isA(
+      isAn(
         e,
         org.eclipse.aether.transfer.ArtifactTransferException::class,
         org.eclipse.aether.transfer.NoRepositoryConnectorException::class,
@@ -1080,7 +1080,7 @@ class DownloadMaven(
    * @param classes TODO:doc
    * @return TODO:doc
    */
-  fun isA(exception: Throwable?, vararg classes: kotlin.reflect.KClass<*>): Boolean {
+  fun isAn(exception: Throwable?, vararg classes: kotlin.reflect.KClass<*>): Boolean {
     var e: Throwable? = exception
     while (e is org.apache.maven.model.resolution.UnresolvableModelException ||
       e is org.eclipse.aether.collection.DependencyCollectionException ||

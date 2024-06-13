@@ -242,6 +242,7 @@ object DecompileClass {
     val thrownExceptions: NodeList<ReferenceType> = NodeList(sig.exceptionTypes)
     val name: SimpleName = SimpleName(node.name)
     val body: BlockStmt = DecompileMethodBody.decompileBodyStub(node)
+    @Suppress("NULLABLE_PROPERTY_TYPE") // TODO: temporary until we replace this null
     val receiverParameter: ReceiverParameter? = null // TODO
     val bodyDeclaration = when (node.name) {
       "<clinit>" ->

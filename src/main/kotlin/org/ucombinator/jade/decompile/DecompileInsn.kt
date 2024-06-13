@@ -52,6 +52,8 @@ import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Errors
+import com.github.javaparser.ast.stmt.Statement as JPStatement
+import com.github.javaparser.ast.expr.Expression as JPExpression
 
 /*
 Nestings
@@ -65,9 +67,6 @@ Generators
 
 // TODO: ktlint: aligned forms
 // TODO: ktlint: two-line if
-// TODO: alternatives to type aliases?
-private typealias JPStatement = com.github.javaparser.ast.stmt.Statement
-private typealias JPExpression = com.github.javaparser.ast.expr.Expression
 
 /** TODO:doc. */
 @Suppress(

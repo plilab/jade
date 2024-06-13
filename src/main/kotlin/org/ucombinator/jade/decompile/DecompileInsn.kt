@@ -71,7 +71,7 @@ private typealias JPExpression = com.github.javaparser.ast.expr.Expression
 
 /** TODO:doc. */
 @Suppress(
-  "MaxLineLength",
+  "detekt:MaxLineLength",
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:max-line-length",
   "ktlint:standard:parameter-list-wrapping",
@@ -223,7 +223,12 @@ object DecompileInsn {
    * @param ssa TODO:doc
    * @return TODO:doc
    */
-  @Suppress("MORE_THAN_ONE_STATEMENT_PER_LINE", "TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "MaxLineLength")
+  @Suppress(
+    "MORE_THAN_ONE_STATEMENT_PER_LINE",
+    "TOO_MANY_CONSECUTIVE_SPACES",
+    "WRONG_WHITESPACE",
+    "detekt:MaxLineLength",
+  )
   fun decompileInsn(node: AbstractInsnNode, ssa: StaticSingleAssignment): Pair<Var?, DecompiledInsn> {
     val (retVar, argVars) = ssa.insnVars.getOrElse(node, { Pair(null, listOf()) })
     val argsArray: Array<Expression> = argVars.map(::decompileVar).toTypedArray()

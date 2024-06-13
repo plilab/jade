@@ -13,7 +13,7 @@ object SignatureTest {
 
   enum class Kind { TYPE, CLASS, METHOD }
 
-  @Suppress("MaxLineLength", "ktlint:standard:argument-list-wrapping", "ktlint:standard:max-line-length")
+  @Suppress("detekt:MaxLineLength", "ktlint:standard:argument-list-wrapping", "ktlint:standard:max-line-length")
   @JvmStatic fun tests() =
     listOf<Triple<Kind, String, String?>>(
       // Triple(signature kind, signature, expected result or null for invalid)

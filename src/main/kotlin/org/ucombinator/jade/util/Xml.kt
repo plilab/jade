@@ -15,7 +15,7 @@ object Xml {
    * @return TODO:doc
    */
   fun readXml(file: File, rootTag: String): Element? {
-    val document = @Suppress("SwallowedException") try {
+    val document = @Suppress("detekt:SwallowedException") try {
       DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
     } catch (e: IOException) {
       return null

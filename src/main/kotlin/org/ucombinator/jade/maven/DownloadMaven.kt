@@ -469,7 +469,7 @@ class DownloadMaven(
 
   /** TODO:doc. */
   @Suppress(
-    "MaxLineLength",
+    "detekt:MaxLineLength",
     "ktlint:standard:comment-wrapping",
     "ktlint:standard:max-line-length",
     "ktlint:standard:no-consecutive-comments",
@@ -689,7 +689,7 @@ class DownloadMaven(
     val groupId = groupIdPath.replace('/', '.')
     val name = "$groupId:$artifactId"
     val startTime = System.nanoTime()
-    @Suppress("TooGenericExceptionCaught")
+    @Suppress("detekt:TooGenericExceptionCaught")
     try {
       running.put(Pair(groupIdPath, artifactId), startTime)
       println("running +${running.size} / $remaining")
@@ -723,7 +723,7 @@ class DownloadMaven(
         fails.merge(exceptionName(e), 1, Int::plus)
         val stringWriter = StringWriter()
         val printWriter = PrintWriter(stringWriter)
-        @Suppress("PrintStackTrace") e.printStackTrace(printWriter)
+        @Suppress("detekt:PrintStackTrace") e.printStackTrace(printWriter)
         printWriter.flush()
         val content =
           "!" + exceptionName(e) + "\n" +

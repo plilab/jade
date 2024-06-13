@@ -60,7 +60,7 @@ object DownloadIndex {
       if (prefix != null) options += Storage.BlobListOption.prefix(prefix)
       if (trueStartOffset != null) options += Storage.BlobListOption.startOffset(trueStartOffset)
 
-      @Suppress("SpreadOperator") // the array will always be short
+      @Suppress("detekt:SpreadOperator") // the array will always be short
       val blobs = bucket.list(*options.toTypedArray()).iterateAll()
 
       var checkStartOffset = resume

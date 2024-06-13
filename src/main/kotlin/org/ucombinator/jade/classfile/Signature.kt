@@ -123,7 +123,7 @@ object Signature {
  * @property delegate TODO:doc
  */
 @Suppress(
-  "MaxLineLength",
+  "detekt:MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:max-line-length",
@@ -156,8 +156,8 @@ private class DelegatingSignatureVisitor(var delegate: DelegateSignatureVisitor?
 /** TODO:doc. */
 @Suppress(
   "MISSING_KDOC_ON_FUNCTION",
-  "ThrowingExceptionsWithoutMessageOrCause",
   "WRONG_OVERLOADING_FUNCTION_ARGUMENTS",
+  "detekt:ThrowingExceptionsWithoutMessageOrCause",
   "ktlint:standard:blank-line-before-declaration",
 )
 private open class DelegateSignatureVisitor {
@@ -186,7 +186,7 @@ private typealias TypeReceiver = (Type) -> DelegateSignatureVisitor?
  * @property receiver TODO:doc
  */
 @Suppress(
-  "MaxLineLength",
+  "detekt:MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:function-signature",
@@ -202,7 +202,7 @@ private class TypeSignatureVisitor(val receiver: TypeReceiver) : DelegateSignatu
 
 /** TODO:doc. */
 @Suppress(
-  "MaxLineLength",
+  "detekt:MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:max-line-length",
@@ -233,7 +233,7 @@ private class ClassSignatureVisitor : FormalTypeParameterVisitor() {
 
 /** TODO:doc. */
 @Suppress(
-  "MaxLineLength",
+  "detekt:MaxLineLength",
   "ktlint:standard:argument-list-wrapping",
   "ktlint:standard:blank-line-before-declaration",
   "ktlint:standard:function-signature",

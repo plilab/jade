@@ -7,35 +7,35 @@ object Tuples {
    *
    * @return TODO:doc
    */
-  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "FunctionNaming")
+  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "detekt:FunctionNaming")
   fun <A, B> Pair<A, B>._1(): A = this.first
 
   /** TODO:doc.
    *
    * @return TODO:doc
    */
-  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "FunctionNaming")
+  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "detekt:FunctionNaming")
   fun <A, B> Pair<A, B>._2(): B = this.second
 
   /** TODO:doc.
    *
    * @return TODO:doc
    */
-  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "FunctionNaming")
+  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "detekt:FunctionNaming")
   fun <A, B, C> Triple<A, B, C>._1(): A = this.first
 
   /** TODO:doc.
    *
    * @return TODO:doc
    */
-  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "FunctionNaming")
+  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "detekt:FunctionNaming")
   fun <A, B, C> Triple<A, B, C>._2(): B = this.second
 
   /** TODO:doc.
    *
    * @return TODO:doc
    */
-  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "FunctionNaming")
+  @Suppress("FUNCTION_NAME_INCORRECT_CASE", "detekt:FunctionNaming")
   fun <A, B, C> Triple<A, B, C>._3(): C = this.third
 
   /** Represents a quadruple of values.
@@ -49,7 +49,7 @@ object Tuples {
    * @property _3 Third value.
    * @property _4 Fourth value.
    */
-  @Suppress("ConstructorParameterNaming", "VARIABLE_NAME_INCORRECT_FORMAT")
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT", "detekt:ConstructorParameterNaming")
   data class Fourple<out A, out B, out C, out D>(val _1: A, val _2: B, val _3: C, val _4: D)
 
   /** Represents a quintuple of values.
@@ -65,6 +65,6 @@ object Tuples {
    * @property _4 Fourth value.
    * @property _5 Fifth value.
    */
-  @Suppress("ConstructorParameterNaming", "VARIABLE_NAME_INCORRECT_FORMAT")
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT", "detekt:ConstructorParameterNaming")
   data class Fiveple<out A, out B, out C, out D, out E>(val _1: A, val _2: B, val _3: C, val _4: D, val _5: E)
 }

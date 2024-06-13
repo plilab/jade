@@ -21,6 +21,6 @@ object Errors {
    * @param message TODO:doc
    * @return TODO:doc
    */
-  @Suppress("TooGenericExceptionThrown")
+  @Suppress("detekt:TooGenericExceptionThrown")
   fun fatal(message: String): Nothing = throw Exception("Fatal error: ${message}")
 }

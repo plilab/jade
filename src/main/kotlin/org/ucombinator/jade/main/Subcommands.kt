@@ -30,7 +30,7 @@ class BuildInfo : CliktCommand(help = "Display information about how `jade` was 
           Build tools: Kotlin $kotlinVersion, Gradle $gradleVersion, Java $javaVersion
           Build time: $buildTime
           Dependencies:
-        """.trimIndent()
+        """.trimIndent(),
       )
     }
     for (d in BuildInformation.dependencies) {
@@ -143,7 +143,7 @@ class DownloadIndex : CliktCommand(help = "Download index of all files") {
       pageSize,
       prefix,
       startOffset,
-      flushFrequency
+      flushFrequency,
     )
   }
 }

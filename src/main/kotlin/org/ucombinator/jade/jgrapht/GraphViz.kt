@@ -106,7 +106,7 @@ object GraphViz {
     tree: Graph<V, TE>,
     root: V,
     alternateBackgroundColor: Boolean = true,
-    flatten: Boolean = true
+    flatten: Boolean = true,
   ) {
     out.write("digraph {\n")
 

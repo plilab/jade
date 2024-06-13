@@ -108,7 +108,7 @@ object DecompileClass {
       else ->
         NormalAnnotationExpr(
           name,
-          NodeList(vs.pairs().map { MemberValuePair(it.first as String, decompileLiteral(it.second)) })
+          NodeList(vs.pairs().map { MemberValuePair(it.first as String, decompileLiteral(it.second)) }),
         )
     }
   }
@@ -133,7 +133,7 @@ object DecompileClass {
       node.visibleAnnotations,
       node.invisibleAnnotations,
       node.visibleTypeAnnotations,
-      node.invisibleTypeAnnotations
+      node.invisibleTypeAnnotations,
     )
     val type =
       if (node.signature != null) Signature.typeSignature(node.signature) else Descriptor.fieldDescriptor(node.desc)
@@ -156,7 +156,7 @@ object DecompileClass {
   private fun decompileParameter(
     method: MethodNode,
     paramCount: Int,
-    parameter: IndexedValue<Fourple<Type?, ParameterNode?, List<AnnotationNode>?, List<AnnotationNode>?>>
+    parameter: IndexedValue<Fourple<Type?, ParameterNode?, List<AnnotationNode>?, List<AnnotationNode>?>>,
   ): Parameter {
     val index = parameter.index
     val (type, node, a1, a2) = parameter.value
@@ -211,7 +211,7 @@ object DecompileClass {
       node.visibleAnnotations,
       node.invisibleAnnotations,
       node.visibleTypeAnnotations,
-      node.invisibleTypeAnnotations
+      node.invisibleTypeAnnotations,
     )
     val descriptor = Descriptor.methodDescriptor(node.desc)
     val sig =
@@ -220,7 +220,7 @@ object DecompileClass {
           listOf(),
           descriptor.parameterTypes,
           descriptor.returnType,
-          node.exceptions.map(ClassName::classNameType)
+          node.exceptions.map(ClassName::classNameType),
         )
       } else {
         Signature.methodSignature(node.signature)
@@ -235,14 +235,15 @@ object DecompileClass {
         parameterTypes(descriptor.parameterTypes, sig.parameterTypes, parameterNodes),
         parameterNodes,
         node.visibleParameterAnnotations?.toList() ?: listOf(), // TODO: remove .toList()
-        node.invisibleParameterAnnotations?.toList() ?: listOf()
+        node.invisibleParameterAnnotations?.toList() ?: listOf(),
       ).withIndex()
     val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig.parameterTypes.size, it) })
     val type: Type = sig.returnType
     val thrownExceptions: NodeList<ReferenceType> = NodeList(sig.exceptionTypes)
     val name: SimpleName = SimpleName(node.name)
     val body: BlockStmt = DecompileMethodBody.decompileBodyStub(node)
-    @Suppress("NULLABLE_PROPERTY_TYPE") // TODO: temporary until we replace this null
+
+    @Suppress("NULLABLE_PROPERTY_TYPE") // TODO: temporary until we remove null (remove blank line above when we do)
     val receiverParameter: ReceiverParameter? = null // TODO
     val bodyDeclaration = when (node.name) {
       "<clinit>" ->
@@ -256,7 +257,7 @@ object DecompileClass {
           parameters,
           thrownExceptions,
           body,
-          receiverParameter
+          receiverParameter,
         )
       else ->
         MethodDeclaration(
@@ -268,7 +269,7 @@ object DecompileClass {
           parameters,
           thrownExceptions,
           body,
-          receiverParameter
+          receiverParameter,
         )
     }
     bodyDeclaration.setData(METHOD_NODE, node)
@@ -288,7 +289,7 @@ object DecompileClass {
         |* Class-file Format Version: ${node.version}
         |* Source Debug Extension: ${node.sourceDebug} // See JSR-45 https://www.jcp.org/en/jsr/detail?id=045
         |
-      """.trimMargin()
+      """.trimMargin(),
     )
     // outerClass
     // outerMethod
@@ -311,7 +312,7 @@ object DecompileClass {
         node.visibleAnnotations,
         node.invisibleAnnotations,
         node.visibleTypeAnnotations,
-        node.invisibleTypeAnnotations
+        node.invisibleTypeAnnotations,
       )
       val isInterface: Boolean = (node.access and Opcodes.ACC_INTERFACE) != 0
       val simpleName = SimpleName(fullClassName.identifier)
@@ -321,7 +322,7 @@ object DecompileClass {
         typeParameters: NodeList<TypeParameter>,
         extendedTypes: NodeList<ClassOrInterfaceType>,
         implementedTypes: NodeList<ClassOrInterfaceType>,
-        permittedTypes: NodeList<ClassOrInterfaceType> // TODO: implement
+        permittedTypes: NodeList<ClassOrInterfaceType>, // TODO: implement
       ) =
         if (node.signature == null) {
           // TODO: maybe change Fourple to MethodSignature
@@ -329,7 +330,7 @@ object DecompileClass {
             NodeList<TypeParameter>(),
             if (node.superName == null) NodeList() else NodeList(ClassName.classNameType(node.superName)),
             NodeList(node.interfaces.map { ClassName.classNameType(it) }),
-            NodeList<ClassOrInterfaceType>()
+            NodeList<ClassOrInterfaceType>(),
           )
         } else {
           val s = Signature.classSignature(node.signature)
@@ -337,7 +338,7 @@ object DecompileClass {
             NodeList(s.typeParameters),
             NodeList(s.superclass),
             NodeList(s.interfaces),
-            NodeList<ClassOrInterfaceType>()
+            NodeList<ClassOrInterfaceType>(),
           )
         }
       val members: NodeList<BodyDeclaration<*>> = run {
@@ -357,7 +358,7 @@ object DecompileClass {
         extendedTypes,
         implementedTypes,
         permittedTypes,
-        members
+        members,
       )
     }
 

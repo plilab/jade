@@ -62,7 +62,7 @@ object DecompileStatement {
 
     fun insnLabelString(insn: Insn): String = "JADE_${insn.index()}" // TODO: overload with labelString
 
-    fun structuredBlock(head: Insn): Pair<Statement, Set<Insn> /* pendingOutside */> {
+    fun structuredBlock(head: Insn): Pair<Statement, /* pendingOutside */ Set<Insn>> {
       // do statements in instruction order if possible
       // constraints (loops *must* be together):
       // 1. Respect edges

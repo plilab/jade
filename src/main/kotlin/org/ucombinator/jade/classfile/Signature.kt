@@ -31,7 +31,7 @@ import org.ucombinator.jade.util.Errors
 data class ClassSignature(
   val typeParameters: List<TypeParameter>,
   val superclass: ClassOrInterfaceType,
-  val interfaces: List<ClassOrInterfaceType>
+  val interfaces: List<ClassOrInterfaceType>,
 )
 
 /** TODO:doc.
@@ -45,7 +45,7 @@ data class MethodSignature(
   val typeParameters: List<TypeParameter>,
   val parameterTypes: List<Type>,
   val returnType: Type,
-  val exceptionTypes: List<ReferenceType>
+  val exceptionTypes: List<ReferenceType>,
 )
 
 /** TODO:doc. */
@@ -87,7 +87,7 @@ object Signature {
     return ClassSignature(
       visitor.typeParameters,
       requireNotNull(visitor.superclass) { "no superclass for signature \"$string\"" },
-      visitor.interfaces
+      visitor.interfaces,
     )
   }
 
@@ -106,7 +106,7 @@ object Signature {
       visitor.typeParameters,
       visitor.parameterTypes,
       requireNotNull(visitor.returnType) { "no return type for signature \"$string\"" },
-      visitor.exceptionTypes
+      visitor.exceptionTypes,
     )
   }
 }

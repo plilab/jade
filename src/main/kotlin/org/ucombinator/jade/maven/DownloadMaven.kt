@@ -210,7 +210,7 @@ class CachingMetadataResolver : MetadataResolver { // TODO: rename to wrapper
 
   override fun resolveMetadata(
     session: RepositorySystemSession,
-    requests: MutableCollection<out MetadataRequest>
+    requests: MutableCollection<out MetadataRequest>,
   ): List<MetadataResult> = requests.map { resolveMetadata(session, it) }
 
   /** TODO:doc.
@@ -370,7 +370,7 @@ class CachingArtifactResolver : ArtifactResolver {
 
   override fun resolveArtifacts(
     session: RepositorySystemSession,
-    requests: MutableCollection<out ArtifactRequest>
+    requests: MutableCollection<out ArtifactRequest>,
   ): List<ArtifactResult> = requests.map { resolveArtifact(session, it) }
 
   companion object {
@@ -392,7 +392,7 @@ class DownloadMaven(
   val localRepoDir: File,
   val jarListsDir: File,
   val reverse: Boolean,
-  val shuffle: Boolean
+  val shuffle: Boolean,
 ) {
   private val log = Log {}
 
@@ -603,7 +603,7 @@ class DownloadMaven(
         for ((name, startTime) in running.toList().sortedBy(Pair<Pair<String, String>, Long>::second).reversed()) {
           println("- ${time(startTime)}: ${name.first}:${name.second}")
         }
-      }
+      },
     )
 
     MavenRepo.listArtifacts(indexFile) { artifacts ->
@@ -705,7 +705,7 @@ class DownloadMaven(
         artifactId,
         artifactDescriptorResult.artifact.classifier,
         model.packaging,
-        version
+        version,
       )
       artifactDescriptorResult.artifact = artifactResult.artifact
       artifactDescriptorResult.request.artifact = artifactResult.artifact
@@ -771,7 +771,7 @@ class DownloadMaven(
         org.eclipse.aether.transfer.ArtifactTransferException::class,
         org.eclipse.aether.transfer.NoRepositoryConnectorException::class,
         org.eclipse.aether.transfer.NoRepositoryConnectorException::class,
-        org.eclipse.aether.transfer.NoTransporterException::class
+        org.eclipse.aether.transfer.NoTransporterException::class,
       ) ||
       // isAn(
       //   e,
@@ -875,7 +875,7 @@ class DownloadMaven(
     artifactId: String,
     classifier: String?,
     extension: String,
-    version: String
+    version: String,
   ): ArtifactResult {
     val (cls, extensions) = when {
       extension == "pom" -> Pair(null, listOf(extension)) // TODO: null isn't technically correct (should be classifier)
@@ -1003,7 +1003,7 @@ class DownloadMaven(
         node.artifact.artifactId,
         null,
         "pom",
-        node.artifact.version
+        node.artifact.version,
       )
       val model = getModel(pomArtifactResult.artifact.file)
       val art = Fiveple(
@@ -1011,7 +1011,7 @@ class DownloadMaven(
         node.artifact.artifactId,
         node.artifact.classifier,
         model.packaging,
-        node.artifact.version
+        node.artifact.version,
       )
       artifactRequests += art
 

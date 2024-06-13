@@ -66,7 +66,7 @@ class Main : CliktCommand() {
       Set the logging level where LEVEL is a comma-seperated list of LVL or NAME=LVL.
       LVL is one of (case insensitive): off info warning error debug trace all.
       NAME is a qualified package or class name and is relative to `org.ucombinator.jade` unless prefixed with `.`.
-    """.trimIndent()
+    """.trimIndent(),
   ).convert { arg ->
     arg.split(",").map {
       val r = it.split("=", limit = 2)
@@ -89,10 +89,10 @@ class Main : CliktCommand() {
 
   /** TODO:doc. */
   val wait: Boolean by option(
-    help = "Wait for input from user before running.  This allows time for a debugger to attach to this process."
+    help = "Wait for input from user before running.  This allows time for a debugger to attach to this process.",
   ).flag(
     "--no-wait",
-    default = false
+    default = false,
   )
 
   override fun run() {

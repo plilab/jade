@@ -248,9 +248,9 @@ object DecompileInsn {
           /*TODO: cast to insn.owner?*/ args(0),
           typeArguments,
           insn.name,
-          NodeList(argumentTypes.indices.map { args(it + 1) })
-        )
-      ) // TODO: better way for this
+          NodeList(argumentTypes.indices.map { args(it + 1) }),
+        ),
+      )
     }
 
     fun staticCall(node: AbstractInsnNode): DecompiledInsn {
@@ -260,8 +260,8 @@ object DecompileInsn {
           ClassName.classNameExpr(insn.owner),
           typeArguments,
           insn.name,
-          NodeList(argumentTypes.indices.map(::args))
-        )
+          NodeList(argumentTypes.indices.map(::args)),
+        ),
       )
     }
 
@@ -508,7 +508,7 @@ object DecompileInsn {
             is LineNumberNode -> DecompiledInsn.LineNumber(node)
             else              -> Errors.unmatchedType(node)
           }
-      }
+      },
     )
   }
 

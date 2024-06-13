@@ -110,12 +110,12 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   override fun newExceptionValue(
     tryCatchBlockNode: TryCatchBlockNode,
     handlerFrame: Frame<Var>,
-    exceptionType: Type
+    exceptionType: Type,
   ): Var =
     Var.Exception(
       // TODO: wrong cast?
       TypedBasicInterpreter.newExceptionValue(tryCatchBlockNode, handlerFrame as Frame<BasicValue>, exceptionType),
-      Insn(method, tryCatchBlockNode.handler)
+      Insn(method, tryCatchBlockNode.handler),
     )
 
   /** TODO:doc.
@@ -144,8 +144,8 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
       Var.Copy(
         TypedBasicInterpreter.copyOperation(insn, value.basicValue),
         Insn(method, insn),
-        this.copyOperationPosition
-      )
+        this.copyOperationPosition,
+      ),
     )
   }
 
@@ -154,7 +154,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
     record(
       insn,
       listOf(value),
-      Var.Instruction(TypedBasicInterpreter.unaryOperation(insn, value.basicValue), Insn(method, insn))
+      Var.Instruction(TypedBasicInterpreter.unaryOperation(insn, value.basicValue), Insn(method, insn)),
     )
 
   @Throws(AnalyzerException::class)
@@ -164,8 +164,8 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
       listOf(value1, value2),
       Var.Instruction(
         TypedBasicInterpreter.binaryOperation(insn, value1.basicValue, value2.basicValue),
-        Insn(method, insn)
-      )
+        Insn(method, insn),
+      ),
     )
 
   @Throws(AnalyzerException::class)
@@ -175,8 +175,8 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
       listOf(value1, value2, value3),
       Var.Instruction(
         TypedBasicInterpreter.ternaryOperation(insn, value1.basicValue, value2.basicValue, value3.basicValue),
-        Insn(method, insn)
-      )
+        Insn(method, insn),
+      ),
     )
 
   @Throws(AnalyzerException::class)
@@ -186,8 +186,8 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
       values,
       Var.Instruction(
         TypedBasicInterpreter.naryOperation(insn, values.map { it.basicValue }),
-        Insn(method, insn)
-      )
+        Insn(method, insn),
+      ),
     )
 
   @Throws(AnalyzerException::class)

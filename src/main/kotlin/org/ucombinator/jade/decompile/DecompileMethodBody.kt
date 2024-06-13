@@ -46,18 +46,18 @@ object DecompileMethodBody {
           ObjectCreationExpr(
             null,
             ClassName.classNameType("java/lang/UnsupportedOperationException"),
-            NodeList(StringLiteralExpr(message))
-          )
+            NodeList(StringLiteralExpr(message)),
+          ),
         ),
-        comment
-      )
+        comment,
+      ),
     )
     if (false) { // TODO: option for generating compilable versus uncompilable stub bodies
       statements.add(
         JavaParser.setComment(
           EmptyStmt(),
-          BlockComment(" The following is unreachable code so that this code generates a compilation error ")
-        )
+          BlockComment(" The following is unreachable code so that this code generates a compilation error "),
+        ),
       )
     }
     return BlockStmt(statements)
@@ -91,8 +91,8 @@ object DecompileMethodBody {
           |         * Instructions:
           |${instructions.lines().map { "         *$it" }.joinToString("\n")}
           |
-        """.trimMargin()
-      )
+        """.trimMargin(),
+      ),
     )
   }
 
@@ -139,8 +139,8 @@ object DecompileMethodBody {
           declaration.setBody(
             warningBody(
               "No implementation for constructor ${classNode.name}" +
-                "(signature = ${method.signature}, descriptor = ${method.desc})"
-            )
+                "(signature = ${method.signature}, descriptor = ${method.desc})",
+            ),
           )
         is MethodDeclaration -> {
           val modifiers = declaration.modifiers
@@ -151,8 +151,8 @@ object DecompileMethodBody {
             declaration.setBody(
               warningBody(
                 "No implementation for non-abstract, non-native method: ${classNode.name}.${method.name}" +
-                  "(signature = ${method.signature}, descriptor = ${method.desc})"
-              )
+                  "(signature = ${method.signature}, descriptor = ${method.desc})",
+              ),
             )
           }
         }

@@ -8,7 +8,7 @@ import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.pattern.color.ANSIConstants
 import mu.KotlinLogging
 import org.slf4j.LoggerFactory
-import org.ucombinator.jade.main.Jade
+import org.ucombinator.jade.main.Main
 import java.util.jar.JarFile
 import ch.qos.logback.classic.Logger as LogbackLogger
 import ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter as OldHighlightingCompositeConverter
@@ -37,7 +37,7 @@ object Log {
   fun loggers(): List<LogbackLogger> {
     // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
     // Note: toURI is required in order to handle special characters
-    val jar = java.io.File(Jade::class.java.protectionDomain.codeSource.location.toURI()).path
+    val jar = java.io.File(Main::class.java.protectionDomain.codeSource.location.toURI()).path
     this.log.debug("jar: $jar")
 
     for (entry in JarFile(jar).entries()) {

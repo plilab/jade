@@ -28,7 +28,7 @@ import org.ucombinator.jade.util.Log
 // TODO: throw ProgramResult(statusCode)
 
 fun main(args: Array<String>): Unit =
-  Jade().subcommands(
+  Main().subcommands(
     BuildInfo(),
     Decompile(),
     Compile(),
@@ -46,7 +46,7 @@ fun main(args: Array<String>): Unit =
 //   commandLine.setOverwrittenOptionsAllowed(true)
 //   showAtFileInUsageHelp = true,
 //   showEndOfOptionsDelimiterInUsageHelp = true,
-class Jade : CliktCommand() {
+class Main : CliktCommand() {
   init {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
     // TODO: color and other formatting in help messages

@@ -51,6 +51,7 @@ import org.ucombinator.jade.util.Lists.pairs
 import org.ucombinator.jade.util.Lists.tail
 import org.ucombinator.jade.util.Lists.zipAll
 import org.ucombinator.jade.util.Tuples.Fourple
+import com.github.javaparser.ast.Modifier
 
 // TODO: rename package to `translate` or `transform` or `transformation`?
 
@@ -207,6 +208,16 @@ object DecompileClass {
     // TODO: JPModifier.Keyword.DEFAULT
     // TODO: catch exceptions and return a stub method
     val modifiers = Flag.toModifiers(Flag.methodFlags(node.access))
+
+    // An interface might contain abstract methods, default methods or static methods (see https://docs.oracle.com/javase%2Ftutorial%2F/java/IandI/interfaceDef.html).
+    // When our method is either abstract or static, we can directly use the modifier list from node.access (access flags from ASM). However, there is no access flag for `default` (despite being present in raw .class bytecode files). Therefore, for default methods, default modifier has to be manually added as below.
+    val isInsideInterface: Boolean = (classNode.access and Opcodes.ACC_INTERFACE) != 0
+    val isStatic: Boolean = (node.access and Opcodes.ACC_STATIC) != 0
+
+    if (isInsideInterface and !isStatic and !DecompileMethodBody.isAbstract(node)) {
+      modifiers.add(Modifier(Modifier.Keyword.DEFAULT))
+    }
+
     val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
       node.visibleAnnotations,
       node.invisibleAnnotations,
@@ -241,9 +252,9 @@ object DecompileClass {
     val type: Type = sig.returnType
     val thrownExceptions: NodeList<ReferenceType> = NodeList(sig.exceptionTypes)
     val name: SimpleName = SimpleName(node.name)
-    val body: BlockStmt = DecompileMethodBody.decompileBodyStub(node)
+    
+    val body: BlockStmt? = DecompileMethodBody.decompileBodyStub(node)
 
-    @Suppress("NULLABLE_PROPERTY_TYPE") // TODO: temporary until we remove null (remove blank line above when we do)
     val receiverParameter: ReceiverParameter? = null // TODO
     val bodyDeclaration = when (node.name) {
       "<clinit>" ->
@@ -259,8 +270,8 @@ object DecompileClass {
           body,
           receiverParameter,
         )
-      else ->
-        MethodDeclaration(
+      else -> {
+        val methodDeclaration = MethodDeclaration(
           modifiers,
           annotations,
           typeParameters,
@@ -271,6 +282,8 @@ object DecompileClass {
           body,
           receiverParameter,
         )
+        methodDeclaration
+      }
     }
     bodyDeclaration.setData(METHOD_NODE, node)
     // TODO: Decompile.methods.add(bodyDeclaration to ((classNode, node)))

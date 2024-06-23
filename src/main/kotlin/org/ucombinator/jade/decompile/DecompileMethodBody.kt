@@ -15,6 +15,7 @@ import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.ast.stmt.ThrowStmt
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.util.Textifier
 import org.objectweb.asm.util.TraceMethodVisitor
 import org.ucombinator.jade.analysis.ControlFlowGraph
@@ -63,15 +64,34 @@ object DecompileMethodBody {
     return BlockStmt(statements)
   }
 
-  /** TODO:doc.
+    /**
+    * Checks if the given MethodNode represents an abstract method.
+    *
+    * A method is considered abstract if it has no instructions and is marked with the `ACC_ABSTRACT` flag.
+    *
+    * @param node The MethodNode to check.
+    * @return `true` if the method is abstract (no instructions and has `ACC_ABSTRACT` access flag), `false` otherwise.
+    */
+  fun isAbstract(node: MethodNode): Boolean {
+    if (node.instructions.size() == 0) {
+      assert((node.access and Opcodes.ACC_ABSTRACT) != 0)
+      return true
+    }
+    return false
+  }
+
+  /**
+   * Returns a BlockStmt that contains the decompiled method's skeleton. Instructions within the
+   * method are encoded as a string comment for later further decompilation. If the given MethodNode
+   * is abstract i.e. has no body, null is returned.
    *
-   * @param node TODO:doc
-   * @return TODO:doc
+   * @param node a MethodNode
+   * @return the desired BlockStmt object.
    */
-  fun decompileBodyStub(node: MethodNode): BlockStmt {
+  fun decompileBodyStub(node: MethodNode): BlockStmt? {
     val instructions = run {
-      if (node.instructions.size() == 0) {
-        "   <no instructions>" // TODO: check
+      if (isAbstract(node)) {
+        return null
       } else {
         val textifier = Textifier()
         node.accept(TraceMethodVisitor(null, textifier))

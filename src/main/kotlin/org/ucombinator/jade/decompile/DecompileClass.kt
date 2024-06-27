@@ -76,7 +76,7 @@ object DecompileClass {
       // TODO: improve formatting of literals?
       null -> null
       is Int -> IntegerLiteralExpr(node.toString())
-      is Long -> LongLiteralExpr(node.toString())
+      is Long -> LongLiteralExpr("${node}L")
       is Float -> DoubleLiteralExpr("${node}F") // `JavaParser` uses Doubles for Floats
       is Double -> DoubleLiteralExpr("${node}D")
       is String -> StringLiteralExpr(node)

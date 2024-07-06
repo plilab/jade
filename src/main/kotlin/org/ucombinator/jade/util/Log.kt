@@ -6,7 +6,7 @@ import ch.qos.logback.classic.spi.CallerData
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.pattern.color.ANSIConstants
-import mu.KLogger
+import mu.KLogger // TODO: consider other logger systems
 import mu.KotlinLogging
 import org.slf4j.LoggerFactory
 import org.ucombinator.jade.main.Main
@@ -59,9 +59,10 @@ object Log {
     for (entry in JarFile(jar).entries()) {
       if (entry.name.endsWith(".class")) {
         try {
+          // TODO: classLoader load class
           Class.forName(entry.name.replace("\\.class$", "").replace("/", "."))
-        } catch (_: Throwable) {
-          log.debug("skipping: ${entry.name}") // TODO: show exception in message
+        } catch (e: Throwable) {
+          log.debug("skipping: ${entry.name} ${e}") // TODO: show exception in message
         }
       }
     }
@@ -90,10 +91,10 @@ class RelativeLoggerConverter : ClassicConverter() {
 class DynamicCallerConverter : ClassicConverter() {
   companion object {
     /** TODO:doc. */
-    var depthStart = 0
+    var depthStart = 0 // TODO: maybe make private
 
     /** TODO:doc. */
-    var depthEnd = 0
+    var depthEnd = 0 // TODO: maybe make private
   }
 
   override fun convert(event: ILoggingEvent): String {

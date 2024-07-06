@@ -7,14 +7,17 @@ object Errors {
    * @param x TODO:doc
    * @return TODO:doc
    */
-  fun unmatchedType(x: Any): Nothing = fatal("Type ${x::class.java.name} not handled by match of value ${x}")
+  fun unmatchedType(x: Any?): Nothing =
+    (if (x == null) "null" else x::class.java.name).let { type ->
+      fatal("Type ${type} not handled by match of value ${x}")
+    }
 
   /** TODO:doc.
    *
    * @param x TODO:doc
    * @return TODO:doc
    */
-  fun unmatchedValue(x: Any): Nothing = fatal("Value not handled by match: ${x}")
+  fun unmatchedValue(x: Any?): Nothing = fatal("Value not handled by match: ${x}")
 
   /** TODO:doc.
    *

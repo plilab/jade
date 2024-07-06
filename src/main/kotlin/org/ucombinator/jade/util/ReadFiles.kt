@@ -38,6 +38,19 @@ package org.ucombinator.jade.util
 //   https://commons.apache.org/proper/commons-vfs/filesystems.html
 // https://en.wikipedia.org/wiki/List_of_archive_formats
 
+// https://commons.apache.org/proper/commons-vfs/filesystems.html
+// https://commons.apache.org/proper/commons-vfs/index.html
+// https://commons.apache.org/proper/commons-vfs/api.html
+// https://commons.apache.org/proper/commons-vfs/apidocs/org/apache/commons/vfs2/FileSystemManager.html
+
+// TODO:
+// - https://github.com/skolson/KmpIO
+// - https://developer.android.com/reference/kotlin/java/util/zip/ZipFile
+// - https://github.com/alxiw/kotlin-archiver
+// - https://stackoverflow.com/questions/69498191/android-11-kotlin-reading-a-zip-file
+// - https://commons.apache.org/proper/commons-compress/apidocs/org/apache/commons/compress/compressors/CompressorStreamFactory.html
+// - https://commons.apache.org/proper/commons-compress/apidocs/org/apache/commons/compress/archivers/ArchiveInputStream.html
+
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.ArchiveException
 import org.apache.commons.compress.archivers.ArchiveInputStream

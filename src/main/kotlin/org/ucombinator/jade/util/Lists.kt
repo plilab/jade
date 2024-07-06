@@ -21,6 +21,10 @@ object Lists {
       Fourple(a.getOrNull(it), b.getOrNull(it), c.getOrNull(it), d.getOrNull(it))
     }
 
+  // TODO: KDoc: @receiver
+  // TODO: KDoc: @throws
+  // TODO: KDoc: type parameters of functions
+
   /** TODO:doc.
    *
    * @param T TODO:doc

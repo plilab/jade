@@ -3,6 +3,9 @@ package org.ucombinator.jade.util
 /** TODO:doc. */
 @Suppress("ktlint:standard:function-naming")
 object Tuples {
+  // TODO: flip
+  // TODO: comparable
+
   /** TODO:doc.
    *
    * @return TODO:doc

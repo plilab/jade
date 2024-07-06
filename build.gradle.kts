@@ -67,6 +67,7 @@ dependencies {
 
   // Compressed files
   implementation("org.apache.commons:commons-compress:1.26.1")
+  implementation("com.github.luben:zstd-jni:1.5.6-3")
 
   // For parallelizing access to Google Cloud Storage
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
@@ -87,6 +88,9 @@ dependencies {
   implementation("org.ow2.asm:asm-util:9.7")
 
   // Maven
+
+  // TODO: trim?
+  implementation("org.apache.maven.resolver:maven-resolver-supplier:1.9.20")
   implementation("org.apache.maven.resolver:maven-resolver-api:1.9.20")
   implementation("org.apache.maven.resolver:maven-resolver-spi:1.9.20")
   implementation("org.apache.maven.resolver:maven-resolver-util:1.9.20")
@@ -95,6 +99,12 @@ dependencies {
   implementation("org.apache.maven.resolver:maven-resolver-transport-file:1.9.20")
   implementation("org.apache.maven.resolver:maven-resolver-transport-http:1.9.20")
   implementation("org.apache.maven:maven-resolver-provider:3.9.6")
+
+  implementation("org.apache.maven.indexer:indexer-core:7.1.3")
+  implementation("org.apache.maven.indexer:indexer-reader:7.1.3")
+
+  // Manipulating JSON
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
 }
 
 // ////////////////////////////////////////////////////////////////

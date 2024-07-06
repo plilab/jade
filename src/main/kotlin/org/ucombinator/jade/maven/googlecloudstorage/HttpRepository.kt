@@ -2,6 +2,8 @@ package org.ucombinator.jade.maven.googlecloudstorage
 
 import org.eclipse.aether.repository.RemoteRepository
 
+// TODO: remove this class?
+
 /** TODO:doc. */
 object HttpRepository {
   // https://maven-central.storage-download.googleapis.com/maven2/
@@ -15,5 +17,5 @@ object HttpRepository {
    *
    * @return TODO:doc
    */
-  fun getBuilder(): RemoteRepository.Builder = RemoteRepository.Builder("google-maven-central", "default", URL)
+  fun getBuilder(): RemoteRepository.Builder = RemoteRepository.Builder("google-maven-central-ap", "default", URL)
 }

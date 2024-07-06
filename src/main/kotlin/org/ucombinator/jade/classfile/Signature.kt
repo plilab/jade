@@ -71,7 +71,7 @@ object Signature {
   fun typeSignature(string: String): Type {
     checkSignature(string, SignatureReader::acceptType)
     var type = null as Type?
-    SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor { type = it; null }))
+    SignatureReader(string).acceptType(DelegatingSignatureVisitor(TypeSignatureVisitor { null.apply { type = it } }))
     return requireNotNull(type) { "no type for signature \"$string\"" }
   }
 

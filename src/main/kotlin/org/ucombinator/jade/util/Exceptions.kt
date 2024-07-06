@@ -1,5 +1,8 @@
 package org.ucombinator.jade.util
 
+import java.io.PrintWriter
+import java.io.StringWriter
+
 /** TODO:doc. */
 object Exceptions {
   /** TODO:doc.
@@ -17,6 +20,20 @@ object Exceptions {
    */
   fun name(exception: Throwable): String =
     causes(exception).joinToString(":") { it::class.qualifiedName ?: "<anonymous>" }
+
+  /** TODO:doc.
+   *
+   * @param exception TODO:doc
+   * @return TODO:doc
+   */
+  fun stackTrace(exception: Throwable): String {
+    // TODO: buildString idiom
+    val stringWriter = StringWriter()
+    val printWriter = PrintWriter(stringWriter)
+    exception.printStackTrace(printWriter)
+    printWriter.flush()
+    return stringWriter.toString()
+  }
 
   /** TODO:doc.
    *

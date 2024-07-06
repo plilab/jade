@@ -858,5 +858,5 @@ object SignatureTest {
     }
 
   @ParameterizedTest @MethodSource("tests")
-  fun `test signature`(test: Triple<Kind, String, String?>): Unit = test("signature", test, ::parseSignature)
+  fun `test signature`(test: Triple<Kind, String, String?>) { test("signature", test, ::parseSignature) }
 }

@@ -55,6 +55,8 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
     }
   }
 
+  // TODO: maybe make private
+
   /** TODO:doc. */
   companion object InsnTextifier : Textifier(Opcodes.ASM9) {
     /** TODO:doc. */

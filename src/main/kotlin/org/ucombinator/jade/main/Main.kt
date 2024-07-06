@@ -13,8 +13,11 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.split
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.double
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
+import org.ucombinator.jade.util.Parallel
+import java.io.File
 
 // TODO: analysis to ensure using only the canonical constructor (helps with detecting forward version changes) (as a
 //   compiler plugin?)
@@ -30,17 +33,24 @@ import org.ucombinator.jade.util.Log
  *
  * @param args TODO:doc
  */
-fun main(args: Array<String>): Unit =
+fun main(args: Array<String>) {
   Main().subcommands(
-    BuildInfo(),
     Decompile(),
     Compile(),
     Diff(),
-    Loggers(),
-    DownloadIndex(),
-    DownloadMaven(),
-    CompletionCommand(),
+    Maven().subcommands(
+      Maven.Index(),
+      Maven.IndexToJson(),
+      Maven.Versions(),
+      Maven.Dependencies(),
+    ),
+    Meta().subcommands(
+      Meta.BuildInfo(),
+      Meta.Loggers(),
+      CompletionCommand(),
+    ),
   ).main(args)
+}
 
 // TODO: optionalValue()
 // TODO: varargValues()
@@ -50,13 +60,27 @@ fun main(args: Array<String>): Unit =
 //   showAtFileInUsageHelp = true,
 //   showEndOfOptionsDelimiterInUsageHelp = true,
 
-/** TODO:doc. */
-class Main : CliktCommand() {
+/** TODO: doc. */
+abstract class JadeCommand(help: String = "") : CliktCommand(help) {
   init {
-    versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
     // TODO: color and other formatting in help messages
     // TODO: check
-    context { helpFormatter = { MordantHelpFormatter(it, showRequiredTag = true, showDefaultValues = true) } }
+    context {
+      helpFormatter = { MordantHelpFormatter(it, showRequiredTag = true, showDefaultValues = true) }
+      argumentFileReader = { it -> File(it).readText() } // The Clikt default fails on pipes, redirects and devices
+    }
+  }
+}
+
+/** TODO: doc. */
+open class NoOpJadeCommand(help: String = "") : JadeCommand(help) {
+  final override fun run() { /* do nothing */ }
+}
+
+/** TODO:doc. */
+class Main : JadeCommand() {
+  init {
+    versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
   }
 
   /** TODO:doc. */
@@ -82,23 +106,32 @@ class Main : CliktCommand() {
   val logCallerDepth: Int by option(
     metavar = "DEPTH",
     help = "Number of callers to print after log messages",
-  ).int().default(0)
+  ).int().default(DynamicCallerConverter.depthEnd)
 
   /** TODO:doc. */
   val ioThreads: Int? by option().int()
 
   /** TODO:doc. */
+  val timeout: Double by option().double().default(Parallel.timeout)
+
+  /** TODO:doc. */
   val wait: Boolean by option(
     help = "Wait for input from user before running.  This allows time for a debugger to attach to this process.",
   ).flag(
-    "--no-wait",
+    "--no-wait", // TODO: automate "off" names
     default = false,
   )
 
-  override fun run() {
-    if (ioThreads != null) System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, ioThreads.toString())
+  // override fun aliases(): Map<String, List<String>> = mapOf(
+  //   "mvn" to listOf("maven"),
+  // )
 
+  // TODO: command aliases for all command prefixes
+  override fun run() {
     DynamicCallerConverter.depthEnd = logCallerDepth
+    Parallel.timeout = timeout
+
+    ioThreads?.let { System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, it.toString()) }
 
     for ((name, level) in log) {
       // TODO: warn if log exists
@@ -112,6 +145,7 @@ class Main : CliktCommand() {
     }
 
     if (wait) {
+      // TODO: use Clikt prompt
       // We use the system console in case stdin or stdout are redirected
       System.console().printf("Waiting for user.  Press \"Enter\" to continue.")
       System.console().readLine()

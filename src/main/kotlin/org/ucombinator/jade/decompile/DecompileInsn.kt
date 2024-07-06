@@ -1,7 +1,5 @@
 package org.ucombinator.jade.decompile
 
-// import java.lang.invoke.LambdaMetafactory
-
 import com.github.javaparser.ast.ArrayCreationLevel
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.ArrayAccessExpr
@@ -52,8 +50,10 @@ import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.classfile.Descriptor
 import org.ucombinator.jade.javaparser.JavaParser
 import org.ucombinator.jade.util.Errors
-import com.github.javaparser.ast.stmt.Statement as JPStatement
 import com.github.javaparser.ast.expr.Expression as JPExpression
+import com.github.javaparser.ast.stmt.Statement as JPStatement
+
+// import java.lang.invoke.LambdaMetafactory
 
 /*
 Nestings

@@ -5,6 +5,7 @@ import org.apache.maven.index.reader.RecordExpander
 import org.apache.maven.index.reader.resource.PathWritableResourceHandler
 import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Log
+
 import java.io.File
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -48,6 +49,8 @@ object IndexToJson { // TODO: rename "export index" or just "index" if we can co
     printJson(kind, entries.toMap().mapKeys { it.key.key() })
   }
 
+  // TODO: use Json.kt
+  // TODO: "null" in {"kind":"EXPANDED_RECORD","type":"ARTIFACT_ADD","hasJavadoc":false,"version":"1.2.2","recordModified":1318434019089,"groupId":"xstream","fileSize":-1,"fileExtension":"pom","artifactId":"xstream","packaging":"null","hasSources":false,"hasSignature":false,"fileModified":1182839150000}
   private fun printJson(kind: Kind, entries: Map<String, Any>) {
     println(
       JsonObject(

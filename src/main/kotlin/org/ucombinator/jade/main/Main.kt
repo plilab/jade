@@ -13,10 +13,8 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.split
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.int
-import com.github.ajalt.clikt.parameters.types.double
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
-import org.ucombinator.jade.util.Parallel
 import java.io.File
 
 // TODO: analysis to ensure using only the canonical constructor (helps with detecting forward version changes) (as a
@@ -43,6 +41,8 @@ fun main(args: Array<String>) {
       Maven.IndexToJson(),
       Maven.Versions(),
       Maven.Dependencies(),
+      Maven.Download(),
+      Maven.ClearLocks(),
     ),
     Meta().subcommands(
       Meta.BuildInfo(),
@@ -67,7 +67,7 @@ abstract class JadeCommand(help: String = "") : CliktCommand(help) {
     // TODO: check
     context {
       helpFormatter = { MordantHelpFormatter(it, showRequiredTag = true, showDefaultValues = true) }
-      argumentFileReader = { it -> File(it).readText() } // The Clikt default fails on pipes, redirects and devices
+      argumentFileReader = { File(it).readText() } // The Clikt default fails on pipes, redirects and devices
     }
   }
 }
@@ -112,9 +112,6 @@ class Main : JadeCommand() {
   val ioThreads: Int? by option().int()
 
   /** TODO:doc. */
-  val timeout: Double by option().double().default(Parallel.timeout)
-
-  /** TODO:doc. */
   val wait: Boolean by option(
     help = "Wait for input from user before running.  This allows time for a debugger to attach to this process.",
   ).flag(
@@ -129,7 +126,6 @@ class Main : JadeCommand() {
   // TODO: command aliases for all command prefixes
   override fun run() {
     DynamicCallerConverter.depthEnd = logCallerDepth
-    Parallel.timeout = timeout
 
     ioThreads?.let { System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, it.toString()) }
 

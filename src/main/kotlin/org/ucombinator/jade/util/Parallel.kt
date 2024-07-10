@@ -1,23 +1,21 @@
 package org.ucombinator.jade.util
 
 import mu.KLogger
+
 import java.io.File
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withTimeout
+
+// TODO: rename to concurrency
 
 /** TODO:doc. */
-object Parallel { // TODO: rename to concurrency
-  var log = Log {}
-
-  /** TODO:doc. */
-  var timeout = 5 * 60.0
-
+object Parallel {
   /** TODO:doc. */
   private fun time(startTime: Long): String = "%.2f".format((System.nanoTime() - startTime).toDouble() / 1e9)
 
@@ -38,10 +36,6 @@ object Parallel { // TODO: rename to concurrency
       } finally {
         runtime.removeShutdownHook(hook)
       }
-    // } finally {
-    //   runtime.removeShutdownHook(thread)
-    //   hook(false)
-    // }
     } catch (e: Throwable) {
       handler(false)
       throw e
@@ -55,6 +49,7 @@ object Parallel { // TODO: rename to concurrency
   /** TODO:doc. */
   fun <T> run(
     log: KLogger,
+    timeout: Duration,
     tasks: Collection<T>,
     outputFiles: (T) -> Pair<File, File>,
     isPermanent: (Throwable) -> Boolean, // TODO: flag for retry (can't do 'Boolean?' because need to know when retry limit reached
@@ -72,7 +67,7 @@ object Parallel { // TODO: rename to concurrency
       val running = Collections.synchronizedMap(mutableMapOf<T, Long>())
     }
     val passes = object {
-      val cached = AtomicInteger()
+      val cached = AtomicInteger() // TODO: cached don't need async
       val new = AtomicInteger()
     }
     val fails = object {
@@ -86,7 +81,6 @@ object Parallel { // TODO: rename to concurrency
       val jobsTotal = jobs.total
       val jobsWaiting = jobs.waiting.get()
       val jobsRunning = jobs.running.size
-      val jobsDone = jobsTotal - jobsWaiting - jobsRunning
 
       val passesCached = passes.cached.get()
       val passesNew = passes.new.get()
@@ -97,9 +91,12 @@ object Parallel { // TODO: rename to concurrency
       val failsGlitched = fails.glitched.values.sum()
       val failsTotal = failsCached + failsNew + failsGlitched
 
-      // TODO: show non-cached completed count
+      val jobsCached = passesCached + failsCached
+      val jobsDone = jobsTotal - jobsCached - jobsWaiting - jobsRunning
+      // TODO: reconsider how these are calculated to ensure no missing counts
+
       fun num(n: Number) = "%,d".format(n).replace(',', '_') // TODO: proper locale instead of replace()
-      val taskString = "👷jobs ${num(jobsTotal)} (wait ${num(jobsWaiting)}/run ${num(jobsRunning)}/done ${num(jobsDone)})"
+      val taskString = "👷jobs ${num(jobsTotal)} (cache ${num(jobsCached)}/wait ${num(jobsWaiting)}/run ${num(jobsRunning)}/done ${num(jobsDone)})"
       val passString = "✅pass ${num(passesTotal)} (cache ${num(passesCached)}/new ${num(passesNew)})"
       val failString = "❌fail ${num(failsTotal)} (cache ${num(failsCached)}/new ${num(failsNew)}/glitch ${num(failsGlitched)})"
 
@@ -176,7 +173,7 @@ object Parallel { // TODO: rename to concurrency
               jobs.running.put(task, startTime)
               printStatus("🏃start  ${task}")
               try {
-                writeResult(passFile, withTimeout(timeout.seconds) { runInterruptible { block(task) } })
+                writeResult(passFile, withTimeout(timeout) { runInterruptible { block(task) } })
               } finally {
                 jobs.running.remove(task)
               }

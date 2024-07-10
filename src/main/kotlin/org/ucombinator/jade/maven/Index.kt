@@ -3,6 +3,7 @@ package org.ucombinator.jade.maven
 import org.apache.maven.index.reader.Utils.INDEX_FILE_PREFIX
 import org.apache.maven.index.reader.resource.UriResourceHandler
 import org.ucombinator.jade.util.Log
+
 import java.io.File
 import java.net.URI
 import java.nio.channels.Channels

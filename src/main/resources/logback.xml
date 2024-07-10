@@ -22,6 +22,7 @@
   </appender>
 
   <root level="info">
+    <!-- TODO: STDERR (configurable?) -->
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

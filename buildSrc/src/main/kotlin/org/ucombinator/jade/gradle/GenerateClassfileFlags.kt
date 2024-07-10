@@ -112,7 +112,7 @@ object GenerateClassfileFlags {
         |
         |import com.github.javaparser.ast.Modifier
         |import com.github.javaparser.ast.NodeList
-        |import javax.annotation.Generated
+        |import javax.annotation.processing.Generated
         |
         |@Generated("${generatorName}")
         |sealed interface Flag {

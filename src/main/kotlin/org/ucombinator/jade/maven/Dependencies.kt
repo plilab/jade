@@ -34,6 +34,8 @@ object Dependencies {
     val session = Maven.session(LocalRepository(localRepoDir))
     // TODO: support multiple remotes
     val compressorStreamFactory = CompressorStreamFactory()
+    // org.eclipse.aether.collection.DependencyCollectionException: Failed to collect dependencies
+    // Caused by: org.eclipse.aether.transfer.ArtifactNotFoundException: Could not find artifact
 
     // TODO: INFO  .org.eclipse.aether.internal.impl.DefaultArtifactResolver: Artifact net.shibboleth.utilities:java-support:pom:8.4.0 is present in the local repository, but cached from a remote repository ID that is unavailable in current build context, verifying that is downloadable from [google-maven-central-ap (https://maven-central-asia.storage-download.googleapis.com/maven2, default, releases+snapshots), central (https://repo.maven.apache.org/maven2, default, releases), Shibbolet (https://build.shibboleth.net/nexus/content/repositories/releases/, default, releases+snapshots)]
     // TODO: INFO  .org.apache.http.impl.execchain.RetryExec: I/O exception (java.net.SocketException) caught when processing request to {}->http://repo.typesafe.com:80: Network is unreachable
@@ -120,12 +122,7 @@ object Dependencies {
           )
       },
     ) { artifact ->
-      // TODO:
-      // if (unsolvable(descriptorResult.artifact.groupId, descriptorResult.artifact.artifactId)) {
-      //   throw UnsolvableArtifactException(descriptorResult.artifact.groupId, descriptorResult.artifact.artifactId)
-      // }
-
-      val collectRequest = CollectRequest(Dependency(artifact, JavaScopes.COMPILE), listOf(Maven.remote))
+      val collectRequest = CollectRequest(Dependency(artifact, JavaScopes.COMPILE), Maven.remotes)
       // TODO: note difference between root artifact and root dependency (see https://maven.apache.org/resolver/maven-resolver-api/apidocs/org/eclipse/aether/collection/CollectRequest.html#setRootArtifact(org.eclipse.aether.artifact.Artifact))
       val collectResult = Maven.system.collectDependencies(session, collectRequest)
       // // collectResult.getRoot().accept(ConsoleDependencyGraphDumper())

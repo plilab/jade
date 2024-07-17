@@ -74,3 +74,19 @@ object Versions { // TODO: rename to versions
     }
   }
 }
+
+/** TODO:doc.
+ *
+ * @property groupId TODO:doc
+ * @property artifactId TODO:doc
+ */
+data class NoVersioningTagException(val groupId: String, val artifactId: String) :
+  Exception("No <versioning> tag in POM for $groupId:$artifactId")
+
+/** TODO:doc.
+ *
+ * @property groupId TODO:doc
+ * @property artifactId TODO:doc
+ */
+data class NoVersionsInVersioningTagException(val groupId: String, val artifactId: String) :
+Exception("No versions in POM for for $groupId:$artifactId")

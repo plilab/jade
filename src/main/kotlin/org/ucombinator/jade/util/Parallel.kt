@@ -45,6 +45,7 @@ object Parallel {
   }
 
   // TODO: could we replace with GNU Parallel or make this work across machines?
+  // TODO: flags for show glitch exception and show fail exception
 
   /** TODO:doc. */
   fun <T> run(
@@ -184,7 +185,7 @@ object Parallel {
               if (!isPermanent(e)) {
                 fails.glitched.merge(name, 1, Long::plus)
                 log.error(name, e)
-                printResult("🚧glitch")
+                printResult("⚠️ glitch")
               } else {
                 fails.new.merge(name, 1, Long::plus)
                 writeResult(failFile, "${name}\n--------\n${e.stackTraceToString()}".toByteArray())

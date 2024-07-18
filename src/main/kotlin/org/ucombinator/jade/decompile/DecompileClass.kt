@@ -26,6 +26,7 @@ import com.github.javaparser.ast.expr.MarkerAnnotationExpr
 import com.github.javaparser.ast.expr.MemberValuePair
 import com.github.javaparser.ast.expr.Name
 import com.github.javaparser.ast.expr.NormalAnnotationExpr
+import com.github.javaparser.ast.expr.NullLiteralExpr
 import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr
 import com.github.javaparser.ast.expr.StringLiteralExpr
@@ -74,7 +75,7 @@ object DecompileClass {
   fun decompileLiteral(node: Any?): Expression? =
     when (node) {
       // TODO: improve formatting of literals?
-      null -> null
+      null -> NullLiteralExpr()
       is Int -> IntegerLiteralExpr(node.toString())
       is Long -> LongLiteralExpr("${node}L")
       is Float -> DoubleLiteralExpr("${node}F") // `JavaParser` uses Doubles for Floats

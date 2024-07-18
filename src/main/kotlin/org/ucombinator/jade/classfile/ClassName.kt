@@ -40,11 +40,19 @@ object ClassName {
    * @param name TODO:doc
    * @return TODO:doc
    */
-  fun classNameExpr(name: String): Expression =
-    identifiers(name).map(::SimpleName).fold(null as Expression?) { qualifier, simpleName ->
-      if (qualifier == null) NameExpr(simpleName) else FieldAccessExpr(qualifier, /*TODO*/ NodeList(), simpleName)
-    }!!
+  fun classNameExpr(name: String): Expression = classNameExpr(classNameType(className(name)))
 
+  /** TODO:doc.
+   *
+   * @param name TODO:doc
+   * @return TODO:doc
+   */
+  fun classNameExpr(name: ClassOrInterfaceType): Expression =
+    when (val scope = name.scope.orElse(null)) {
+      null -> NameExpr(name.name)
+      else -> FieldAccessExpr(classNameExpr(scope), /* TODO */ NodeList(), name.name)
+    }
+    
   /** TODO:doc.
    *
    * @param name TODO:doc

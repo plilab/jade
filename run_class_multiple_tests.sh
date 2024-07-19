@@ -1,7 +1,7 @@
 # This script runs the test for decompiling class-level constructs on multiple .class files.
 
 # To use it:
-#   - Compile java files desired into .class files and if needs be and keep all .class files in a folder and its subfolders
+#   - Compile test java files into .class files if needs be and keep all .class files in a folder and its subfolders
 #   - Then, from project root, run `bash run_class_multiple_tests.sh <path to folder containing test files>. The script finds all .class files within the folder and its subfolders
 # REMEMBER TO RE-COMPILE .JAVA INTO .CLASS WHENEVER YOU MODIFY TEST JAVA FILES!
 # See https://github.com/adamsmd/jade/pull/2 for manual equivalence for a single test

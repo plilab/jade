@@ -1,4 +1,3 @@
-package abstract_class_interface;
 import java.util.ArrayList;
 
 public interface SampleInterface {

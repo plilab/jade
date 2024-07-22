@@ -81,13 +81,6 @@ class Diff : JadeCommand(help = "Compare class files") {
 class Maven : NoOpJadeCommand(help = "TODO") {
   // TODO: options such as proxy to mirror that match `mvn` options: https://maven.apache.org/settings.html
 
-  class Mirrors : JadeCommand(help = "TODO") {
-    // https://repo1.maven.org/maven2/.meta/repository-metadata.xml
-    override fun run() {
-      TODO()
-    }
-  }
-
   class Index : JadeCommand(help = "TODO") {
     // TODO: use `::URI`
     // https://repo1.maven.org/maven2/.index/
@@ -108,10 +101,10 @@ class Maven : NoOpJadeCommand(help = "TODO") {
     val record: Boolean by option().flag("--no-record", default = true)
     val expandedRecord: Boolean by option().flag("--no-expanded-record", default = true)
 
-    val remote: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
+    val local: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
 
     override fun run() {
-      org.ucombinator.jade.maven.IndexToJson.main(remote, index, chunk, record, expandedRecord)
+      org.ucombinator.jade.maven.IndexToJson.main(local, index, chunk, record, expandedRecord)
     }
   }
 

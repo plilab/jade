@@ -18,6 +18,8 @@ import kotlinx.serialization.json.JsonPrimitive
 // TODO: trailing commas
 // TODO: search to "TODO" typos
 
+// TODO: Format is JsonLines/NDJSON
+
 /** TODO:doc. */
 object IndexToJson { // TODO: rename "export index" or just "index" if we can combine with download or "index-export"
   private val log = Log {}
@@ -76,19 +78,17 @@ object IndexToJson { // TODO: rename "export index" or just "index" if we can co
 
   /** TODO:doc. */
   fun main( // TODO: rename to "list" or "toJson" or "export"? TODO: take outputstream as argument
-    remote: File, // TODO: rename
+    local: File,
     index: Boolean,
     chunk: Boolean,
     record: Boolean,
     expandedRecord: Boolean,
   ) {
-    var count = 0
     val expander = RecordExpander()
 
     // TODO: see if BufferedResourceHandler brings any speedup
-    PathWritableResourceHandler(remote.toPath()).use { remoteHandler -> // TODO: rename
-      // TODO: log.info of index (and others)
-      IndexReader(null, remoteHandler).use { indexReader ->
+    PathWritableResourceHandler(local.toPath()).use { resourceHandler ->
+      IndexReader(null, resourceHandler).use { indexReader ->
         if (index) {
           printJson(
             Kind.INDEX,
@@ -123,14 +123,10 @@ object IndexToJson { // TODO: rename "export index" or just "index" if we can co
                   )
                 }
               }
-
-              // if (count % 200_000 == 0) log.info("count: ${count}") // TODO: configurable modulus
-              count++
             }
           }
         }
       }
     }
-    // TODO: log total count
   }
 }

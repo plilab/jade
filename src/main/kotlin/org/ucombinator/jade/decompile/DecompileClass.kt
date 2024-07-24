@@ -17,15 +17,19 @@ import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.comments.BlockComment
 import com.github.javaparser.ast.expr.AnnotationExpr
+import com.github.javaparser.ast.expr.ArrayInitializerExpr
 import com.github.javaparser.ast.expr.ClassExpr
 import com.github.javaparser.ast.expr.DoubleLiteralExpr
 import com.github.javaparser.ast.expr.Expression
+import com.github.javaparser.ast.expr.FieldAccessExpr
 import com.github.javaparser.ast.expr.IntegerLiteralExpr
 import com.github.javaparser.ast.expr.LongLiteralExpr
 import com.github.javaparser.ast.expr.MarkerAnnotationExpr
 import com.github.javaparser.ast.expr.MemberValuePair
 import com.github.javaparser.ast.expr.Name
+import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.NormalAnnotationExpr
+import com.github.javaparser.ast.expr.NullLiteralExpr
 import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr
 import com.github.javaparser.ast.expr.StringLiteralExpr
@@ -74,7 +78,7 @@ object DecompileClass {
   fun decompileLiteral(node: Any?): Expression? =
     when (node) {
       // TODO: improve formatting of literals?
-      null -> null
+      null -> NullLiteralExpr()
       is Int -> IntegerLiteralExpr(node.toString())
       is Long -> LongLiteralExpr("${node}L")
       is Float -> DoubleLiteralExpr("${node}F") // `JavaParser` uses Doubles for Floats
@@ -96,21 +100,46 @@ object DecompileClass {
       else -> throw Exception("failed to convert type $t to a name")
     }
 
-  /** TODO:doc.
+  /** 
+   * Decompiles the value of the key-value pairs representing annotations' parameters as described in https://asm.ow2.io/javadoc/org/objectweb/asm/tree/AnnotationNode.html#values for all possible types of such value. For example, it constructs an Expression representing the string literal "ABC" for the annotation @A(param1="ABC").
    *
-   * @param node TODO:doc
-   * @return TODO:doc
+   * @param parameter The value of the key-value pairs.
+   * @return an Expression object representing the parameter
+   */
+  fun decompileAnnotationParameter(parameter: Any): Expression? = when (parameter) {
+    is Array<*> -> {
+      // enum's representation, e.g. ["Ljava/lang/annotation/RetentionPolicy;", "RETENTION_POLICY"]
+      require (parameter.size == 2) { "parameter is of type Array. It must be Array of String of size 2 representing enums according to https://asm.ow2.io/javadoc/org/objectweb/asm/tree/AnnotationNode.html#values, but here it's not of size 2." }
+
+      require (parameter.isArrayOf<String>()) { "parameter is of type Array. It must be Array of String of size 2 representing enums according to https://asm.ow2.io/javadoc/org/objectweb/asm/tree/AnnotationNode.html#values, but here it's not of Array of String." }
+
+      val scope = Descriptor.fieldDescriptor(parameter[0] as String) as ClassOrInterfaceType
+      val enumName = SimpleName(parameter[1] as String)
+
+      FieldAccessExpr(ClassName.classNameExpr(scope), /* TODO */ NodeList(), enumName)
+    }
+    is AnnotationNode -> decompileAnnotation(parameter)
+    is List<*> -> ArrayInitializerExpr(NodeList(parameter.map { decompileAnnotationParameter(it!!) }))
+    else -> decompileLiteral(parameter)
+  }
+
+  /** Decompiles an ASM AnnotationNode into a JavaParser AnnotationExpr
+   *
+   * @param node The node to be decompiled
+   * @return The JavaParser AnnotationExpr
    */
   private fun decompileAnnotation(node: AnnotationNode): AnnotationExpr {
     val name = typeToName(Descriptor.fieldDescriptor(node.desc))
+
+    // TODO: Implement writing to a SingleMemberAnnotation in the case there's only 1 default parameter named "value".
+    // Currently the SingleMemberAnnotation is written as a NormalAnnotationExpr with the parameter value=...
     val vs = node.values
     return when {
       vs == null -> MarkerAnnotationExpr(name)
-      vs.size == 1 -> SingleMemberAnnotationExpr(name, decompileLiteral(vs.first()))
       else ->
         NormalAnnotationExpr(
           name,
-          NodeList(vs.pairs().map { MemberValuePair(it.first as String, decompileLiteral(it.second)) }),
+          NodeList(vs.pairs().map { MemberValuePair(it.first as String, decompileAnnotationParameter(it.second)) }),
         )
     }
   }

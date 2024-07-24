@@ -1,0 +1,60 @@
+# TODO: Caching for Gradle actions was disabled due to pre-existing Gradle User Home - expand for details
+
+name: Build Variant
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        required: true
+        type: string
+      distribution:
+        required: true
+        type: string
+      java-version:
+        required: true
+        type: number
+
+  workflow_dispatch:
+    inputs:
+      runs-on:
+        description: runs-on (see https://github.com/actions/runner-images/tree/main)
+        required: true
+        default: ubuntu-latest
+        type: string
+      distribution:
+        description: distribution (see TODO)
+        required: true
+        default: temurin
+        type: string
+      java-version:
+        description: java-version (see TODO)
+        required: true
+        default: 17
+        type: number
+
+jobs:
+  build-variant:
+    runs-on: ${{ inputs.runs-on }}
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK ${{ inputs.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: ${{ inputs.distribution }}
+        java-version: ${{ inputs.java-version }}
+        cache: gradle
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        build-scan-publish: true
+        build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
+        build-scan-terms-of-use-agree: "yes"
+
+    - name: Build with Gradle Wrapper
+      run: ./gradlew build

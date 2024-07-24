@@ -1,5 +1,7 @@
 # TODO: buildscan
 # TODO: split into build.yml, gradle-wrapper-validation.yaml, dependency-submission.yml
+# TODO: parameters to specify OS and JDK to run
+# TODO: Caching for Gradle actions was disabled due to pre-existing Gradle User Home - expand for details
 
 name: Java CI with Gradle
 
@@ -49,6 +51,10 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
+      with:
+        build-scan-publish: true
+        build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
+        build-scan-terms-of-use-agree: "yes"
 
     - name: Build with Gradle Wrapper
       run: ./gradlew build
@@ -75,3 +81,7 @@ jobs:
 
     - name: Generate and submit dependency graph
       uses: gradle/actions/dependency-submission@v3
+      with:
+        build-scan-publish: true
+        build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
+        build-scan-terms-of-use-agree: "yes"

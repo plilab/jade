@@ -1,0 +1,36 @@
+name: Dependency Submission
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  dependency-submission:
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: [17]
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: ${{ matrix.java-version }}
+        cache: gradle
+
+    - name: Generate and submit dependency graph
+      uses: gradle/actions/dependency-submission@v3
+      with:
+        build-scan-publish: true
+        build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
+        build-scan-terms-of-use-agree: "yes"

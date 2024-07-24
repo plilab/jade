@@ -1,9 +1,7 @@
-# TODO: buildscan
-# TODO: split into build.yml, gradle-wrapper-validation.yaml, dependency-submission.yml
 # TODO: parameters to specify OS and JDK to run
 # TODO: Caching for Gradle actions was disabled due to pre-existing Gradle User Home - expand for details
 
-name: Java CI with Gradle
+name: Build
 
 on:
   workflow_dispatch:
@@ -13,12 +11,6 @@ on:
     branches: [ master ]
 
 jobs:
-  gradle-wrapper-validation:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: gradle/actions/wrapper-validation@v3
-
   build:
     strategy:
       fail-fast: false
@@ -58,30 +50,3 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: ./gradlew build
-
-  dependency-submission:
-    strategy:
-      fail-fast: false
-      matrix:
-        java-version: [17]
-
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up JDK ${{ matrix.java-version }}
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: ${{ matrix.java-version }}
-        cache: gradle
-
-    - name: Generate and submit dependency graph
-      uses: gradle/actions/dependency-submission@v3
-      with:
-        build-scan-publish: true
-        build-scan-terms-of-use-url: "https://gradle.com/help/legal-terms-of-use"
-        build-scan-terms-of-use-agree: "yes"

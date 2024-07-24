@@ -53,7 +53,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
 
 /** TODO:doc.
  *
@@ -183,7 +182,7 @@ object Maven {
           return@block action(it)
         } catch (e: Throwable) {
           if (attempt >= maxTries || !retry(e)) throw e
-          Thread.sleep((delay * attempt * Random.nextDouble(1.0, 2.0)).toJavaDuration())
+          Thread.sleep((delay * attempt * Random.nextDouble(1.0, 2.0)).inWholeMilliseconds)
           attempt++
         }
       }

@@ -26,6 +26,7 @@ import java.io.File
 // TODO: aliases, description, defaultValueProvider
 // TODO: have build generate documentation
 // TODO: throw ProgramResult(statusCode)
+// TODO: show default on boolean flags
 
 /** TODO:doc.
  *
@@ -37,6 +38,7 @@ fun main(args: Array<String>) {
     Compile(),
     Diff(),
     Maven().subcommands(
+      Maven.Mirrors(),
       Maven.Index(),
       Maven.IndexToJson(),
       Maven.Versions(),
@@ -44,9 +46,9 @@ fun main(args: Array<String>) {
       Maven.Download(),
       Maven.ClearLocks(),
     ),
-    Meta().subcommands(
-      Meta.BuildInfo(),
-      Meta.Loggers(),
+    About().subcommands(
+      About.BuildInfo(),
+      About.Loggers(),
       CompletionCommand(),
     ),
   ).main(args)
@@ -64,6 +66,7 @@ fun main(args: Array<String>) {
 abstract class JadeCommand(help: String = "") : CliktCommand(help) {
   init {
     // TODO: color and other formatting in help messages
+    // TODO: better terminal colors for `code`
     // TODO: check
     context {
       helpFormatter = { MordantHelpFormatter(it, showRequiredTag = true, showDefaultValues = true) }

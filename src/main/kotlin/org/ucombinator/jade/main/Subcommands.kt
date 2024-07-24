@@ -16,6 +16,7 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.types.file
 import org.ucombinator.jade.util.Log
 
@@ -47,16 +48,17 @@ class Decompile : JadeCommand(help = "Decompile a class file") {
 
 class Compile : JadeCommand(help = "Compile a java file") {
   // TODO: factor common parameters with Decompile
+  val options: List<String> by option().multiple()
+  val classes: List<String> by option().multiple()
+
   val files: List<File> by argument(
     name = "PATH",
     help = "Files or directories to compile",
   ).file(mustExist = true).multiple(required = true)
 
   override fun run() {
-    // TODO: Use a JavaAgent of a nested compiler to test whether the code compiles
-    // TODO: Test whether it compiles under different Java versions
-    // TODO: Back-off if compilation fails
-    org.ucombinator.jade.compile.Compile.main(files)
+    org.ucombinator.jade.compile.Compile.main(null, null, null, options, classes, files)
+    // TODO: instead of null use: System.out.writer() and others
   }
 }
 
@@ -78,62 +80,81 @@ class Diff : JadeCommand(help = "Compare class files") {
   }
 }
 
-class Maven : NoOpJadeCommand(help = "TODO") {
+class Maven : NoOpJadeCommand(
+  help = """
+    Commands for operating with Maven.
+
+    Common values for `remote` include:
+
+    - https://repo.maven.apache.org/maven2/
+    - https://repo1.maven.org/maven2/
+    - https://maven-central.storage-download.googleapis.com/maven2/
+    - https://maven-central-eu.storage-download.googleapis.com/maven2/
+    - https://maven-central-asia.storage-download.googleapis.com/maven2/
+  """.trimIndent(),
+) {
   // TODO: options such as proxy to mirror that match `mvn` options: https://maven.apache.org/settings.html
+  // TODO: use `::URI`
 
-  class Index : JadeCommand(help = "TODO") {
-    // TODO: use `::URI`
-    // https://repo1.maven.org/maven2/.index/
-    // https://maven-central-asia.storage-download.googleapis.com/maven2/.index/ (or mirror file)
+  class Mirrors : JadeCommand(help = """Print the mirrors of a maven repository""") {
+    val remote: URI by option().convert{ URI(it) }.default(URI(org.ucombinator.jade.maven.Maven.mavenCentral.first.url))
 
-    val remote: URI by argument().convert{ URI(it) } // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
-    val local: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
+    override fun run() {
+      org.ucombinator.jade.maven.Mirrors.main(remote)
+    }
+  }
+  // TODO: Clikt: metavar based on type (for URI)
+
+  class Index : JadeCommand(help = "Download the index from a remote Maven repository") {
+    val remote: URI by option(metavar = "URI", help = "URI of the repository to download from").convert{ URI(it) }.default(URI(org.ucombinator.jade.maven.Maven.mavenCentral.first.url))
+
+    val local: File by argument(help = "Path to the local directory in which to store the index").file(mustExist = true, canBeFile = false, mustBeWritable = true)
 
     override fun run() {
       org.ucombinator.jade.maven.Index.main(remote, local)
     }
   }
 
-  // TODO: options first then arguments
-  class IndexToJson : JadeCommand(help = "TODO") {
-    val index: Boolean by option().flag("--no-index", default = true)
-    val chunk: Boolean by option().flag("--no-chunk", default = true)
-    val record: Boolean by option().flag("--no-record", default = true)
-    val expandedRecord: Boolean by option().flag("--no-expanded-record", default = true)
+  class IndexToJson : JadeCommand(help = "Print a Maven index to stdout as JSON lines") {
+    val index: Boolean by option(help = "Whether to print `INDEX` records").flag("--no-index", default = true)
+    val chunk: Boolean by option(help = "Whether to print `CHUNK` records").flag("--no-chunk", default = true)
+    val record: Boolean by option(help = "Whether to print `RECORD` records").flag("--no-record", default = true)
+    val expandedRecord: Boolean by option(help = "Whether to print `EXPANDED_RECORD` records").flag("--no-expanded-record", default = true)
 
-    val local: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
+    val indexFile: File by argument().file(mustExist = true, canBeDir = false, mustBeReadable = true)
 
     override fun run() {
-      org.ucombinator.jade.maven.IndexToJson.main(local, index, chunk, record, expandedRecord)
+      org.ucombinator.jade.maven.IndexToJson.main(indexFile, index, chunk, record, expandedRecord)
     }
   }
 
-  class Versions : JadeCommand(help = "TODO") {
-    val shuffle: Boolean by option().flag("--no-shuffle", default = false)
-    val timeout: Duration by option().convert { Duration.parse(it) }.default(Duration.parse("5m")) // TODO: how to do infinity?
+  class Versions : JadeCommand(help = "Select artifact versions") {
+    // TODO: factor into ParallelCommand (or a mixin?)
+    // TODO: add io-threads
+    val shuffle: Boolean by option(help = "Whether to randomize the order of the inputs").flag("--no-shuffle", default = false)
+    val timeout: Duration by option(help = "How long to let an input run before timing it out").convert { Duration.parse(it) }.default(Duration.parse("5m")) // TODO: how to do infinity?
 
     val localRepoDir: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
     val versionsDir: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false) // TODO: as option and use stdout if not set
     val artifacts: List<Pair<String, String>> by
-      argument().convert { org.ucombinator.jade.maven.Maven.coordinate(it) }.multiple(required = true) // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
+      argument().convert { org.ucombinator.jade.maven.Maven.coordinate(it) }.multiple(required = true)
+      // TODO: argument().shuffled(shuffle)
 
     override fun run() {
-      val shuffledArtifacts = if (shuffle) artifacts.shuffled() else artifacts
+      val shuffledArtifacts = if (shuffle) artifacts.shuffled() else artifacts // TODO: factor
       org.ucombinator.jade.maven.Versions.main(timeout, localRepoDir, versionsDir, shuffledArtifacts)
     }
   }
 
   class Dependencies : JadeCommand(help = "TODO") {
-    // TODO: factor into ParallelCommand
-    // TODO: add io-threads
-    val shuffle: Boolean by option().flag("--no-shuffle", default = false)
-    val timeout: Duration by option().convert { Duration.parse(it) }.default(Duration.parse("5m")) // TODO: how to do infinity?
+    val shuffle: Boolean by option(help = "Whether to randomize the order of the inputs").flag("--no-shuffle", default = false)
+    val timeout: Duration by option(help = "How long to let an input run before timing it out").convert { Duration.parse(it) }.default(Duration.parse("5m")) // TODO: how to do infinity?
 
     // TODO: class Dependencies { remoterepos(default=central) localIndex artifacts() -> stdout or outputDir (local repo) }
     val localRepoDir: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
     val dependenciesDir: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false) // TODO: as option and use stdout if not set
     val artifacts: List<org.eclipse.aether.artifact.Artifact> by
-      argument().convert { org.eclipse.aether.artifact.DefaultArtifact(it)}.multiple(required = true) // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
+      argument().convert { org.eclipse.aether.artifact.DefaultArtifact(it)}.multiple(required = true)
 
     override fun run() {
       val shuffledArtifacts = if (shuffle) artifacts.shuffled() else artifacts
@@ -162,7 +183,7 @@ class Maven : NoOpJadeCommand(help = "TODO") {
     val localRepoDir: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
     val artifactsDir: File by argument().file() // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false) // TODO: as option and use stdout if not set
     val artifacts: List<org.eclipse.aether.artifact.Artifact> by
-      argument().convert { org.eclipse.aether.artifact.DefaultArtifact(it)}.multiple(required = true) // TODO: (mustExist = true, mustBeReadable = true, canBeDir = false)
+      argument().convert { org.eclipse.aether.artifact.DefaultArtifact(it)}.multiple(required = true)
 
     override fun run() {
       val shuffledArtifacts = if (shuffle) artifacts.shuffled() else artifacts
@@ -171,7 +192,7 @@ class Maven : NoOpJadeCommand(help = "TODO") {
   }
 }
 
-class Meta : NoOpJadeCommand(help = "TODO") { // TODO: rename (to "about"?)
+class About : NoOpJadeCommand(help = "Commands about `jade`") {
   class BuildInfo : JadeCommand(help = "Show information about how `jade` was built") {
     // TODO: --long --short
     override fun run() {
@@ -203,7 +224,7 @@ class Meta : NoOpJadeCommand(help = "TODO") { // TODO: rename (to "about"?)
   }
 
   class Loggers : JadeCommand(help = "List available loggers") {
-    val test: Boolean by option(help = "TODO").flag(default = false)
+    val test: Boolean by option(help = "Send test messages to all loggers").flag(default = false)
 
     override fun run() {
       // TODO: shows only initialized loggers

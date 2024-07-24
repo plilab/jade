@@ -14,10 +14,8 @@ import java.io.File
 import java.io.FileInputStream
 import kotlin.time.Duration
 
-// TODO: remove non-aether maven imports
-
 /** TODO:doc. */
-object Versions { // TODO: rename to versions
+object Versions {
   private val log = Log {}
 
   /** TODO:doc. */
@@ -35,7 +33,6 @@ object Versions { // TODO: rename to versions
 
     // TODO: factor into utility class?
     val session = Maven.session(LocalRepository(localRepoDir))
-    // TODO: use https://repo1.maven.org/maven2/ as backup
     val versionScheme = GenericVersionScheme() // TODO: locator.getService(VersionScheme::class.java)
 
     Parallel.run(
@@ -89,4 +86,4 @@ data class NoVersioningTagException(val groupId: String, val artifactId: String)
  * @property artifactId TODO:doc
  */
 data class NoVersionsInVersioningTagException(val groupId: String, val artifactId: String) :
-Exception("No versions in POM for for $groupId:$artifactId")
+  Exception("No versions in POM for for $groupId:$artifactId")

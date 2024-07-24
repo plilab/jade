@@ -13,25 +13,7 @@ on:
         type: string
       java-version:
         required: true
-        type: number
-
-  workflow_dispatch:
-    inputs:
-      runs-on:
-        description: runs-on (see https://github.com/actions/runner-images/tree/main)
-        required: true
-        default: ubuntu-latest
         type: string
-      distribution:
-        description: distribution (see TODO)
-        required: true
-        default: temurin
-        type: string
-      java-version:
-        description: java-version (see TODO)
-        required: true
-        default: 17
-        type: number
 
 jobs:
   build-variant:

@@ -1,0 +1,47 @@
+# TODO: Release
+# - https://github.com/marketplace/actions/automatic-releases
+# - https://github.com/marketplace/actions/gh-release
+# - https://github.com/marketplace/actions/create-release
+# - https://github.com/marketplace/actions/release-drafter
+# TODO: Publish library
+# TODO: Lint reports:
+# - https://github.com/marketplace/actions/lint-action
+# - https://github.com/marketplace/actions/super-linter
+# - https://github.com/marketplace/actions/megalinter
+# TODO: KDoc
+# TODO: Test reports
+# - https://github.com/marketplace/actions/test-reporter
+# - https://github.com/marketplace/actions/publish-test-results
+
+name: Build on Push
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build-on-push:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-latest, macos-latest, windows-latest]
+        distribution: [temurin]
+        # See https://adoptium.net/temurin/releases/ for available versions
+        # Available versions are: 8, 11, 16, 17, 18, 19, 20, 21, 22
+        # The LTS versions are: 8, 11, 17, 21
+        # We omit 8 because the class files in JGit require at least Java 11 (class file version 55.0)
+        # We omit 22 because Kotlin does not yet support JDK 22 target
+        java-version: ['11', '16', '17', '18', '19', '20', '21']
+        exclude:
+          - # Java 16 is not available on MacOS for some reason
+            runs-on: macos-latest
+            java-version: 16
+
+    uses: ./.github/workflows/build-variant.yml
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      distribution: ${{ matrix.distribution }}
+      java-version: ${{ matrix.java-version }}

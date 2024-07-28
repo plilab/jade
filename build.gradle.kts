@@ -199,8 +199,11 @@ val generateBuildInfo by tasks.registering {
     val dependencies = project.configurations
       .flatMap { it.dependencies }
       .filterIsInstance<ExternalDependency>()
-      .map { "    \"${it.group?.escape()}:${it.name.escape()}:${it.version?.escape()}\" to \"${it.targetConfiguration?.escape() ?: "default"}\"," }
-      .sorted()
+      .map {
+        val key = "${it.group?.escape()}:${it.name.escape()}:${it.version?.escape()}"
+        val value = "${it.targetConfiguration?.escape() ?: "default"}"
+        "    \"${key}\" to \"${value}\","
+      }.sorted()
       .joinToString("\n")
 
     val systemProperties = System.getProperties().toList()

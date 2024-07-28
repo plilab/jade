@@ -5,6 +5,7 @@ import com.github.javaparser.ast.DataKey
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.PackageDeclaration
+import com.github.javaparser.ast.body.AnnotationDeclaration
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.ConstructorDeclaration
@@ -354,17 +355,25 @@ object DecompileClass {
     
     val imports = NodeList<ImportDeclaration>() // TODO
 
-    val classOrInterfaceDeclaration = run {
-      // TODO: assert ACC_SUPER
-      val modifiers = Flag.toModifiers(Flag.classFlags(node.access))
-      val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
-        node.visibleAnnotations,
-        node.invisibleAnnotations,
-        node.visibleTypeAnnotations,
-        node.invisibleTypeAnnotations,
-      )
-      val isInterface: Boolean = (node.access and Opcodes.ACC_INTERFACE) != 0
-      val simpleName = SimpleName(fullClassName.identifier)
+    // TODO: assert ACC_SUPER
+    val modifiers = Flag.toModifiers(Flag.classFlags(node.access))
+    val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
+      node.visibleAnnotations,
+      node.invisibleAnnotations,
+      node.visibleTypeAnnotations,
+      node.invisibleTypeAnnotations,
+    )
+    val isInterface: Boolean = (node.access and Opcodes.ACC_INTERFACE) != 0
+    val simpleName = SimpleName(fullClassName.identifier)
+    val members: NodeList<BodyDeclaration<*>> = run {
+      val list = NodeList<BodyDeclaration<*>>()
+      list.addAll(NodeList(node.fields.map(::decompileField)))
+      list.addAll(NodeList(node.methods.map { decompileMethod(node, it) }))
+      // TODO
+      list
+    }
+
+    val declaration = if (0 == (node.access and Opcodes.ACC_ANNOTATION)) {
       // `extendedTypes` may be multiple if on an interface
       // TODO: test if should be Descriptor.className
       val (
@@ -390,15 +399,8 @@ object DecompileClass {
             NodeList<ClassOrInterfaceType>(),
           )
         }
-      val members: NodeList<BodyDeclaration<*>> = run {
-        val list = NodeList<BodyDeclaration<*>>()
-        list.addAll(NodeList(node.fields.map(::decompileField)))
-        list.addAll(NodeList(node.methods.map { decompileMethod(node, it) }))
-        // TODO
-        list
-      }
 
-      ClassOrInterfaceDeclaration(
+      val classOrInterfaceDeclaration = ClassOrInterfaceDeclaration(
         modifiers,
         annotations,
         isInterface,
@@ -409,17 +411,25 @@ object DecompileClass {
         permittedTypes,
         members,
       )
-    }
 
-    if (classOrInterfaceDeclaration.isInterface) {
-      classOrInterfaceDeclaration.setExtendedTypes(classOrInterfaceDeclaration.implementedTypes)
-      classOrInterfaceDeclaration.setImplementedTypes(NodeList())
-    }
+      if (classOrInterfaceDeclaration.isInterface) {
+        classOrInterfaceDeclaration.setExtendedTypes(classOrInterfaceDeclaration.implementedTypes)
+        classOrInterfaceDeclaration.setImplementedTypes(NodeList())
+      }
 
-    classOrInterfaceDeclaration.setData(CLASS_NODE, node)
+      classOrInterfaceDeclaration.setData(CLASS_NODE, node)
+      classOrInterfaceDeclaration
+    } else {
+      AnnotationDeclaration(
+        modifiers,
+        annotations,
+        simpleName,
+        members
+      )
+    }
 
     val types = NodeList<TypeDeclaration<*>>()
-    types.add(classOrInterfaceDeclaration)
+    types.add(declaration)
 
     // TODO: ModuleExportNode
     // TODO: ModuleNode

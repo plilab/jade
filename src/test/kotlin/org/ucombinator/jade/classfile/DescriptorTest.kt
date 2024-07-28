@@ -12,8 +12,9 @@ object DescriptorTest {
 
   @Suppress("detekt:MaxLineLength", "ktlint:standard:argument-list-wrapping", "ktlint:standard:max-line-length")
   @JvmStatic fun tests() =
+    // Triple(descriptor kind, descriptor, expected result or null for invalid)
     listOf<Triple<Kind, String, String?>>(
-      // Triple(descriptor kind, descriptor, expected result or null for invalid)
+      // TODO: From ...
       Triple(Kind.FIELD, "", null),
       Triple(Kind.METHOD, "", null),
       Triple(Kind.FIELD, "L.;", null),
@@ -102,17 +103,17 @@ object DescriptorTest {
       Triple(Kind.FIELD, "java.lang.String", null),
       Triple(Kind.FIELD, "[]", null),
       Triple(Kind.FIELD, "Ljava/lang/String", null),
-      // Triple(Kind.FIELD, "Ljava.lang.String;", null), // invalid descriptor but valid signature
+      Triple(Kind.FIELD, "Ljava.lang.String;", null),
       Triple(Kind.FIELD, "java/lang/String", null),
       Triple(Kind.FIELD, "I;", null),
       Triple(Kind.FIELD, "[]", null),
       Triple(Kind.FIELD, "Ljava/lang/String", null),
-      // Triple(Kind.FIELD, "Ljava.lang.String;", null), // invalid descriptor but valid signature
+      Triple(Kind.FIELD, "Ljava.lang.String;", null),
       Triple(Kind.FIELD, "java/lang/String", null),
       Triple(Kind.FIELD, "I;", null),
       Triple(Kind.FIELD, "[]", null),
       // Triple(Kind.FIELD, "[Ljava/lang/String;", null), // invalid "internal name" but valid descriptor
-      // Triple(Kind.FIELD, "Ljava.lang.String;", null), // invalid descriptor but valid signature
+      Triple(Kind.FIELD, "Ljava.lang.String;", null),
       Triple(Kind.FIELD, "java.lang.String", null),
       Triple(Kind.FIELD, "Ljava/lang/String;", "java.lang.String"),
 
@@ -181,7 +182,7 @@ object DescriptorTest {
       Triple(Kind.METHOD, "(java.lang.String)V", null),
       Triple(Kind.METHOD, "()[]", null),
       Triple(Kind.METHOD, "(Ljava/lang/String)V", null),
-      // Triple(Kind.METHOD, "(Ljava.lang.String;)V", null), // invalid descriptor but valid signature
+      Triple(Kind.METHOD, "(Ljava.lang.String;)V", null),
       Triple(Kind.METHOD, "(java/lang/String)V", null),
 
       // From https://github.com/openjdk/jdk/blob/jdk-23%2B23/test/jdk/java/lang/constant/NameValidationTest.java

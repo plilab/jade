@@ -1,6 +1,9 @@
 package org.ucombinator.jade.classfile
 
+import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.type.Type
+import com.github.javaparser.ast.type.TypeParameter
+import com.github.javaparser.ast.visitor.GenericVisitorAdapter
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.ucombinator.jade.util.Log
@@ -16,8 +19,9 @@ object SignatureTest {
 
   @Suppress("detekt:MaxLineLength", "ktlint:standard:argument-list-wrapping", "ktlint:standard:max-line-length")
   @JvmStatic fun tests() =
+    // Triple(signature kind, signature, expected result or null for invalid)
     listOf<Triple<Kind, String, String?>>(
-      // Triple(signature kind, signature, expected result or null for invalid)
+      // TODO: From ...
       Triple(Kind.TYPE, "", null),
       Triple(Kind.CLASS, "", null),
       Triple(Kind.METHOD, "", null),
@@ -859,5 +863,59 @@ object SignatureTest {
     }
 
   @ParameterizedTest @MethodSource("tests")
-  fun `test signature`(test: Triple<Kind, String, String?>) { test("signature", test, ::parseSignature) }
+  fun `test signature`(test: Triple<Kind, String, String?>) = test("signature", test, ::parseSignature)
+
+  @ParameterizedTest @MethodSource("tests")
+  fun `test descriptor`(test: Triple<Kind, String, String?>) {
+    // Modify the tests to (1) use DescriptorTest.Kind and (2) fail for valid signatures but invalid descriptors
+    val modifiedTest = when (test.first) {
+      Kind.CLASS -> return // No meaningful equivalent for descriptors
+      Kind.TYPE -> Triple(
+        DescriptorTest.Kind.FIELD,
+        test.second,
+        test.third.let { result ->
+          if (result == null || hasDots(test.second) || hasTypeParam(Signature.typeSignature(test.second))) {
+            null
+          } else {
+            result
+          }
+        },
+      )
+      Kind.METHOD -> Triple(
+        DescriptorTest.Kind.METHOD,
+        test.second,
+        test.third.let { result ->
+          if (result == null ||
+            hasDots(test.second) ||
+            Signature.methodSignature(test.second).let { signature ->
+              signature.typeParameters.isNotEmpty() ||
+                signature.exceptionTypes.isNotEmpty() ||
+                signature.parameterTypes.any(::hasTypeParam) ||
+                hasTypeParam(signature.returnType)
+            }
+          ) {
+            null
+          } else {
+            result.split(';').let { es -> "${es[1]};${es[2]}" } // Omit type parameters and exceptions
+          }
+        },
+      )
+    }
+    test("descriptor", modifiedTest, DescriptorTest::parseDescriptor)
+  }
+
+  // TODO: "." is valid (for inner classes) in signatures but not descriptors
+  private fun hasDots(s: String): Boolean = s.any { listOf('.').contains(it) }
+
+  // TODO: Type parameters are valid in signatures but not descriptors
+  private fun hasTypeParam(type: Type): Boolean =
+    null != type.accept(
+      object : GenericVisitorAdapter<Unit, Unit>() {
+        override fun visit(n: ClassOrInterfaceType, a: Unit): Unit? =
+          if (n.typeArguments.isPresent) Unit else super.visit(n, a)
+
+        override fun visit(n: TypeParameter, a: Unit): Unit? = Unit
+      },
+      Unit,
+    )
 }

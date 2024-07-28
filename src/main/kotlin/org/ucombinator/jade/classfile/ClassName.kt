@@ -5,8 +5,9 @@ import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.FieldAccessExpr
 import com.github.javaparser.ast.expr.Name
 import com.github.javaparser.ast.expr.NameExpr
-import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.ClassOrInterfaceType
+
+// TODO: make clear which strings take "." or "/"
 
 /** TODO:doc. */
 object ClassName {
@@ -52,7 +53,7 @@ object ClassName {
       null -> NameExpr(name.name)
       else -> FieldAccessExpr(classNameExpr(scope), /* TODO */ NodeList(), name.name)
     }
-    
+
   /** TODO:doc.
    *
    * @param name TODO:doc

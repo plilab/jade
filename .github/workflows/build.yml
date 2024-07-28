@@ -13,7 +13,7 @@
 # - https://github.com/marketplace/actions/test-reporter
 # - https://github.com/marketplace/actions/publish-test-results
 
-name: Build on Push
+name: Build
 
 on:
   push:

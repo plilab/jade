@@ -78,7 +78,7 @@ The correctness of decompiling class-level constructs can be ascertained by the 
 ```
 ./gradlew run --args="decompile '<path to file>/SampleInterface.class' tmp"
 ```
-2) Recompile the decompiled code with `javac tmp/SampleInterface.java` or `javac tmp/SampleAbstractClass.java`
+2) Recompile the decompiled code with `javac tmp/XXX.java`. If there is any dependency, download their jar file as well and include them with a `-classpath` parameter, for example `javac -classpath denpendency1.jar:dependency2.jar:dependency3.jar: "XXX.java"`
 
 3) Decompile given test files 
     ```

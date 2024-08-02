@@ -1,6 +1,8 @@
 import java.lang.annotation.*;
 
-// Alternative: https://docs.oracle.com/en/java/javase/17/docs/api/java.compiler/javax/annotation/processing/Generated.html
+// Annotation with multiple parameters
+// Alternatively, we can use the built-in @Generated with multiple parameters
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.compiler/javax/annotation/processing/Generated.html
 @interface Name {
     String first();
     String last();

@@ -1,3 +1,4 @@
+// Custom annotation declaration with a single parameter
 @interface FirstName {
     String value();
 }

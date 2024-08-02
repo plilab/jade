@@ -9,7 +9,7 @@ At a high level, Jade works as follows:
 - Then, raw Java bytecodes from the `.class` file are read using [ASM](https://asm.ow2.io/), and accessed via the ASM Tree API.
 - Subsequently, Jade builds a Java abstract syntax tree using data structures provided by [JavaParser](https://javaparser.org/).
 	- Bytecode sections belonging to class-level constructs (fields, method signatures, etc.) are directly translated from bytecode into JavaParser data structures.
-	- Bytecode sections belonging to method bodies with instructions are converted into 3 useful intermediate representations: control flow graph (CFG), Static-Single Assignment (SSA) form and CFG Domination Structure form. Jade utilizes these three representations to construct a Java abstract syntax tree.
+	- Bytecode sections belonging to method bodies with instructions are converted into 3 useful intermediate representations: control flow graph (CFG), Static-Single Assignment (SSA) form and CFG Dominator Structure form. Jade utilizes these three representations to construct a Java abstract syntax tree.
 - Finally, the abstract syntax tree is converted into Java code and written to the output stream.
 
 The following figure illustrates Jade's decompiling workflow:

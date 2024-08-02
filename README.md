@@ -45,4 +45,4 @@ TODO: explain the following
 
 ## Developer Guide
 
-For more details on Jade's codebase, refer to Developer Guide which can be found at `docs/Developer Guide.md`
+For more details on Jade's codebase and working on Jade, refer to Developer Guide at [docs/DeveloperGuide.md](docs/DeveloperGuide.md)

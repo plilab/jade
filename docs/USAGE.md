@@ -519,3 +519,5 @@ $ source completions/jade.zsh
 $ ./jade about generate-completion fish >completions/jade.fish
 $ source completions/jade.fish
 ```
+
+$ ./jade download-maven --shuffle ~/a/local/jade2/index/index ~/a/local/jade2/local-repo ~/a/local/jade2/dependency-lists ~/a/local/jade2/jar-lists

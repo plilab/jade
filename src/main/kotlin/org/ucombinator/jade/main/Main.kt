@@ -4,7 +4,10 @@ import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.context
+import com.github.ajalt.clikt.core.main
+import com.github.ajalt.clikt.core.installMordantMarkdown
 import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
@@ -33,7 +36,7 @@ import java.io.File
  * @param args TODO:doc
  */
 fun main(args: Array<String>) {
-  Main().subcommands(
+  Jade().subcommands(
     Decompile(),
     Compile(),
     Diff(),
@@ -63,25 +66,26 @@ fun main(args: Array<String>) {
 //   showEndOfOptionsDelimiterInUsageHelp = true,
 
 /** TODO: doc. */
-abstract class JadeCommand(help: String = "") : CliktCommand(help) {
+abstract class JadeCommand() : CliktCommand() {
   init {
     // TODO: color and other formatting in help messages
     // TODO: better terminal colors for `code`
     // TODO: check
+    installMordantMarkdown() // TODO: versus helpFormatter
     context {
-      helpFormatter = { MordantHelpFormatter(it, showRequiredTag = true, showDefaultValues = true) }
-      argumentFileReader = { File(it).readText() } // The Clikt default fails on pipes, redirects and devices
+      // TODO: helpFormatter = { MordantHelpFormatter(it, showRequiredTag = true, showDefaultValues = true) }
+      readArgumentFile = { File(it).readText() } // The Clikt default fails on pipes, redirects and devices
     }
   }
 }
 
 /** TODO: doc. */
-open class NoOpJadeCommand(help: String = "") : JadeCommand(help) {
+open class NoOpJadeCommand() : JadeCommand() {
   final override fun run() { /* do nothing */ }
 }
 
 /** TODO:doc. */
-class Main : JadeCommand() {
+class Jade : JadeCommand() {
   init {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
   }
@@ -95,15 +99,14 @@ class Main : JadeCommand() {
       NAME is a qualified package or class name and is relative to `org.ucombinator.jade` unless prefixed with `.`.
     """.trimIndent(),
   ).convert { arg ->
-    arg.split(",").map {
-      val r = it.split("=", limit = 2)
-      when (r.size) {
-        1 -> "" to Level.toLevel(r[0])
-        2 -> r[0] to Level.toLevel(r[1])
-        else -> TODO("impossible")
-      }
+    val r = arg.split("=", limit = 2)
+    when (r.size) {
+      1 -> "" to Level.toLevel(r[0])
+      2 -> r[0] to Level.toLevel(r[1])
+      else -> TODO("impossible")
     }
-  }.default(listOf())
+  }.split(Regex(","))
+  .default(listOf())
 
   /** TODO:doc. */
   val logCallerDepth: Int by option(

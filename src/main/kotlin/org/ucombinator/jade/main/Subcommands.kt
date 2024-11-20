@@ -9,6 +9,7 @@
 // separate from Main.kt so we can suppress lint warnings about undocumented classes and properties.
 package org.ucombinator.jade.main
 
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
@@ -24,7 +25,9 @@ import java.io.File
 import java.net.URI
 import kotlin.time.Duration
 
-class Decompile : JadeCommand(help = "Decompile a class file") {
+class Decompile : JadeCommand() {
+  override fun help(context: Context) = "Decompile a class file"
+
   // TODO: --include-file --exclude-file --include-class --exclude-class --include-cxt-file --include-cxt-class
   // --filter=+dir=
   // TODO: --classpath
@@ -46,7 +49,9 @@ class Decompile : JadeCommand(help = "Decompile a class file") {
   }
 }
 
-class Compile : JadeCommand(help = "Compile a java file") {
+class Compile : JadeCommand() {
+  override fun help(context: Context) = "Compile a java file"
+
   // TODO: factor common parameters with Decompile
   val options: List<String> by option().multiple()
   val classes: List<String> by option().multiple()
@@ -64,7 +69,9 @@ class Compile : JadeCommand(help = "Compile a java file") {
 
 // TODO: commands for decompiling with other decompilers
 
-class Diff : JadeCommand(help = "Compare class files") {
+class Diff : JadeCommand() {
+  override fun help(context: Context) = "Compare class files"
+
   val old: File by argument(
     name = "PATH",
     help = "TODO",
@@ -80,23 +87,25 @@ class Diff : JadeCommand(help = "Compare class files") {
   }
 }
 
-class Maven : NoOpJadeCommand(
-  help = """
-    Commands for operating with Maven.
+class Maven : NoOpJadeCommand() {
+  override fun help(context: Context) = """
+      Commands for operating with Maven.
 
-    Common values for `remote` include:
+      Common values for `remote` include:
 
-    - https://repo.maven.apache.org/maven2/
-    - https://repo1.maven.org/maven2/
-    - https://maven-central.storage-download.googleapis.com/maven2/
-    - https://maven-central-eu.storage-download.googleapis.com/maven2/
-    - https://maven-central-asia.storage-download.googleapis.com/maven2/
-  """.trimIndent(),
-) {
+      - https://repo.maven.apache.org/maven2/
+      - https://repo1.maven.org/maven2/
+      - https://maven-central.storage-download.googleapis.com/maven2/
+      - https://maven-central-eu.storage-download.googleapis.com/maven2/
+      - https://maven-central-asia.storage-download.googleapis.com/maven2/
+    """.trimIndent()
+
   // TODO: options such as proxy to mirror that match `mvn` options: https://maven.apache.org/settings.html
   // TODO: use `::URI`
 
-  class Mirrors : JadeCommand(help = """Print the mirrors of a maven repository""") {
+  class Mirrors : JadeCommand() {
+    override fun help(context: Context) = """Print the mirrors of a maven repository"""
+
     val remote: URI by option().convert{ URI(it) }.default(URI(org.ucombinator.jade.maven.Maven.mavenCentral.first.url))
 
     override fun run() {
@@ -105,7 +114,9 @@ class Maven : NoOpJadeCommand(
   }
   // TODO: Clikt: metavar based on type (for URI)
 
-  class Index : JadeCommand(help = "Download the index from a remote Maven repository") {
+  class Index : JadeCommand() {
+    override fun help(context: Context) = "Download the index from a remote Maven repository"
+
     val remote: URI by option(metavar = "URI", help = "URI of the repository to download from").convert{ URI(it) }.default(URI(org.ucombinator.jade.maven.Maven.mavenCentral.first.url))
 
     val local: File by argument(help = "Path to the local directory in which to store the index").file(mustExist = true, canBeFile = false, mustBeWritable = true)
@@ -115,7 +126,9 @@ class Maven : NoOpJadeCommand(
     }
   }
 
-  class IndexToJson : JadeCommand(help = "Print a Maven index to stdout as JSON lines") {
+  class IndexToJson : JadeCommand() {
+    override fun help(context: Context) = "Print a Maven index to stdout as JSON lines"
+
     val index: Boolean by option(help = "Whether to print `INDEX` records").flag("--no-index", default = true)
     val chunk: Boolean by option(help = "Whether to print `CHUNK` records").flag("--no-chunk", default = true)
     val record: Boolean by option(help = "Whether to print `RECORD` records").flag("--no-record", default = true)
@@ -128,7 +141,9 @@ class Maven : NoOpJadeCommand(
     }
   }
 
-  class Versions : JadeCommand(help = "Select artifact versions") {
+  class Versions : JadeCommand() {
+    override fun help(context: Context) = "Select artifact versions"
+
     // TODO: factor into ParallelCommand (or a mixin?)
     // TODO: add io-threads
     val shuffle: Boolean by option(help = "Whether to randomize the order of the inputs").flag("--no-shuffle", default = false)
@@ -146,7 +161,9 @@ class Maven : NoOpJadeCommand(
     }
   }
 
-  class Dependencies : JadeCommand(help = "TODO") {
+  class Dependencies : JadeCommand() {
+    override fun help(context: Context) = "TODO"
+
     val shuffle: Boolean by option(help = "Whether to randomize the order of the inputs").flag("--no-shuffle", default = false)
     val timeout: Duration by option(help = "How long to let an input run before timing it out").convert { Duration.parse(it) }.default(Duration.parse("5m")) // TODO: how to do infinity?
 
@@ -166,7 +183,9 @@ class Maven : NoOpJadeCommand(
 
   // TODO: class ArtifactUrl
 
-  class ClearLocks : JadeCommand(help = "TODO") {
+  class ClearLocks : JadeCommand() {
+    override fun help(context: Context) = "TODO"
+
     override fun run() {
       // TODO: command to clear locks
       // ../repo/local-repo/org/bgee/log4jdbc-log4j2/log4jdbc-log4j2-jdbc4.1/maven-metadata-google-maven-central-ap.xml.6707912453454501025.tmp
@@ -176,7 +195,9 @@ class Maven : NoOpJadeCommand(
     }
   }
 
-  class Download : JadeCommand(help = "TODO") {
+  class Download : JadeCommand() {
+    override fun help(context: Context) = "TODO"
+
     val shuffle: Boolean by option().flag("--no-shuffle", default = false)
     val timeout: Duration by option().convert { Duration.parse(it) }.default(Duration.parse("5m")) // TODO: how to do infinity?
 
@@ -192,8 +213,12 @@ class Maven : NoOpJadeCommand(
   }
 }
 
-class About : NoOpJadeCommand(help = "Commands about `jade`") {
-  class BuildInfo : JadeCommand(help = "Show information about how `jade` was built") {
+class About : NoOpJadeCommand() {
+  override fun help(context: Context) = "Commands about `jade`"
+
+  class BuildInfo : JadeCommand() {
+    override fun help(context: Context) = "Show information about how `jade` was built"
+
     // TODO: --long --short
     override fun run() {
       with(BuildInformation) {
@@ -223,7 +248,9 @@ class About : NoOpJadeCommand(help = "Commands about `jade`") {
     }
   }
 
-  class Loggers : JadeCommand(help = "List available loggers") {
+  class Loggers : JadeCommand() {
+    override fun help(context: Context) = "List available loggers"
+
     val test: Boolean by option(help = "Send test messages to all loggers").flag(default = false)
 
     override fun run() {

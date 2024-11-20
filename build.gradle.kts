@@ -46,8 +46,8 @@ dependencies {
 
   // NOTE: these are sorted alphabetically
 
-  // Logging (see also io.github.microutils:kotlin-logging-jvm)
-  implementation("ch.qos.logback:logback-classic:1.5.6")
+  // Logging (see also io.github.oshai:kotlin-logging-jvm)
+  implementation("ch.qos.logback:logback-classic:1.5.12")
 
   // Command-line argument parsing
   implementation("com.github.ajalt.clikt:clikt:4.4.0")
@@ -60,7 +60,7 @@ dependencies {
   // Omitting the JavaParser "generator" and "metamodel" packages as they are just for building JavaParser
 
   // Logging (see also ch.qos.logback:logback-classic)
-  implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
+  implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 
   // Compression
   implementation("org.apache.commons:commons-compress:1.26.1")

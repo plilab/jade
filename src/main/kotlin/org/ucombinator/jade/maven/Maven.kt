@@ -177,7 +177,7 @@ object Maven {
     return block@{
       var attempt = 1
       repeat {
-        if (attempt > maxSilentTries) log.warn("Retrying (${attempt} of ${maxTries}): ${it}")
+        if (attempt > maxSilentTries) log.warn { "Retrying (${attempt} of ${maxTries}): ${it}" }
         try {
           return@block action(it)
         } catch (e: Throwable) {
@@ -367,7 +367,7 @@ class JadeArtifactResolver(var artifactResolver: ArtifactResolver) : ArtifactRes
     // TODO: data-driven list of removals
     // request.repositories = request.repositories.mapNotNull {
     //   // ERROR maven.Dependencies: URL: typesafe (http://repo.typesafe.com/typesafe/releases/, default, releases+snapshots) repo.typesafe.com true http://repo.typesafe.com/typesafe/releases/
-    //   // if (it.url.contains("typesafe")) { log.error("URL: ${it} ${it.host} ${it.host == "repo.typesafe.com"} ${it.url}") }
+    //   // if (it.url.contains("typesafe")) { log.error { "URL: ${it} ${it.host} ${it.host == "repo.typesafe.com"} ${it.url}" } }
     //   when {
     //     it.host == "repo.typesafe.com" -> null // TODO: new typesafe repo // TODO: still broken for some reason
     //     else -> it

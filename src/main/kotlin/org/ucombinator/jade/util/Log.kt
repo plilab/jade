@@ -6,8 +6,8 @@ import ch.qos.logback.classic.spi.CallerData
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.CoreConstants
 import ch.qos.logback.core.pattern.color.ANSIConstants
-import mu.KLogger // TODO: consider other logger systems
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KLogger // TODO: consider other logger systems
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.slf4j.LoggerFactory
 import org.ucombinator.jade.main.Main
 
@@ -56,7 +56,7 @@ object Log {
     // See https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
     // Note: toURI is required in order to handle special characters
     val jar = java.io.File(Main::class.java.protectionDomain.codeSource.location.toURI()).path
-    log.debug("jar: $jar")
+    log.debug { "jar: $jar" }
 
     for (entry in JarFile(jar).entries()) {
       if (entry.name.endsWith(".class")) {
@@ -64,7 +64,7 @@ object Log {
           // TODO: classLoader load class
           Class.forName(entry.name.replace("\\.class$", "").replace("/", "."))
         } catch (e: Throwable) {
-          log.debug("skipping: ${entry.name} ${e}") // TODO: show exception in message
+          log.debug { "skipping: ${entry.name} ${e}" } // TODO: show exception in message
         }
       }
     }

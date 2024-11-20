@@ -442,7 +442,7 @@ object DecompileClass {
     val compilationUnit = CompilationUnit(packageDeclaration, imports, types, module)
     JavaParser.setComment(compilationUnit, comment)
     // TODO: Decompile.classes += compilationUnit to node
-    // TODO: log.debug("++++ decompile class ++++\n" + compilationUnit.toString())
+    // TODO: log.debug { "++++ decompile class ++++\n" + compilationUnit.toString() }
 
     return compilationUnit
   }

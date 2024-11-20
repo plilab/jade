@@ -28,7 +28,7 @@ object Index {
     var remoteDir = remote.resolve(".index/")
     UriResourceHandler(remoteDir).use { resourceHandler ->
       for (name in listOf(".properties", ".gz").map(INDEX_FILE_PREFIX::plus)) {
-        log.info("downloading $name from $remoteDir to $local")
+        log.info { "downloading $name from $remoteDir to $local" }
         resourceHandler.locate(name).use { resource ->
           resource.read().use { inputStream ->
             // TODO: inputStream == null
@@ -36,7 +36,7 @@ object Index {
               // TODO: outputStream throws java.io.FileNotFoundException
               local.resolve(name).outputStream().use { fileOutputStream ->
                 val transferred = fileOutputStream.channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
-                log.info("downloaded ${name} from $remoteDir to $local containing ${transferred} bytes")
+                log.info { "downloaded ${name} from $remoteDir to $local containing ${transferred} bytes" }
               }
             }
           }

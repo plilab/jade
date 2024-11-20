@@ -107,7 +107,7 @@ object DecompileStatement {
         val (retVal, decompiled) = DecompileInsn.decompileInsn(insn.insn, ssa)
         return when (decompiled) {
           is DecompiledInsn.If -> {
-            // log.debug("IF: " + decompiled.labelNode + "///" + decompiled.labelNode.getLabel)
+            // log.debug { "IF: " + decompiled.labelNode + "///" + decompiled.labelNode.getLabel }
             IfStmt(decompiled.condition, BreakStmt(labelString(decompiled.labelNode)), null)
           }
           is DecompiledInsn.Goto ->

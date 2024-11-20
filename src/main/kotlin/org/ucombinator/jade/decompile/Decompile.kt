@@ -38,10 +38,10 @@ object Decompile {
       val file = filePath.last() // TODO: temporary code: multiple file paths due to nested archives
       val classReader = ClassReader(bytes)
 
-      log.info("Decompiling [${i + 1} of ${readFiles.result.size}] ${classReader.className} from ${filePath}")
+      log.info { "Decompiling [${i + 1} of ${readFiles.result.size}] ${classReader.className} from ${filePath}" }
       val compilationUnit = decompileClassReader(classReader)
 
-      log.debug("stubCompilationUnit\n${compilationUnit}")
+      log.debug { "stubCompilationUnit\n${compilationUnit}" }
 
       // TODO: use class name to create directory hierarchy (may need CLI options to control this)
       // Write to .java file of the same name as .class file (e.g. SampleClass.class -> SampleClass.java)
@@ -56,21 +56,21 @@ object Decompile {
       AtomicWriteFile.write(File(outputDir, classFileName.replace(suffix, ".java")), "${compilationUnit}", false)
 
       for (type in compilationUnit.types) {
-        log.debug("type: ${type.javaClass}")
+        log.debug { "type: ${type.javaClass}" }
         if (type is ClassOrInterfaceDeclaration) {
           val classNode = type.getData(DecompileClass.CLASS_NODE)!!
           // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
           for (callable in type.constructors + type.methods) {
             val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
             DecompileMethodBody.decompileBody(classNode, methodNode, callable)
-            log.debug("method: $callable")
+            log.debug { "method: $callable" }
           }
         } else {
           TODO()
         }
       }
 
-      log.debug("compilationUnit\n${compilationUnit}")
+      log.debug { "compilationUnit\n${compilationUnit}" }
     }
 
     // for (((name, readers), classIndex) <- VFS.classes.zipWithIndex) {
@@ -83,17 +83,17 @@ object Decompile {
     //     for (typ <- compilationUnit.types.iterator().asScala) {
     //       val members = typ.members.iterator().asScala.flatMap(x => Decompile.methods[x].map((_, x))).toList
     //       for ((((classNode, methodNode), bodyDeclaration), methodIndex) <- members.zipWithIndex) {
-    //         log.debug("!!!!!!!!!!!!")
-    //         log.info(
+    //         log.debug { "!!!!!!!!!!!!" }
+    //         log.info {
     //           "Decompiling [${classIndex + 1} of ${VFS.classes.size}] ${classNode.name} [${methodIndex + 1} of " +
     //           "${members.size}] ${methodNode.name} (signature = ${methodNode.signature}, " +
     //           "descriptor = ${methodNode.desc})"
-    //         )
+    //         }
     //         DecompileMethodBody.decompileBody(classNode, methodNode, bodyDeclaration)
     //       }
     //     }
 
-    //     log.debug(f"compilationUnit\n${compilationUnit}")
+    //     log.debug { f"compilationUnit\n${compilationUnit}" }
     //   }
     // }
   }
@@ -107,7 +107,7 @@ object Decompile {
     val classNode = ClassNode(Opcodes.ASM9)
     classReader.accept(classNode, ClassReader.EXPAND_FRAMES) // TODO: Do we actually need ClassReader.EXPAND_FRAMES?
 
-    log.debug("class name: ${classNode.name}")
+    log.debug { "class name: ${classNode.name}" }
     log.debug {
       val stringWriter = StringWriter()
       classNode.accept(TraceClassVisitor(null, Textifier(), PrintWriter(stringWriter)))

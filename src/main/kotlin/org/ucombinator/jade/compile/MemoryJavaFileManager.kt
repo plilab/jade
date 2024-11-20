@@ -45,36 +45,36 @@ class MemoryJavaFileManager(val fileManager: StandardJavaFileManager) : Standard
   ////////////////////////////////
 
   override fun isSupportedOption(option: String): Int = fileManager.isSupportedOption(option).also {
-    log.debug("isSupportedOption(${option}) = ${it}")
+    log.debug { "isSupportedOption(${option}) = ${it}" }
   }
 
   ////////////////////////////////
 
   override fun getClassLoader(location: JavaFileManager.Location): ClassLoader = fileManager.getClassLoader(location).also {
-    log.debug("getClassLoader(${location}) = ${it}")
+    log.debug { "getClassLoader(${location}) = ${it}" }
   }
   override fun list(location: JavaFileManager.Location, packageName: String, kinds: Set<JavaFileObject.Kind>, recurse: Boolean): Iterable<JavaFileObject> = fileManager.list(location, packageName, kinds, recurse).also {
-    log.debug("list($location, $packageName, $kinds, $recurse) = ${it}")
+    log.debug { "list($location, $packageName, $kinds, $recurse) = ${it}" }
   }
   override fun inferBinaryName(location: JavaFileManager.Location, file: JavaFileObject): String = fileManager.inferBinaryName(location, file).also {
-    // log.debug("inferBinaryName($location, $file) = ${it}")
+    // log.debug { "inferBinaryName($location, $file) = ${it}" }
   }
   override fun isSameFile(a: FileObject, b: FileObject): Boolean = fileManager.isSameFile(a, b).also {
-    log.debug("isSameFile($a, $b) = ${it}")
+    log.debug { "isSameFile($a, $b) = ${it}" }
   }
   override fun handleOption(current: String, remaining: Iterator<String>): Boolean = fileManager.handleOption(current, remaining).also {
-    log.debug("handleOption(${current}, ${remaining}) = ${it}")
+    log.debug { "handleOption(${current}, ${remaining}) = ${it}" }
   }
   override fun hasLocation(location: JavaFileManager.Location): Boolean = fileManager.hasLocation(location).also {
-    log.debug("hasLocation(${location}) = ${it}")
+    log.debug { "hasLocation(${location}) = ${it}" }
   }
   override fun getJavaFileForInput(location: JavaFileManager.Location, className: String, kind: JavaFileObject.Kind): JavaFileObject = fileManager.getJavaFileForInput(location, className, kind).also {
-    log.debug("getJavaFileForInput($location, $className, $kind) = ${it}")
+    log.debug { "getJavaFileForInput($location, $className, $kind) = ${it}" }
   }
   override fun getJavaFileForOutput(location: JavaFileManager.Location, className: String, kind: JavaFileObject.Kind, sibling: FileObject): JavaFileObject {
-    log.debug("getJavaFileForOutput($location, $className, $kind, $sibling)")
-    log.error("uri: ${sibling.toUri().path}")
-    log.error("name: ${sibling.getName()}")
+    log.debug { "getJavaFileForOutput($location, $className, $kind, $sibling)" }
+    log.error { "uri: ${sibling.toUri().path}" }
+    log.error { "name: ${sibling.getName()}" }
     val path = pathOf(className, kind)
     // TODO: include kind after path
     //return this[location, path] ?:
@@ -89,80 +89,80 @@ class MemoryJavaFileManager(val fileManager: StandardJavaFileManager) : Standard
   //     log.debug("getJavaFileForOutput($location, $className, $kind, $sibling) = ${it}")
   // }
   override fun getFileForInput(location: JavaFileManager.Location, packageName: String, relativeName: String): FileObject = fileManager.getFileForInput(location, packageName, relativeName).also {
-    log.debug("getFileForInput($location, $packageName, $relativeName) = ${it}")
+    log.debug { "getFileForInput($location, $packageName, $relativeName) = ${it}" }
     // this[location, name]!!
     // get memory (not exist vs could not exist) then get from super
   }
   override fun getFileForOutput(location: JavaFileManager.Location, packageName: String, relativeName: String, sibling: FileObject): FileObject = fileManager.getFileForOutput(location, packageName, relativeName, sibling).also {
     // get then put then get
-    log.debug("getFileForOutput($location, $packageName, $relativeName, $sibling) = ${it}")
+    log.debug { "getFileForOutput($location, $packageName, $relativeName, $sibling) = ${it}" }
     // this[location, name] ?: MemoryFileObject(this, TODO(), ByteArray(0)).also { this[location, name] = it }
   }
   override fun flush(): Unit = fileManager.flush().also {
-    log.debug("flush() = ${it}")
+    log.debug { "flush() = ${it}" }
   }
   override fun close(): Unit = fileManager.close().also {
-    log.debug("close() = ${it}")
+    log.debug { "close() = ${it}" }
   }
   override fun getLocationForModule(location: JavaFileManager.Location, moduleName: String): /* default */ JavaFileManager.Location = fileManager.getLocationForModule(location, moduleName).also {
-    log.debug("getLocationForModule($location, $moduleName) = ${it}")
+    log.debug { "getLocationForModule($location, $moduleName) = ${it}" }
   }
   override fun getLocationForModule(location: JavaFileManager.Location, fo: JavaFileObject): /* default */ JavaFileManager.Location = fileManager.getLocationForModule(location, fo).also {
-    log.debug("getLocationForModule($location, $fo) = ${it}")
+    log.debug { "getLocationForModule($location, $fo) = ${it}" }
   }
   override fun <S> getServiceLoader(location: JavaFileManager.Location, service: Class<S>): /* default */ ServiceLoader<S> = fileManager.getServiceLoader(location, service).also {
-    log.debug("getServiceLoader($location, $service) = ${it}")
+    log.debug { "getServiceLoader($location, $service) = ${it}" }
   }
   override fun inferModuleName(location: JavaFileManager.Location): /* default */ String = fileManager.inferModuleName(location).also {
-    log.debug("inferModuleName($location) = ${it}")
+    log.debug { "inferModuleName($location) = ${it}" }
   }
   override fun listLocationsForModules(location: JavaFileManager.Location): /* default */ Iterable<Set<JavaFileManager.Location>> = fileManager.listLocationsForModules(location).also {
-    log.debug("listLocationsForModules($location) = ${it}")
+    log.debug { "listLocationsForModules($location) = ${it}" }
   }
   override fun contains(location: JavaFileManager.Location, fo: FileObject): /* default */ Boolean = fileManager.contains(location, fo).also {
-    log.debug("contains(${location}, ${fo}) = ${it}")
+    log.debug { "contains(${location}, ${fo}) = ${it}" }
   }
 
   ////////////////////////////////
 
   override fun getJavaFileObjectsFromFiles(files: Iterable<File>): Iterable<JavaFileObject> = fileManager.getJavaFileObjectsFromFiles(files).also {
-    log.debug("getJavaFileObjectsFromFiles($files) = ${it}")
+    log.debug { "getJavaFileObjectsFromFiles($files) = ${it}" }
   }
   override fun getJavaFileObjectsFromPaths(paths: Iterable<Path>): /* default */ Iterable<JavaFileObject> = fileManager.getJavaFileObjectsFromPaths(paths).also {
-    log.debug("getJavaFileObjectsFromPaths($paths) = ${it}")
+    log.debug { "getJavaFileObjectsFromPaths($paths) = ${it}" }
   }
   override fun getJavaFileObjects(vararg files: File): Iterable<JavaFileObject> = fileManager.getJavaFileObjects(*files).also {
-    log.debug("getJavaFileObjects($files) = ${it}")
+    log.debug { "getJavaFileObjects($files) = ${it}" }
   }
   override fun getJavaFileObjects(vararg paths: Path): /* default */ Iterable<JavaFileObject> = fileManager.getJavaFileObjects(*paths).also {
-    log.debug("getJavaFileObjects($paths) = ${it}")
+    log.debug { "getJavaFileObjects($paths) = ${it}" }
   }
   override fun getJavaFileObjectsFromStrings(names: Iterable<String>): Iterable<JavaFileObject> = fileManager.getJavaFileObjectsFromStrings(names).also {
-    log.debug("getJavaFileObjectsFromStrings($names) = ${it}")
+    log.debug { "getJavaFileObjectsFromStrings($names) = ${it}" }
   }
   override fun getJavaFileObjects(vararg names: String): Iterable<JavaFileObject> = fileManager.getJavaFileObjects(*names).also {
-    log.debug("getJavaFileObjects($names) = ${it}")
+    log.debug { "getJavaFileObjects($names) = ${it}" }
   }
   override fun setLocation(location: JavaFileManager.Location, files: Iterable<File>): Unit = fileManager.setLocation(location, files).also {
-    log.debug("setLocation($location, $files) = ${it}")
+    log.debug { "setLocation($location, $files) = ${it}" }
   }
   override fun setLocationFromPaths(location: JavaFileManager.Location, paths: Collection<Path>): /* default */ Unit = fileManager.setLocationFromPaths(location, paths).also {
-    log.debug("setLocationFromPaths($location, $paths) = ${it}")
+    log.debug { "setLocationFromPaths($location, $paths) = ${it}" }
   }
   override fun setLocationForModule(location: JavaFileManager.Location, moduleName: String, paths: Collection<Path>): /* default */ Unit = fileManager.setLocationForModule(location, moduleName, paths).also {
-    log.debug("setLocationForModule($location, $moduleName, $paths) = ${it}")
+    log.debug { "setLocationForModule($location, $moduleName, $paths) = ${it}" }
   }
   override fun getLocation(location: JavaFileManager.Location): Iterable<File>? = fileManager.getLocation(location).also {
-    log.debug("getLocation($location) = ${it}")
+    log.debug { "getLocation($location) = ${it}" }
   }
   override fun getLocationAsPaths(location: JavaFileManager.Location): /* default */ Iterable<Path> = fileManager.getLocationAsPaths(location).also {
-    log.debug("getLocationAsPaths($location) = ${it}")
+    log.debug { "getLocationAsPaths($location) = ${it}" }
   }
   override fun asPath(file: FileObject): /* default */ Path = fileManager.asPath(file).also {
-    log.debug("asPath($file) = ${it}")
+    log.debug { "asPath($file) = ${it}" }
   }
   override fun setPathFactory(f: StandardJavaFileManager.PathFactory): /* default */ Unit = fileManager.setPathFactory(f).also {
-    log.debug("setPathFactory($f) = ${it}")
+    log.debug { "setPathFactory($f) = ${it}" }
   }
 }
 

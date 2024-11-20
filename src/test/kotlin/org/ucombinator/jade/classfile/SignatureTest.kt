@@ -828,10 +828,14 @@ object SignatureTest {
   fun <Kind> test(type: String, test: Triple<Kind, String, String?>, parse: (Kind, String) -> String) {
     val (kind, signature, expectedResult) = test
     if (expectedResult == "") { // Don't run test; just print actual result
-      log.error("$type: $signature type: ${parse(kind, signature)}")
+      val actualResult = parse(kind, signature)
+      log.error { "$type: $signature type: ${actualResult}" }
     } else if (expectedResult == null) { // Expect an error
       // NOTE: Printing the actual result if it doesn't fail to help with debugging the tests
-      assertFailsWith<IllegalArgumentException> { log.error("$type: $signature type: ${parse(kind, signature)}") }
+      assertFailsWith<IllegalArgumentException> {
+        val actualResult = parse(kind, signature)
+        log.error { "$type: $signature type: ${actualResult}" }
+      }
     } else {
       expect(expectedResult) { parse(kind, signature) }
     }

@@ -1,6 +1,6 @@
 package org.ucombinator.jade.util
 
-import mu.KLogger
+import io.github.oshai.kotlinlogging.KLogger
 
 import java.io.File
 import java.util.Collections
@@ -158,7 +158,7 @@ object Parallel {
               try {
                 AtomicWriteFile.write(file, result, true)
               } catch (e: Throwable) { // TODO: could this be more specific than Throwable?
-                log.error("Failed to write result to file ${file}", e)
+                log.error(e) { "Failed to write result to file ${file}" }
               }
             }
 
@@ -184,7 +184,7 @@ object Parallel {
               val name = Exceptions.name(e)
               if (!isPermanent(e)) {
                 fails.glitched.merge(name, 1, Long::plus)
-                log.error(name, e)
+                log.error(e) { name }
                 printResult("⚠️ glitch")
               } else {
                 fails.new.merge(name, 1, Long::plus)

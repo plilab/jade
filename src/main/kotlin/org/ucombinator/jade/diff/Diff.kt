@@ -251,7 +251,7 @@ class NoMethodBodiesTextifier() : Textifier(Opcodes.ASM9) {
   val log = Log {}
   private var codeStart = -1;
   override fun visitCode() {
-    log.info("visitCode")
+    log.info { "visitCode" }
     super.visitCode()
     codeStart = text.size
   }

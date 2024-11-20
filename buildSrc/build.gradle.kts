@@ -3,7 +3,7 @@ repositories {
 }
 
 plugins {
-  kotlin("jvm") version "1.9.22"
+  kotlin("jvm") version "2.0.20"
   `kotlin-dsl` // version built into gradle
 
   id("com.github.ben-manes.versions") version "0.51.0" // Adds: ./gradlew -p buildSrc dependencyUpdates

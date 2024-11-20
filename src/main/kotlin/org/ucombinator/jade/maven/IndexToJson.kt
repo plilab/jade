@@ -30,7 +30,7 @@ object IndexToJson { // TODO: rename "export index" or just "index" if we can co
     fun key() = toString().replaceFirstChar(Char::lowercase)
 
     companion object {
-      val Kind = Kind::class.simpleName!!.replaceFirstChar(Char::lowercase)
+      val kind = Kind::class.simpleName!!.replaceFirstChar(Char::lowercase)
     }
 
     // TODO: NOTE: capitalization and spelling of these matter
@@ -56,7 +56,7 @@ object IndexToJson { // TODO: rename "export index" or just "index" if we can co
   private fun printJson(kind: Kind, entries: Map<String, Any>) {
     println(
       JsonObject(
-        mapOf(Key.Kind to JsonPrimitive(kind.toString())) +
+        mapOf(Key.kind to JsonPrimitive(kind.toString())) +
           entries.mapValues { (_, value) ->
             when (value) {
               is Boolean -> JsonPrimitive(value)

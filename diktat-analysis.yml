@@ -263,9 +263,11 @@
   enabled: true
   configuration:
     # If the number of parameters on one line is more than this threshold, all parameters will be placed on separate lines.
-    maxParametersInOneLine: 1000 # Large value so it has no effect
-    # 3 by default.
-    maxCallsInOneLine: 1000 # Large value so it has no effect
+    # Large value so it has no effect
+    maxParametersInOneLine: 1000
+    # 3 by default
+    # Large value so it has no effect
+    maxCallsInOneLine: 1000
 # Checks trailing comma
 - name: TRAILING_COMMA
   enabled: true

@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # This script runs the test for decompiling class-level constructs on multiple .class files.
 
 # To use it:

@@ -1,7 +1,7 @@
 import java.lang.annotation.*;
 
 /**
- * Indicates the author of the annotated program element.
+ * Nested annotations.
  * Source: https://docs.oracle.com/javase/specs/jls/se17/html/jls-9.html#jls-9.6.1
  */
 @interface Author {

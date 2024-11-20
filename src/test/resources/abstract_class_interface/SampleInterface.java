@@ -1,8 +1,10 @@
 import java.util.ArrayList;
 
+/*
+ * Tnterface with various types of methods.
+ */
 public interface SampleInterface {
-    // Abstract methods with no body.
-    // For regular methods declarations of interfaces without bodies, if the `abstract` modifier is not explicitly specified, in the bytecodes, the `abstract` modifier is automatically inserted.
+    // Abstract methods with no body. For methods of interfaces without bodies, if the `abstract` modifier is not present, in the bytecodes, the `abstract` modifier is automatically inserted.
     void sampleMethod();
     abstract void sampleMethod2();
 
@@ -11,6 +13,7 @@ public interface SampleInterface {
         return 0;
     }
 
+    // Default method returning void
     default void sampleDefaultMethod2() {}
 
     default ArrayList<Integer> sampleDefaultMethod3() {

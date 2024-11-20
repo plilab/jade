@@ -16,10 +16,10 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin") // version matches kotlin("jvm")
 
   // Git API (for `GitVersionsPlugin.kt`)
-  implementation("org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r")
+  implementation("org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r")
 
   // HTML parsing (for `GenerateClassfileFlags.table()`)
-  implementation("org.jsoup:jsoup:1.17.2")
+  implementation("org.jsoup:jsoup:1.18.1")
 }
 
 // ////////////////////////////////////////////////////////////////

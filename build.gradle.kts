@@ -26,18 +26,18 @@ plugins {
 
   // Code Coverage
   id("jacoco") // version built into Gradle // Adds: ./gradlew jacocoTestReport
-  id("org.jetbrains.kotlinx.kover") version "0.8.0" // Adds: ./gradlew koverMergedHtmlReport
+  id("org.jetbrains.kotlinx.kover") version "0.8.3" // Adds: ./gradlew koverMergedHtmlReport
 
   // Dependency Versions and Licenses
   id("com.github.ben-manes.versions") version "0.51.0" // Adds: ./gradlew dependencyUpdates
-  id("com.github.jk1.dependency-license-report") version "2.7" // Adds: ./gradlew generateLicenseReport
+  id("com.github.jk1.dependency-license-report") version "2.9" // Adds: ./gradlew generateLicenseReport
 }
 
 dependencies {
   // Testing
   testImplementation(kotlin("test"))
   testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
-  testImplementation("org.junit.jupiter:junit-jupiter-params:5.6.3")
+  testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.3")
 
   // Code Formatting
   // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
@@ -53,9 +53,9 @@ dependencies {
   implementation("com.github.ajalt.clikt:clikt:4.4.0")
 
   // Java source abstract syntax trees
-  implementation("com.github.javaparser:javaparser-core:3.25.10") // Main library
-  implementation("com.github.javaparser:javaparser-core-serialization:3.25.10") // Serialization to/from JSON
-  implementation("com.github.javaparser:javaparser-symbol-solver-core:3.25.10") // Resolving symbols and identifiers
+  implementation("com.github.javaparser:javaparser-core:3.26.2") // Main library
+  implementation("com.github.javaparser:javaparser-core-serialization:3.26.2") // Serialization to/from JSON
+  implementation("com.github.javaparser:javaparser-symbol-solver-core:3.26.2") // Resolving symbols and identifiers
   // Omitting the JavaParser "parent" package as it is just metadata
   // Omitting the JavaParser "generator" and "metamodel" packages as they are just for building JavaParser
 
@@ -63,14 +63,14 @@ dependencies {
   implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 
   // Compression
-  implementation("org.apache.commons:commons-compress:1.26.1")
-  implementation("com.github.luben:zstd-jni:1.5.6-3")
+  implementation("org.apache.commons:commons-compress:1.27.1")
+  implementation("com.github.luben:zstd-jni:1.5.6-7")
 
   // Parallelization
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
   // JSON
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
   // Graphs (vertex and edge)
   implementation("org.jgrapht:jgrapht-core:1.5.2")
@@ -80,17 +80,17 @@ dependencies {
   implementation("org.jgrapht:jgrapht-opt:1.5.2")
 
   // Class files
-  implementation("org.ow2.asm:asm:9.7")
-  implementation("org.ow2.asm:asm-analysis:9.7")
-  implementation("org.ow2.asm:asm-commons:9.7")
-  // implementation("org.ow2.asm:asm-test:9.7")
-  implementation("org.ow2.asm:asm-tree:9.7")
-  implementation("org.ow2.asm:asm-util:9.7")
+  implementation("org.ow2.asm:asm:9.7.1")
+  implementation("org.ow2.asm:asm-analysis:9.7.1")
+  implementation("org.ow2.asm:asm-commons:9.7.1")
+  // implementation("org.ow2.asm:asm-test:9.7.1")
+  implementation("org.ow2.asm:asm-tree:9.7.1")
+  implementation("org.ow2.asm:asm-util:9.7.1")
 
   // Maven
   // TODO: trim?
-  implementation("org.apache.maven.indexer:indexer-core:7.1.3")
-  implementation("org.apache.maven.indexer:indexer-reader:7.1.3")
+  implementation("org.apache.maven.indexer:indexer-core:7.1.5")
+  implementation("org.apache.maven.indexer:indexer-reader:7.1.5")
   implementation("org.apache.maven.resolver:maven-resolver-api:1.9.20")
   implementation("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.20")
   implementation("org.apache.maven.resolver:maven-resolver-impl:1.9.20")

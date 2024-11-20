@@ -8,7 +8,7 @@ plugins {
 
   id("com.github.ben-manes.versions") version "0.51.0" // Adds: ./gradlew -p buildSrc dependencyUpdates
   id("com.saveourtool.diktat") version "2.0.0" // Adds: ./gradlew -p buildSrc diktatCheck
-  id("io.gitlab.arturbosch.detekt") version "1.23.6" // Adds: ./gradlew -p buildSrc detekt
+  id("io.gitlab.arturbosch.detekt") version "1.23.7" // Adds: ./gradlew -p buildSrc detekt
   id("org.jlleitschuh.gradle.ktlint") version "12.1.1" // Adds: ./gradlew -p buildSrc ktlintCheck
 }
 
@@ -31,7 +31,7 @@ diktat {
   diktatConfigFile = File("../diktat-analysis.yml")
 }
 
-// See https://github.com/detekt/detekt/blob/v1.23.6/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
+// See https://github.com/detekt/detekt/blob/v1.23.7/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
 detekt {
   ignoreFailures = true
   allRules = true

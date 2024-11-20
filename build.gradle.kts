@@ -21,7 +21,7 @@ plugins {
 
   // Code Formatting
   id("com.saveourtool.diktat") version "2.0.0" // Adds: ./gradlew diktatCheck
-  id("io.gitlab.arturbosch.detekt") version "1.23.6" // Adds: ./gradlew detekt
+  id("io.gitlab.arturbosch.detekt") version "1.23.7" // Adds: ./gradlew detekt
   id("org.jlleitschuh.gradle.ktlint") version "12.1.1" // Adds: ./gradlew ktlintCheck
 
   // Code Coverage
@@ -40,9 +40,9 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.3")
 
   // Code Formatting
-  // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
-  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.6")
-  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.6")
+  // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.7") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
+  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.7")
+  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.7")
 
   // NOTE: these are sorted alphabetically
 
@@ -138,7 +138,7 @@ diktat {
   }
 }
 
-// See https://github.com/detekt/detekt/blob/v1.23.6/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
+// See https://github.com/detekt/detekt/blob/v1.23.7/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
 detekt {
   ignoreFailures = true
   allRules = true

@@ -1,4 +1,4 @@
-# From https://github.com/detekt/detekt/blob/v1.23.6/detekt-rules-ruleauthors/src/main/resources/config/config.yml
+# From https://github.com/detekt/detekt/blob/v1.23.7/detekt-rules-ruleauthors/src/main/resources/config/config.yml
 ruleauthors:
   active: true
   UseEntityAtName:

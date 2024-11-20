@@ -1,4 +1,4 @@
-# From https://github.com/detekt/detekt/blob/v1.23.6/detekt-rules-libraries/src/main/resources/config/config.yml
+# From https://github.com/detekt/detekt/blob/v1.23.7/detekt-rules-libraries/src/main/resources/config/config.yml
 libraries:
   active: true
   ForbiddenPublicDataClass:

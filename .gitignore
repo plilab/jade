@@ -1,5 +1,5 @@
 # Gradle cache directory
-.gradle
+.gradle/
 
 # Gradle build output directory
-build
+build/

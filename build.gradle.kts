@@ -146,7 +146,7 @@ detekt {
 
 // See https://github.com/JLLeitschuh/ktlint-gradle/blob/v12.1.1/plugin/src/main/kotlin/org/jlleitschuh/gradle/ktlint/KtlintExtension.kt
 ktlint {
-  version = "1.2.1"
+  version = "1.4.1"
   verbose = true
   ignoreFailures = true
   enableExperimentalRules = true

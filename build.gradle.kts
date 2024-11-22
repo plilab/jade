@@ -271,7 +271,7 @@ tasks.withType<Test> {
 tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
   dokkaSourceSets {
     named("main") {
-      includes.from("Module.md")
+      includes.from("docs/Module.md")
     }
   }
 }

@@ -124,6 +124,7 @@ apply<GitVersionPlugin>()
 //     line 1:5 no viable alternative at character '='
 //     line 1:7 mismatched input 'null' expecting RPAREN
 diktat {
+  diktatConfigFile = rootProject.file("config/diktat/diktat-analysis.yml") // Avoid cluttering the root directory
   ignoreFailures = true
   // TODO: githubActions = true
 

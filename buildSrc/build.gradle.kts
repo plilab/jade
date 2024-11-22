@@ -27,6 +27,7 @@ dependencies {
 
 // See https://github.com/saveourtool/diktat/blob/v2.0.0/diktat-gradle-plugin/src/main/kotlin/com/saveourtool/diktat/plugin/gradle/DiktatExtension.kt
 diktat {
+  diktatConfigFile = rootProject.file("config/diktat/diktat-analysis.yml") // Avoid cluttering the root directory
   ignoreFailures = true
   diktatConfigFile = File("../diktat-analysis.yml")
 }

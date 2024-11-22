@@ -1,25 +1,27 @@
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
-import org.ucombinator.jade.gradle.GenerateClassfileFlags
-import org.ucombinator.jade.gradle.GitVersionPlugin
 
-import java.text.SimpleDateFormat
-import java.util.Date
+// NOTE: Groups with comment headers are sorted alphabetically by group name (TODO)
 
-// TODO: fix warning: :jar: No valid plugin descriptors were found in META-INF/gradle-plugins
+group = "org.ucombinator.jade"
+// `name = ...` is in settings.gradle.kts because it is read-only here
+// version = "0.1.0" // Uncomment to manually set the version (see GitVersionPlugin)
+// description = "A Java decompiler that aims for high reliability through extensive testing."
+
+// TODO: publish to maven central and gradle plugins
 
 repositories {
   mavenCentral()
 }
 
-// TODO: explain: $ ./gradlew tasks
+// To see a complete list of tasks, use: ./gradlew tasks
 plugins {
-  kotlin("jvm") // version matches buildSrc/build.gradle.kts
-  application
+  kotlin("jvm") // version set by buildSrc/build.gradle.kts
+  application // Provides "./gradlew installDist" then "./build/install/jade/bin/jade"
 
   // Documentation
   id("org.jetbrains.dokka") version "1.9.20" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
 
-  // Code Formatting
+  // Linting and Code Formatting
   id("com.saveourtool.diktat") version "2.0.0" // Adds: ./gradlew diktatCheck
   id("io.gitlab.arturbosch.detekt") version "1.23.7" // Adds: ./gradlew detekt
   id("org.jlleitschuh.gradle.ktlint") version "12.1.1" // Adds: ./gradlew ktlintCheck
@@ -31,7 +33,13 @@ plugins {
   // Dependency Versions and Licenses
   id("com.github.ben-manes.versions") version "0.51.0" // Adds: ./gradlew dependencyUpdates
   id("com.github.jk1.dependency-license-report") version "2.9" // Adds: ./gradlew generateLicenseReport
+
+  // Local Plugins
+  id("org.michaeldadams.gradle.generate-build-information")
+  id("org.michaeldadams.gradle.git-version")
+  id("org.michaeldadams.gradle.version-task")
 }
+apply<org.michaeldadams.gradle.GenerateClassfileFlagsPlugin>()
 
 dependencies {
   // Testing
@@ -39,7 +47,7 @@ dependencies {
   testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
   testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.3")
 
-  // Code Formatting
+  // Linting and Code Formatting
   // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.7") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
   detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.7")
   detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.7")
@@ -103,18 +111,20 @@ dependencies {
   implementation("org.apache.maven:maven-resolver-provider:3.9.6")
 }
 
+generateBuildInformation {
+  packageName = "org.ucombinator.jade.main"
+  url = "https://github.com/adamsmd/jade"
+}
+
 // ////////////////////////////////////////////////////////////////
-// Application Setup / Meta-data
+// Application Setup and Meta-data
 application {
   mainClass = "org.ucombinator.jade.main.MainKt"
   applicationDefaultJvmArgs += listOf("-ea") // enable assertions
 }
 
-// version = "0.1.0" // Uncomment to manually set the version
-apply<GitVersionPlugin>()
-
 // ////////////////////////////////////////////////////////////////
-// Code Formatting
+// Linting and Code Formatting
 
 // See https://github.com/saveourtool/diktat/blob/v2.0.0/diktat-gradle-plugin/src/main/kotlin/com/saveourtool/diktat/plugin/gradle/DiktatExtension.kt
 //
@@ -165,98 +175,6 @@ ktlint {
 }
 
 // ////////////////////////////////////////////////////////////////
-// Code Generation
-
-fun generateSrc(fileName: String, code: String) {
-  val generatedSrcDir = layout.buildDirectory.dir("generated/sources/jade/src/main/kotlin").get().getAsFile()
-  generatedSrcDir.mkdirs()
-  kotlin.sourceSets["main"].kotlin.srcDir(generatedSrcDir)
-  val file = File(generatedSrcDir, fileName)
-  file.writeText(code)
-}
-
-// TODO: Generate Flags.txt (see `sbt flagsTable`)
-val generateClassfileFlags by tasks.registering {
-  doLast {
-    // TODO: avoid running when unchanged
-    val flagsTxt = "src/main/kotlin/org/ucombinator/jade/classfile/Flags.txt"
-    val code = GenerateClassfileFlags.code(File(projectDir, flagsTxt).readText(Charsets.UTF_8))
-    generateSrc("Flags.kt", code)
-  }
-}
-
-val generateBuildInfo by tasks.registering {
-  doLast {
-    // TODO: avoid running when unchanged
-    // TODO: move to a plugin
-
-    // project.kotlin.target.platformType
-    // project.kotlin.target.targetName
-    // project.kotlin.target.attributes
-    // project.kotlin.target.name
-    // project.sourceSets.main.get().runtimeClasspath
-
-    fun String.escape() = """([\\\"\$])""".toRegex().replace(this, """\\$1""")
-
-    val dependencies = project.configurations
-      .flatMap { it.dependencies }
-      .filterIsInstance<ExternalDependency>()
-      .map {
-        val key = "${it.group?.escape()}:${it.name.escape()}:${it.version?.escape()}"
-        val value = "${it.targetConfiguration?.escape() ?: "default"}"
-        "    \"${key}\" to \"${value}\","
-      }.sorted()
-      .joinToString("\n")
-
-    val systemProperties = System.getProperties().toList()
-      .filter { it.first.toString().matches("(java|os)\\..*".toRegex()) } // TODO: why filter?
-      .map { "    \"${it.first?.toString()?.escape()}\" to \"${it.second?.toString()?.escape()}\"," }
-      .sorted()
-      .joinToString("\n")
-
-    fun field(fieldName: String, value: Any?): String =
-      "  val ${fieldName.trim()}: String? = ${value?.let { "\"${it.toString().escape()}\"" } ?: "null"}"
-
-    val code = """
-      |// Do not edit this file by hand.  It is generated by `gradle`.
-      |package org.ucombinator.jade.main
-      |
-      |import javax.annotation.processing.Generated
-      |
-      |/** Information about the build and build-time environment */
-      |@Generated("org.ucombinator.jade.gradle.GenerateBuildInformation")
-      |object BuildInformation {
-      |${field("group        ", project.group)}
-      |${field("name         ", project.name)}
-      |${field("version      ", project.version)}
-      |${field("description  ", project.description)}
-      |${field("kotlinVersion", project.kotlin.coreLibrariesVersion)}
-      |${field("javaVersion  ", System.getProperty("java.version"))}
-      |${field("gradleVersion", project.gradle.gradleVersion)}
-      |${field("buildTime    ", SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").format(Date()))}
-      |${field("status       ", project.status)}
-      |${field("path         ", project.path)}
-      |
-      |  /** Build-time dependencies and their target configurations */
-      |  val dependencies: List<Pair<String, String>> = listOf(
-      |$dependencies
-      |  )
-      |
-      |  /** Build-time system properties and their values */
-      |  val systemProperties: List<Pair<String, String>> = listOf(
-      |$systemProperties
-      |  )
-      |
-      |  val versionMessage = "${'$'}name version ${'$'}version (https://github.org/ucombinator/jade)"
-      |}
-      |
-    """.trimMargin()
-
-    generateSrc("BuildInformation.kt", code)
-  }
-}
-
-// ////////////////////////////////////////////////////////////////
 // Generic Configuration
 
 // TODO: tasks.check.dependsOn(diktatCheck)
@@ -279,8 +197,8 @@ tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
 
 listOf("runKtlintCheckOverMainSourceSet", "runKtlintCheckOverTestSourceSet").forEach { name ->
   tasks.named(name).configure {
-    dependsOn(generateClassfileFlags)
-    dependsOn(generateBuildInfo)
+    dependsOn("generateClassfileFlags")
+    dependsOn("generateBuildInformation")
   }
 }
 
@@ -292,6 +210,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
   // be set to the same Java version.
   kotlinOptions { jvmTarget = project.java.targetCompatibility.toString() }
 
-  dependsOn(generateClassfileFlags)
-  dependsOn(generateBuildInfo)
+  dependsOn("generateClassfileFlags") // TODO: put in plugin
+  dependsOn("generateBuildInformation")
 }

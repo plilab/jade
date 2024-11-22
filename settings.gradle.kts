@@ -1,9 +1,1 @@
-// import ...
-
-// pluginManagement {}
-
-// buildscript {}
-
-// plugins {}
-
-rootProject.name = "jade"
+rootProject.name = "jade" // Set here because it is read-only in build.gradle.kts

@@ -225,7 +225,7 @@ user	28m4.016s
 sys	1m9.788s
 ```
 
-TODO: `jq --raw-output 'include jq/coord.jq; .[1].artifact | coord' |`
+TODO: `jq --raw-output 'include src/main/jq/coord.jq; .[1].artifact | coord' |`
 
 TODO: Packaging vs fileExtension:
 

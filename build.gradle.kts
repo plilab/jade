@@ -1,13 +1,11 @@
-import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
-
 // NOTE: Groups with comment headers are sorted alphabetically by group name (TODO)
+
+// TODO: publish to maven central and gradle plugins
 
 group = "org.ucombinator.jade"
 // `name = ...` is in settings.gradle.kts because it is read-only here
 // version = "0.1.0" // Uncomment to manually set the version (see GitVersionPlugin)
-// description = "A Java decompiler that aims for high reliability through extensive testing."
-
-// TODO: publish to maven central and gradle plugins
+description = "A Java decompiler that aims for high reliability through extensive testing."
 
 repositories {
   mavenCentral()
@@ -16,15 +14,18 @@ repositories {
 // To see a complete list of tasks, use: ./gradlew tasks
 plugins {
   kotlin("jvm") // version set by buildSrc/build.gradle.kts
+  // TODO: kotlin("plugin.power-assert") version "2.0.0" // See https://kotlinlang.org/docs/power-assert.html
   application // Provides "./gradlew installDist" then "./build/install/jade/bin/jade"
 
   // Documentation
   id("org.jetbrains.dokka") version "1.9.20" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
 
   // Linting and Code Formatting
+  // id("com.ncorti.ktfmt.gradle") version "0.21.0" // Adds: ./gradlew ktfmtCheck (omit because issues errors not warnings)
   id("com.saveourtool.diktat") version "2.0.0" // Adds: ./gradlew diktatCheck
   id("io.gitlab.arturbosch.detekt") version "1.23.7" // Adds: ./gradlew detekt
   id("org.jlleitschuh.gradle.ktlint") version "12.1.1" // Adds: ./gradlew ktlintCheck
+  id("se.solrike.sonarlint") version "2.1.0" // Tasks: sonarlint{Main,Test} (omit because issues errors not warnings)
 
   // Code Coverage
   id("jacoco") // version built into Gradle // Adds: ./gradlew jacocoTestReport
@@ -51,11 +52,11 @@ dependencies {
   // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.7") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
   detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.7")
   detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.7")
+  sonarlintPlugins("org.sonarsource.kotlin:sonar-kotlin-plugin:2.13.0.2116") // TODO: others
 
-  // NOTE: these are sorted alphabetically
-
-  // Logging (see also io.github.oshai:kotlin-logging-jvm)
+  // Logging
   implementation("ch.qos.logback:logback-classic:1.5.12")
+  implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 
   // Command-line argument parsing
   implementation("com.github.ajalt.clikt:clikt:5.0.1")
@@ -67,9 +68,6 @@ dependencies {
   implementation("com.github.javaparser:javaparser-symbol-solver-core:3.26.2") // Resolving symbols and identifiers
   // Omitting the JavaParser "parent" package as it is just metadata
   // Omitting the JavaParser "generator" and "metamodel" packages as they are just for building JavaParser
-
-  // Logging (see also ch.qos.logback:logback-classic)
-  implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 
   // Compression
   implementation("org.apache.commons:commons-compress:1.27.1")
@@ -88,7 +86,7 @@ dependencies {
   implementation("org.jgrapht:jgrapht-io:1.5.2")
   implementation("org.jgrapht:jgrapht-opt:1.5.2")
 
-  // Class files
+  // JVM Bytecode / Class files
   implementation("org.ow2.asm:asm:9.7.1")
   implementation("org.ow2.asm:asm-analysis:9.7.1")
   implementation("org.ow2.asm:asm-commons:9.7.1")
@@ -126,13 +124,13 @@ application {
 // ////////////////////////////////////////////////////////////////
 // Linting and Code Formatting
 
-// See https://github.com/saveourtool/diktat/blob/v2.0.0/diktat-gradle-plugin/src/main/kotlin/com/saveourtool/diktat/plugin/gradle/DiktatExtension.kt
-//
 // TODO: fix errors in stderr of diktatCheck:
 //     line 1:3 no viable alternative at character '='
 //     line 1:4 no viable alternative at character '='
 //     line 1:5 no viable alternative at character '='
 //     line 1:7 mismatched input 'null' expecting RPAREN
+//
+// See https://github.com/saveourtool/diktat/blob/v2.0.0/diktat-gradle-plugin/src/main/kotlin/com/saveourtool/diktat/plugin/gradle/DiktatExtension.kt
 diktat {
   diktatConfigFile = rootProject.file("config/diktat/diktat-analysis.yml") // Avoid cluttering the root directory
   ignoreFailures = true
@@ -165,19 +163,28 @@ ktlint {
 
   // See https://github.com/JLLeitschuh/ktlint-gradle/blob/v12.1.1/plugin/src/adapter/kotlin/org/jlleitschuh/gradle/ktlint/reporter/ReporterType.kt
   reporters {
-    reporter(ReporterType.PLAIN)
-    reporter(ReporterType.PLAIN_GROUP_BY_FILE)
-    reporter(ReporterType.CHECKSTYLE)
-    reporter(ReporterType.JSON)
-    reporter(ReporterType.SARIF)
-    reporter(ReporterType.HTML)
+    org.jlleitschuh.gradle.ktlint.reporter.ReporterType.let {
+      reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+      reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN_GROUP_BY_FILE)
+      reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+      reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.JSON)
+      reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.SARIF)
+      reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)
+    }
   }
+}
+
+// See https://github.com/Lucas3oo/sonarlint-gradle-plugin/blob/d738512fb481114cf9fcbc62126460113c289de7/src/main/java/se/solrike/sonarlint/SonarlintExtension.java
+sonarlint {
+  // TODO
+  ignoreFailures = true
 }
 
 // ////////////////////////////////////////////////////////////////
 // Generic Configuration
 
 // TODO: tasks.check.dependsOn(diktatCheck)
+// TODO: task: reports
 tasks.withType<Test> {
   // Use JUnit Platform for unit tests.
   useJUnitPlatform()
@@ -208,7 +215,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
   // Avoid the warning: 'compileJava' task (current target is 11) and
   // 'compileKotlin' task (current target is 1.8) jvm target compatibility should
   // be set to the same Java version.
-  kotlinOptions { jvmTarget = project.java.targetCompatibility.toString() }
+  // kotlinOptions { jvmTarget = project.java.targetCompatibility.toString() }
 
   dependsOn("generateClassfileFlags") // TODO: put in plugin
   dependsOn("generateBuildInformation")

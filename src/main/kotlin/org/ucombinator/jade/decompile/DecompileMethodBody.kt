@@ -23,8 +23,8 @@ import org.ucombinator.jade.analysis.StaticSingleAssignment
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.javaparser.JavaParser
-import org.ucombinator.jade.jgrapht.Dominator
 import org.ucombinator.jade.jgrapht.GraphViz
+import org.ucombinator.jade.jgrapht.dominator.Dominator
 import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Log
 import java.io.PrintWriter

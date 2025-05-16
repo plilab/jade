@@ -76,8 +76,6 @@ TODO: remove [*](*) for plain URLs
 
 ======================
 
-# Repository Name
-
 ## What
 What is this and what is it for? Put a meaningful, short, plain-language description of what this project is trying to accomplish and why it matters. Describe the problem this project solves.
 
@@ -124,3 +122,9 @@ A short explanation of how others can contribute. Be sure to show how to submit 
 A link to the Code for America copyright and [LICENSE.md file](https://github.com/codeforamerica/ceviche-cms/blob/master/LICENCE.md).
 
 ## Citing
+
+## Other Documentation
+
+- ./docs/SECURITY.md: Instructions for how to report a security vulnerability
+- ./docs/USAGE.md
+- ./LICENSE.md

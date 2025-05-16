@@ -24,7 +24,9 @@ import javax.tools.JavaFileManager
 import javax.tools.JavaFileObject
 import javax.tools.StandardJavaFileManager
 
-// // TODO: use forwarding?
+// https://github.com/codefollower/OpenJDK-Research/blob/master/javac/src/com/sun/tools/javac/file/JavacFileManager.java#L657
+
+// TODO: use forwarding?
 class MemoryJavaFileManager(val fileManager: StandardJavaFileManager) : StandardJavaFileManager {
   val log = Log {}
 

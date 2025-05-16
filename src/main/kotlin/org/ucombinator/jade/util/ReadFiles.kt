@@ -1,5 +1,7 @@
 package org.ucombinator.jade.util
 
+// TODO: document most common extensions
+
 // initial implementation: dir or file only (no "inner" paths)
 
 // url
@@ -51,6 +53,38 @@ package org.ucombinator.jade.util
 // - https://commons.apache.org/proper/commons-compress/apidocs/org/apache/commons/compress/compressors/CompressorStreamFactory.html
 // - https://commons.apache.org/proper/commons-compress/apidocs/org/apache/commons/compress/archivers/ArchiveInputStream.html
 
+// http://foo.bar/baz/baq.iso#/foo/bar.jar/baz/quux.class
+// foo/bar
+// foo/bar.jar/baz
+// - For URL, we use '#' instead of '/' so we don't have to hunt up the hierarchy, which would be bad in a url
+// - We use '/' not '!' because '!' is technically a valid character
+// TODO: make separator characters run-time configurable?
+// TODO: add classpath option
+
+// java.net.URI.fragment or java.net.URL.ref
+
+// File
+// FTP
+// FTPS
+// HTTP
+// HTTPS
+// RES
+// SFTP
+// WebDAV
+// CIFS (Samba)
+
+// android
+// appdata
+// apt
+// ar
+// ark
+// at
+// attachment
+
+// --proxy
+// Note: You may need to add the 'User-Agent' header to the HTTP request since some servers don't allow downloads from
+//   unknown clients.
+
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.ArchiveException
 import org.apache.commons.compress.archivers.ArchiveInputStream
@@ -64,6 +98,12 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
+// import kotlin.io.FileTreeWalk
+// TODO: class ReadFiles(roots: List<File>) : Stream<List<File>, ByteArray>
+// use case: decompile whole jar
+// use case: decompile multiple versions of jar
+
+// : Sequence<Pair<Path/URL, Array<Byte>>>
 
 /** TODO:doc. */
 class ReadFiles {
@@ -74,6 +114,31 @@ class ReadFiles {
       listOf<UByte>(0x4aU, 0x4dU, 0x01U, 0x00U, 0x50U, 0x4bU, 0x03U, 0x04U).map { it.toByte() }
     private const val JMOD_OFFSET = 4
   }
+
+
+  // Three phases: walk up, walk down, recurse
+
+  // fun yieldArchive()
+  // fun yieldDir()
+  // fun yieldURL()
+  // fun yieldAny() = sequence {
+  //   when {
+  //     archive ->
+  //     dir
+  //     URL
+  //   }
+  // }
+  // fun yieldRec() = sequence {
+  //   yieldAny.filter {
+  //     yieldRec
+  //   }
+  // }
+
+  // fun foo() {
+  //   file.walk().forEach {
+
+  //   }
+  // }
 
   // TODO: keep list of already traversed paths
 

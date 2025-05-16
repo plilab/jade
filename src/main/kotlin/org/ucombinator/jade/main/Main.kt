@@ -51,6 +51,7 @@ fun main(args: Array<String>) {
     ),
     About().subcommands(
       About.BuildInfo(),
+      // TODO: About.Configuration(),
       About.Loggers(),
       CompletionCommand(),
     ),
@@ -79,6 +80,7 @@ abstract class JadeCommand() : CliktCommand() {
   }
 }
 
+// TODO: read user options from configuration file
 /** TODO: doc. */
 open class NoOpJadeCommand() : JadeCommand() {
   final override fun run() { /* do nothing */ }

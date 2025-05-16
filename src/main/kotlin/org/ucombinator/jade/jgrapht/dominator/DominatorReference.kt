@@ -1,4 +1,4 @@
-package org.ucombinator.jade.jgrapht
+package org.ucombinator.jade.jgrapht.dominator
 
 import org.jgrapht.Graph
 import org.jgrapht.alg.lca.EulerTourRMQLCAFinder

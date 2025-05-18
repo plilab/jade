@@ -1,4 +1,4 @@
-package org.ucombinator.jade.jgrapht
+package org.ucombinator.jade.jgrapht.dominator
 
 import org.jgrapht.Graph
 import org.jgrapht.graph.AsSubgraph
@@ -90,15 +90,13 @@ object DominatorTest {
       }
     }
 
-    expect(tree) { DominatorOld.dominatorTree(graph, root) }
     expect(tree) { DominatorReference.dominatorTree(graph, root) }
-    expect(tree) { Dominator3.dominatorTree(graph, root) }
+    expect(tree) { Dominator.dominatorTree(graph, root) }
 
     fun check(graph: Graph<Vertex, Pair<Vertex, Vertex>>, root: Vertex) {
       try {
         val ref = DominatorReference.dominatorTree(graph, root)
-        expect(ref) { DominatorOld.dominatorTree(graph, root) }
-        expect(ref) { Dominator3.dominatorTree(graph, root) }
+        expect(ref) { Dominator.dominatorTree(graph, root) }
       } catch (e: Throwable) {
         println("root: $root graph: $graph")
         throw e

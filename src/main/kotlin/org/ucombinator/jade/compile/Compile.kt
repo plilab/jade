@@ -73,20 +73,28 @@ object Compile {
     val standardFileManager = javaCompiler.getStandardFileManager(diagnosticListener, locale, charset)
     val fileManager = MemoryJavaFileManager(standardFileManager)
     val compilationUnits = fileManager.getJavaFileObjectsFromFiles(files)
+    // fileManager.getJavaFileForInput(StandardLocation.SOURCE_PATH, className, JavaFileObject.Kind.SOURCE)
     for (i in listOf(
-      StandardLocation.ANNOTATION_PROCESSOR_MODULE_PATH,
-      StandardLocation.ANNOTATION_PROCESSOR_PATH,
-      StandardLocation.CLASS_OUTPUT,
-      StandardLocation.CLASS_PATH,
-      StandardLocation.MODULE_PATH,
-      StandardLocation.MODULE_SOURCE_PATH,
-      StandardLocation.NATIVE_HEADER_OUTPUT,
-      StandardLocation.PATCH_MODULE_PATH,
-      StandardLocation.PLATFORM_CLASS_PATH,
-      StandardLocation.SOURCE_OUTPUT,
-      StandardLocation.SOURCE_PATH,
-      StandardLocation.SYSTEM_MODULES,
-      StandardLocation.UPGRADE_MODULE_PATH,
+      StandardLocation.ANNOTATION_PROCESSOR_MODULE_PATH, // Location to search for modules containing annotation processors.
+      StandardLocation.ANNOTATION_PROCESSOR_PATH, // Location to search for annotation processors.
+      StandardLocation.CLASS_OUTPUT, // Location of new class files.
+      StandardLocation.CLASS_PATH, // Location to search for user class files.
+      StandardLocation.MODULE_PATH, // Location to search for precompiled user modules.
+      StandardLocation.MODULE_SOURCE_PATH, // Location to search for the source code of modules.
+      StandardLocation.NATIVE_HEADER_OUTPUT, // Location of new native header files.
+      StandardLocation.PATCH_MODULE_PATH, // Location to search for module patches.
+      StandardLocation.PLATFORM_CLASS_PATH, // Location to search for platform classes.
+      StandardLocation.SOURCE_OUTPUT, // Location of new source files.
+      StandardLocation.SOURCE_PATH, // Location to search for existing source files.
+      StandardLocation.SYSTEM_MODULES, // Location to search for system modules.
+      StandardLocation.UPGRADE_MODULE_PATH, // Location to search for upgradeable system modules.
+      // FileObject
+      // JavaFileObject
+      // StandardJavaFileManager
+      // SimpleJavaFileObject
+      // ForwardingJavaFileManager
+      // ForwardingFileObject
+      // ForwardingJavaFileObject
     )) {
       if (fileManager.hasLocation(i)) println(fileManager.getLocation(i)!!.toList())
     }

@@ -30,6 +30,7 @@ import javax.tools.StandardJavaFileManager
 class MemoryJavaFileManager(val fileManager: StandardJavaFileManager) : StandardJavaFileManager {
   val log = Log {}
 
+  // val files = mutableMapOf<Pair<JavaFileManager.Location, String>, MemoryJavaFileObject>()
   val files = mutableMapOf<JavaFileManager.Location, MemoryEntry>()
 
   operator fun get(location: JavaFileManager.Location, path: List<String>): MemoryFileTree? =
@@ -220,6 +221,7 @@ open class MemoryFileObject(
   override fun getLastModified(): Long = lastModified
   override fun delete(): Boolean = deleteAction()
 
+  // TODO: delegate vs inherit
   inner class MemoryFileOutputStream() : IOByteArray.ByteArrayOutputStream(buffer) {
     // TODO: other functions
     override fun write(b: Int): Unit {

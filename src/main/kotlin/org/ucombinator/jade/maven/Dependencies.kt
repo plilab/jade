@@ -155,6 +155,14 @@ object Dependencies {
       // (unsure if needed) YOU_NEED_ZSTD_JNI = youNeed("Zstd JNI", "https://github.com/luben/zstd-jni")
 
       // TODO: content type is the layout
+      // In Maven, a repository content type refers to the format or structure of the artifacts (such as JAR files, WAR files, etc.) stored within a Maven repository.
+      // The main repository content types in Maven are:
+      // 1. **Maven 2/3 Repository (default)**: This is the default and most commonly used repository content type in Maven. It follows the Maven 2/3 repository layout, where artifacts are organized into directories based on their group ID, artifact ID, and version.
+      // 2. **Legacy Maven 1 Repository**: This content type is used for repositories that follow the older Maven 1 repository layout, which was used in earlier versions of Maven.
+      // 3. **Ivy Repository**: This content type is used for repositories that follow the Ivy repository layout, which is a different format used by the Ivy dependency management tool.
+      // 4. **P2 Repository**: This content type is used for repositories that follow the P2 (Eclipse Plug-in) repository layout, which is commonly used for Eclipse plugin dependencies.
+      // 5. **Raw Repository**: This content type is used for repositories that do not follow any specific layout and simply store the artifacts as-is, without any directory structure.
+      // The repository content type is important because it determines how Maven will interact with the repository and how it will locate and download the required artifacts. When configuring a Maven repository, you need to specify the correct content type to ensure that Maven can properly access and manage the artifacts stored in the repository.
     }
   }
 

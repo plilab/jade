@@ -32,7 +32,12 @@ object Diff {
   // TODO: global constant for Opcodes.ASM9
   // ClassReader(InputStream), ClassReader(className: String)
   fun diff(old: ByteArray, new: ByteArray): List<Change> =
-    if (old == new) emptyList() else diff(ClassReader(old), ClassReader(new))
+    if (old.contentEquals(new)) {
+      println("Bytecode is the same!")
+      emptyList()
+    } else {
+      diff(ClassReader(old), ClassReader(new))
+    }
 
   // TODO: move to clasfile package
   fun classNodeOfClassReader(classReader: ClassReader): ClassNode =
@@ -52,30 +57,74 @@ object Diff {
     diff(classNodeOfClassReader(old), classNodeOfClassReader(new))
 
   fun diff(old: ClassNode, new: ClassNode): List<Change> {
-    println("------------------")
-    println(textOfClassNode(old, false))
-    println("------------------")
-    println(textOfClassNode(old, true))
-    println("------------------")
+    // refer to https://asm.ow2.io/javadoc/org/objectweb/asm/tree/ClassNode.html
+
+    // println("------------------")
+    // println(textOfClassNode(old, false))
+    // println("------------------")
+    // println(textOfClassNode(old, true))
+    // println("------------------")
     // if (textOfClassNode(old) == textOfClassNode(new)) emptyList()
     // else TODO()
     // TODO: string diff
     // TODO: structure only vs code
     // TODO: deeper diff
 
-    fun <T, R> printDiff(old: T, new: T, by: (T) -> R, format: (R) -> String): Unit = TODO()
-    println(old.name)
-    printDiff(old, new, ClassNode::version) { it.toString() } // TODO: hex?
-    printDiff(old, new, ClassNode::name) { it }
-    printDiff(old, new, ClassNode::signature) { it }
-    printDiff(old, new, ClassNode::superName) { it }
+    fun <T, R> printDiff(old: T, new: T, by: (T) -> R, format: (R) -> String): Unit {
+      val oldR = by(old)
+      val newR = by(new)
+      if (oldR == null && newR == null) {
+        println("--------------FIELD OK--------------")
+      } else if (oldR == null) {
+        println("------------FIELD NOT OK------------")
+        println("OLD: null")
+        println("NEW: ${format(by(new))}")
+        println("------------------------------------")
+      } else if (newR == null) {
+        println("------------FIELD NOT OK------------")
+        println("OLD: ${format(by(old))}")
+        println("NEW: null")
+        println("------------------------------------")
+      } else if (by(old)!!.equals(by(new))) {
+        println("--------------FIELD OK--------------")
+      } else {
+        println("------------FIELD NOT OK------------")
+        println("OLD: ${format(by(old))}")
+        println("NEW: ${format(by(new))}")
+        println("------------------------------------")
+      }
+    }
+    printDiff(old, new, ClassNode::version) {"name: ${it.toString()}"} // TODO: hex?
+    printDiff(old, new, ClassNode::access) {"name: ${it.toString()}"}
+    printDiff(old, new, ClassNode::nestHostClass) {"name: $it"}
+    printDiff(old, new, ClassNode::name) {"name: $it"}
+    printDiff(old, new, ClassNode::signature) {"signature: $it"}
+    printDiff(old, new, ClassNode::superName) {"superName: $it"}
     // List<String> interfaces
-    printDiff(old, new, ClassNode::sourceFile) { it }
-    printDiff(old, new, ClassNode::sourceDebug) { it }
+    printDiff(old, new, ClassNode::sourceFile) {"sourceFile: $it"}
+    printDiff(old, new, ClassNode::sourceDebug) {"sourceDebug: $it"}
     // ModuleNode module
-    printDiff(old, new, ClassNode::outerClass) { it }
-    printDiff(old, new, ClassNode::outerMethod) { it }
-    printDiff(old, new, ClassNode::outerMethodDesc) { it }
+    printDiff(old, new, ClassNode::outerClass) {"outerClass: $it"}
+    printDiff(old, new, ClassNode::outerMethod) {"outerMethod: $it"}
+    printDiff(old, new, ClassNode::outerMethodDesc) {"outerMethodDesc: $it"}
+
+    printDiff(old, new, ClassNode::attrs) {"attrs: $it"}
+    printDiff(old, new, ClassNode::fields) {"fields: $it"}
+    printDiff(old, new, ClassNode::innerClasses) {"innerClasses: $it"}
+    printDiff(old, new, ClassNode::interfaces) {"innerClasses: $it"}
+    printDiff(old, new, ClassNode::invisibleAnnotations) {"invisibleAnnotations: $it"}
+    printDiff(old, new, ClassNode::invisibleTypeAnnotations) {"invisibleTypeAnnotations: $it"}
+
+    printDiff(old, new, ClassNode::methods) {"methods: $it"}
+    printDiff(old, new, ClassNode::module) {"module: $it"}
+
+    printDiff(old, new, ClassNode::nestMembers) {"nestMembers: $it"}
+    printDiff(old, new, ClassNode::permittedSubclasses) {"permittedSubclasses: $it"}
+    printDiff(old, new, ClassNode::recordComponents) {"recordComponents: $it"}
+    printDiff(old, new, ClassNode::visibleAnnotations) {"visibleAnnotations: $it"}
+    printDiff(old, new, ClassNode::visibleTypeAnnotations) {"visibleTypeAnnotations: $it"}
+    printDiff(old, new, ClassNode::module) {"module: $it"}
+
     // List<AnnotationNode> visibleAnnotations
     // List<AnnotationNode> invisibleAnnotations
     // List<TypeAnnotationNode> visibleTypeAnnotations
@@ -88,7 +137,8 @@ object Diff {
     // List<RecordComponentNode> recordComponents
     // List<FieldNode> fields // sort
     // List<MethodNode> methods // sort
-    TODO()
+    // TODO()
+    return emptyList<Change>() // TODO: diff
 
 
 /*

@@ -14,7 +14,13 @@ TODO
 
 ### Diff
 
-TODO
+(as of 12/06/2025) Run the Diff command using
+
+```
+./gradlew run --args="diff bin/test/general/Test1.class bin/test/general/Test1.class"
+```
+
+All it currently does is run a very basic check on all the fields of the ClassNode.
 
 ## `maven` Commands
 

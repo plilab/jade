@@ -14,8 +14,12 @@ import java.io.File
 import java.io.StringWriter
 import java.io.PrintWriter
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 /** TODO:doc. */
 object Diff {
+  private val log = Log {}
   /** TODO:doc.
    *
    * @param old TODO:doc
@@ -70,61 +74,77 @@ object Diff {
     // TODO: structure only vs code
     // TODO: deeper diff
 
-    fun <T, R> printDiff(old: T, new: T, by: (T) -> R, format: (R) -> String): Unit {
+    fun <T, R> printDiff(old: T, new: T, logName: String, by: (T) -> R, format: (R) -> String): Unit {
       val oldR = by(old)
       val newR = by(new)
-      if (oldR == null && newR == null) {
-        println("--------------FIELD OK--------------")
-      } else if (oldR == null) {
-        println("------------FIELD NOT OK------------")
-        println("OLD: null")
-        println("NEW: ${format(by(new))}")
-        println("------------------------------------")
-      } else if (newR == null) {
-        println("------------FIELD NOT OK------------")
-        println("OLD: ${format(by(old))}")
-        println("NEW: null")
-        println("------------------------------------")
-      } else if (by(old)!!.equals(by(new))) {
-        println("--------------FIELD OK--------------")
+      if (oldR == newR) {
+        log.info {"Field '${logName}' matches."}
       } else {
-        println("------------FIELD NOT OK------------")
-        println("OLD: ${format(by(old))}")
-        println("NEW: ${format(by(new))}")
-        println("------------------------------------")
+        log.info{"Field '${logName}' does not match.\n---\nOLD: ${format(oldR)}\n\nNEW: ${format(newR)}\n---"}
       }
     }
-    printDiff(old, new, ClassNode::version) {"name: ${it.toString()}"} // TODO: hex?
-    printDiff(old, new, ClassNode::access) {"name: ${it.toString()}"}
-    printDiff(old, new, ClassNode::nestHostClass) {"name: $it"}
-    printDiff(old, new, ClassNode::name) {"name: $it"}
-    printDiff(old, new, ClassNode::signature) {"signature: $it"}
-    printDiff(old, new, ClassNode::superName) {"superName: $it"}
+
+    // still need another comparison function beyond just .equals, for the more complicated objects
+    // need to write something to convert the actual flags to 
+    // assume that methods and functions are in the same order
+    // watch out for method overloading, need to think more about this. return types don't count!!
+    // method sigs are stored in (1) descriptor and (2) someplace which includes type params for generic types, added in java 8
+    // add another method to just check the methods to see if they're the same
+    // check everything minus method bodies first
+    // check method bodies only when decompile works properly
+    // develop the diff system where it'll be easy to run lots of diff tests eventually
+    // want to be able to run diff on two folders, two jar files, even until maven ips
+    // basically make the system extensible
+    // add a flag for method bodies. basically this means you bypass method bodies and then you can test the
+    // diff on everything else.
+    // think more about how to make the system extensible and be able to test everything
+
+    val now = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    val formatted = now.format(formatter)
+
+    log.info {"Starting Diff log. Current date and time: ${formatted}"}
+
+    // Basic class information
+    printDiff(old, new, "version", ClassNode::version) {"version: ${it.toString()}"} // int TODO: hex? 
+    printDiff(old, new, "access", ClassNode::access) {"access: ${it.toString()}"} // int TODO: format as actual flags
+    printDiff(old, new, "name", ClassNode::name) {"name: $it"} // String
+    printDiff(old, new, "signature", ClassNode::signature) {"signature: $it"} // String
+    printDiff(old, new, "superName", ClassNode::superName) {"superName: $it"} // String
+    printDiff(old, new, "interfaces", ClassNode::interfaces) {"interFaces: $it"} // List<String>
+
+    // Source and debug information
+    printDiff(old, new, "sourceFile", ClassNode::sourceFile) {"sourceFile: $it"} // String
+    printDiff(old, new, "sourceDebug", ClassNode::sourceDebug) {"sourceDebug: $it"} // String
+
+    // Enclosing context
+    printDiff(old, new, "module", ClassNode::module) {"module: $it"} // 
+    printDiff(old, new, "outerClass", ClassNode::outerClass) {"outerClass: $it"}
+    printDiff(old, new, "outerMethod", ClassNode::outerMethod) {"outerMethod: $it"}
+    printDiff(old, new, "outerMethodDesc", ClassNode::outerMethodDesc) {"outerMethodDesc: $it"}
+
+    // Annotations
+    printDiff(old, new, "visibleAnnotations", ClassNode::visibleAnnotations) {"visibleAnnotations: $it"}
+    printDiff(old, new, "invisibleAnnotations", ClassNode::invisibleAnnotations) {"invisibleAnnotations: $it"}
+    printDiff(old, new, "visibleTypeAnnotations", ClassNode::visibleTypeAnnotations) {"visibleTypeAnnotations: $it"}
+    printDiff(old, new, "invisibleTypeAnnotations", ClassNode::invisibleTypeAnnotations) {"invisibleTypeAnnotations: $it"}
+
+    // Attrs
+    printDiff(old, new, "attrs", ClassNode::attrs) {"attrs: $it"}
+
+    // Nest related stuff
+    printDiff(old, new, "innterClasses", ClassNode::innerClasses) {"innerClasses: $it"}
+    printDiff(old, new, "nestHostClass", ClassNode::nestHostClass) {"name: $it"}
+    printDiff(old, new, "nestMembers", ClassNode::nestMembers) {"nestMembers: $it"}
+    printDiff(old, new, "permittedSubclasses", ClassNode::permittedSubclasses) {"permittedSubclasses: $it"}
+    printDiff(old, new, "recordComponents", ClassNode::recordComponents) {"recordComponents: $it"}
+    printDiff(old, new, "fields", ClassNode::fields) {"fields: $it"}
+    printDiff(old, new, "methods", ClassNode::methods) {"methods: $it"}
+
+    log.info {"Finished comparing files."}
+
     // List<String> interfaces
-    printDiff(old, new, ClassNode::sourceFile) {"sourceFile: $it"}
-    printDiff(old, new, ClassNode::sourceDebug) {"sourceDebug: $it"}
     // ModuleNode module
-    printDiff(old, new, ClassNode::outerClass) {"outerClass: $it"}
-    printDiff(old, new, ClassNode::outerMethod) {"outerMethod: $it"}
-    printDiff(old, new, ClassNode::outerMethodDesc) {"outerMethodDesc: $it"}
-
-    printDiff(old, new, ClassNode::attrs) {"attrs: $it"}
-    printDiff(old, new, ClassNode::fields) {"fields: $it"}
-    printDiff(old, new, ClassNode::innerClasses) {"innerClasses: $it"}
-    printDiff(old, new, ClassNode::interfaces) {"innerClasses: $it"}
-    printDiff(old, new, ClassNode::invisibleAnnotations) {"invisibleAnnotations: $it"}
-    printDiff(old, new, ClassNode::invisibleTypeAnnotations) {"invisibleTypeAnnotations: $it"}
-
-    printDiff(old, new, ClassNode::methods) {"methods: $it"}
-    printDiff(old, new, ClassNode::module) {"module: $it"}
-
-    printDiff(old, new, ClassNode::nestMembers) {"nestMembers: $it"}
-    printDiff(old, new, ClassNode::permittedSubclasses) {"permittedSubclasses: $it"}
-    printDiff(old, new, ClassNode::recordComponents) {"recordComponents: $it"}
-    printDiff(old, new, ClassNode::visibleAnnotations) {"visibleAnnotations: $it"}
-    printDiff(old, new, ClassNode::visibleTypeAnnotations) {"visibleTypeAnnotations: $it"}
-    printDiff(old, new, ClassNode::module) {"module: $it"}
-
     // List<AnnotationNode> visibleAnnotations
     // List<AnnotationNode> invisibleAnnotations
     // List<TypeAnnotationNode> visibleTypeAnnotations

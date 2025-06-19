@@ -74,12 +74,12 @@ class Diff : JadeCommand() {
 
   val old: File by argument(
     name = "PATH",
-    help = "TODO",
+    help = "First .class file",
   ).file(mustExist = true)
 
   val new: File by argument(
     name = "PATH",
-    help = "TODO",
+    help = "Second .class file",
   ).file(mustExist = true)
 
   override fun run() {

@@ -27,6 +27,8 @@ object Log {
    * @return TODO:doc
    */
   operator fun invoke(func: () -> Unit): KLogger = KotlinLogging.logger(func)
+  operator fun invoke(name: String, func: () -> Unit): KLogger =
+    KotlinLogging.logger("${KotlinLogging.logger(func).name}.${name}")
 
   /** TODO:doc.
    *

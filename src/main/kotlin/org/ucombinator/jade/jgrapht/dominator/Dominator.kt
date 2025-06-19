@@ -3,6 +3,7 @@ package org.ucombinator.jade.jgrapht.dominator
 import org.jgrapht.Graph
 import org.jgrapht.alg.lca.EulerTourRMQLCAFinder
 import org.jgrapht.graph.SimpleDirectedGraph
+import org.jgrapht.graph.EdgeReversedGraph
 import org.ucombinator.jade.util.Errors
 
 class TotalMutableMap<K, V>(): HashMap<K, V>() { // TODO: rename? NonnullMutableMap NotMissingMutableMap
@@ -27,7 +28,7 @@ typealias DominatorTree<V> = Graph<V, Dominator.Edge<V>>
  * @property root TODO:doc
  */
 data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
-  private val lca = EulerTourRMQLCAFinder(tree, root)
+  private val lca = EulerTourRMQLCAFinder(EdgeReversedGraph(tree), root)
 
   /** TODO:doc.
    *
@@ -43,7 +44,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
    * @param b TODO:doc
    * @return TODO:doc
    */
-  fun dominatesSource(a: V, b: Dominator.Edge<V>): Boolean = lca.getLCA(a, tree.getEdgeSource(b)) == a
+  // fun dominatesSource(a: V, b: Dominator.Edge<V>): Boolean = lca.getLCA(a, tree.getEdgeSource(b)) == a
 
   /** TODO:doc.
    *
@@ -51,7 +52,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
    * @param b TODO:doc
    * @return TODO:doc
    */
-  fun dominatesTarget(a: V, b: Dominator.Edge<V>): Boolean = lca.getLCA(a, tree.getEdgeSource(b)) == a
+  // fun dominatesTarget(a: V, b: Dominator.Edge<V>): Boolean = lca.getLCA(a, tree.getEdgeTarget(b)) == a
 
   /** TODO:doc.
    *
@@ -118,7 +119,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
     // Use non-existing value/null for 0 in the paper
     // The original algorithm dealt in Ints, not Vs.
 
-    fun <V, E> dominatorTree(graph: Graph<V, E>, root: V): DominatorTree<V> {
+    fun <V, E> dominatorTree(graph: Graph<V, E>, root: V): Dominator<V> {
       // TODO: require(root in graph)
       val dom = TotalMutableMap<V, V>() // The idom (once known)
 
@@ -247,7 +248,7 @@ data class Dominator<V>(val tree: Graph<V, Dominator.Edge<V>>, val root: V) {
       for (v in graph.vertexSet()) { tree.addVertex(v) }
       for ((i, d) in dom) { tree.addEdge(i, d, Dominator.Edge<V>(i, d)) }
 
-      return tree
+      return Dominator(tree, root)
     }
   }
 }

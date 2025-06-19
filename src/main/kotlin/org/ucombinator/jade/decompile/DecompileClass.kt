@@ -282,11 +282,22 @@ object DecompileClass {
     val type: Type = sig.returnType
     val thrownExceptions: NodeList<ReferenceType> = NodeList(sig.exceptionTypes)
     val name: SimpleName = SimpleName(node.name)
-    
-    val body: BlockStmt? = DecompileMethodBody.decompileBodyStub(node)
+    val receiverParameter: ReceiverParameter? = null // TODO
+
+    val dummyMethodDecl = MethodDeclaration(
+      modifiers,
+      annotations,
+      typeParameters,
+      type,
+      name,
+      parameters,
+      thrownExceptions,
+      BlockStmt(), // body will be filled in later
+      receiverParameter  // receiverParameter
+    )
+    val body: BlockStmt? = DecompileMethodBody.decompileBody(classNode, node, dummyMethodDecl)
     
     @Suppress("NULLABLE_PROPERTY_TYPE") // TODO: temporary until we remove null (remove blank line above when we do)
-    val receiverParameter: ReceiverParameter? = null // TODO
     val bodyDeclaration = when (node.name) {
       "<clinit>" ->
         InitializerDeclaration(true, body)

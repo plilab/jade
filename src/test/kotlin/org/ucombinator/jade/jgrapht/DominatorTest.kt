@@ -91,12 +91,12 @@ object DominatorTest {
     }
 
     expect(tree) { DominatorReference.dominatorTree(graph, root) }
-    expect(tree) { Dominator.dominatorTree(graph, root) }
+    expect(tree) { Dominator.dominatorTree(graph, root).tree }
 
     fun check(graph: Graph<Vertex, Pair<Vertex, Vertex>>, root: Vertex) {
       try {
         val ref = DominatorReference.dominatorTree(graph, root)
-        expect(ref) { Dominator.dominatorTree(graph, root) }
+        expect(ref) { Dominator.dominatorTree(graph, root).tree }
       } catch (e: Throwable) {
         println("root: $root graph: $graph")
         throw e

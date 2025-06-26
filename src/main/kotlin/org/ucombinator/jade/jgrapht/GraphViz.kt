@@ -17,7 +17,7 @@ object GraphViz {
    * @param string TODO:doc
    * @return TODO:doc
    */
-  fun escape(string: String): String = string.replace("\\\\", """\\\\""").replace("\"", """\\"""")
+  fun escape(string: String): String = string.replace("""\\""", """\\\\""").replace("\"", "\\\"")
 
   /** TODO:doc.
    *
@@ -117,19 +117,21 @@ object GraphViz {
     fun id(v: V): String = ids.getOrPut(v, { "n${ids.size}" })
 
     var cluster = 0
+    val isLoopHead = graph.edgeSet().filter {
+      Dominator.isDominator(tree, graph.getEdgeTarget(it), graph.getEdgeSource(it))
+    }.map { graph.getEdgeTarget(it) }.toSet()
 
     fun go(indent: String, v: V, backgroundColor: Boolean, soleChild: Boolean) {
-      cluster += 1
+      val newBgColor = if (v in isLoopHead) !backgroundColor else backgroundColor
       // NOTE: subgraph must have a name starting with "cluster" to get GraphViz to draw a box around it
-      if (!flatten || !soleChild) {
+      if (cluster == 0 || v in isLoopHead) {
+        cluster += 1
         out.write("${indent}subgraph cluster$cluster {\n")
         if (alternateBackgroundColor) {
-          val bgcolor = if (backgroundColor) "\"#eeeeee\"" else "\"#ffffff\""
-          out.write("$indent  bgcolor=$bgcolor;\n")
+          out.write("$indent  bgcolor=${if (newBgColor) "\"#eeeeee\"" else "\"#ffffff\""};\n")
         }
       }
-      val label = "\"${GraphViz.escape(v.toString())}\""
-      out.write("$indent  ${id(v)} [label=$label];\n")
+      out.write("$indent  ${id(v)} [label=\"${GraphViz.escape(v.toString())}\"];\n")
       val edges = tree.incomingEdgesOf(v)
       // TODO: edges in trees should always go down
       val sole = if (edges.size == 1) {
@@ -141,15 +143,16 @@ object GraphViz {
         false
       }
       for (child in edges.map(tree::getEdgeSource)) {
-        val newIndent = if (!flatten || !sole) "$indent  " else indent
-        go(newIndent, child, (flatten && sole) == backgroundColor, sole)
+        val newIndent = if (v in isLoopHead) "$indent  " else indent
+        go(newIndent, child, newBgColor, sole)
       }
-      if (!flatten || !soleChild) {
+      if (v in isLoopHead) {
         out.write("$indent}\n")
       }
     }
 
     go("  ", root, false, false)
+    out.write("}\n")
     for (edge in graph.edgeSet()) {
       val source = graph.getEdgeSource(edge)
       val target = graph.getEdgeTarget(edge)

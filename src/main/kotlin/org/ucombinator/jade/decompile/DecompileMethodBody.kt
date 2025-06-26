@@ -213,51 +213,44 @@ object DecompileMethodBody {
         logCfg.debug { "v: ${cfg.graph.incomingEdgesOf(v).size}: $v" }
       }
 
-      // Log("ssa")
-      log.debug { "**** SSA ****" }
+      val logSSA = Log("ssa") {}
+      logSSA.debug { "**** SSA ****" }
       val ssa = StaticSingleAssignment.make(classNode.name, method, cfg)
 
-      // Log("ssa.frames")
-      log.debug { "++++ frames: ${ssa.frames.size} ++++" }
+      val logSSAFrames = Log("ssa.frames") {}
+      logSSAFrames.debug { "++++ frames: ${ssa.frames.size} ++++" }
       for (i in 0 until method.instructions.size()) {
-        log.debug { "frame($i): ${ssa.frames[i]}" }
+        logSSAFrames.debug { "frame($i): ${ssa.frames[i]}" }
       }
 
-      log.debug { "++++ results and arguments ++++" }
+      val logResArgs = Log("ssa.res") {}
+      logResArgs.debug { "++++ results and arguments ++++" }
       for (i in 0 until method.instructions.size()) {
         val insn = method.instructions[i]
-        log.debug { "args($i): ${Insn.longString(method, insn)} --- ${ssa.insnVars[insn]}" }
+        logResArgs.debug { "args($i): ${Insn.longString(method, insn)} --- ${ssa.insnVars[insn]}" }
       }
 
-      log.debug { "++++ ssa map ++++" }
+      val logSSAMap = Log("ssa.map") {}
+      logSSAMap.debug { "++++ ssa map ++++" }
       for ((key, value) in ssa.phiInputs) {
-        log.debug { "ssa: $key -> $value" }
+        logSSAMap.debug { "ssa: $key -> $value" }
       }
 
-      log.debug { "**** Dominators ****" }
+      val logDom = Log("dominator") {}
+      logDom.debug { "**** Dominators ****" }
       val doms = Dominator.dominatorTree(cfg.graphWithExceptions, cfg.entry)
 
-      log.debug { "++++ dominator tree ++++\n${GraphViz.toString(doms.tree)}" }
+      val logDomTree = Log("dominator.tree") {}
+      logDomTree.debug { "++++ dominator tree ++++\n${GraphViz.toString(doms.tree)}" }
 
-      log.debug { "++++ dominator nesting ++++\n${GraphViz.nestingTree(cfg.graphWithExceptions, doms.tree, cfg.entry)}" }
+      val logDomNesting = Log("dominator.nesting") {}
+      logDomNesting.debug { "++++ dominator nesting ++++\n${GraphViz.nestingTree(cfg.graphWithExceptions, doms.tree, cfg.entry)}" }
 
       val logStructure = Log("structure") {}
       logStructure.debug { "**** Structure ****" }
 
       val structure = Loops.make(cfg)
-
       logStructure.debug { "++++ structure nesting graph ++++\n${GraphViz.toString(structure.nesting)}" }
-
-      try {
-        val writer = FileWriter("structure.dot")
-        writer.write(GraphViz.toString(structure.nesting))
-        writer.close()
-        log.debug { "Wrote loop structure to structure.dot" }
-      } catch (e: IOException) {
-        log.error(e) { "Failed to write loop structure to file" }
-      }
-
-
 
       // TODO: JEP 334: JVM Constants API: https://openjdk.java.net/jeps/334
 

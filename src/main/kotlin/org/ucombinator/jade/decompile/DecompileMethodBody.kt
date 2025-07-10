@@ -254,10 +254,12 @@ object DecompileMethodBody {
 
       // TODO: JEP 334: JVM Constants API: https://openjdk.java.net/jeps/334
 
-//      log.debug { "**** Statement ****" }
-//      val statement = DecompileStatement.make(cfg, ssa, structure)
-//      log.debug { statement }
-//      setDeclarationBody(declaration, statement)
+      val logStatement = Log("statement") {}
+      logStatement.debug { "**** Statement ****" }
+      val statement = DecompileStatement.make(cfg, ssa, structure)
+      logStatement.debug { statement }
+      setDeclarationBody(declaration, statement)
+      return statement
 //
 //      var statements : List<Statement> = mutableListOf()
 //      for (insn in method.instructions.toArray()) {
@@ -266,6 +268,7 @@ object DecompileMethodBody {
 //      }
 //      log.debug { "++++ statements ++++\n" + statements.joinToString("\n") }
 //      setDeclarationBody(declaration, BlockStmt( NodeList(statements)))
+
     }
     val textifier = Textifier()
     method.accept(TraceMethodVisitor(null, textifier))

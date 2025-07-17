@@ -1,0 +1,3 @@
+INFO  decompile.Decompile: Decompiling [1 of 1] Test3 from [Test3.class]
+INFO  decompile.Decompile: Decompiling [1 of 1] Test3 from [tmp/Test3.class]
+INFO  decompile.Decompile: Decompiling [1 of 1] Test3 from [tmp/Test3.class]

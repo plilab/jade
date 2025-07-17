@@ -28,7 +28,7 @@ data class Insn(val method: MethodNode, val insn: AbstractInsnNode) : Comparable
    *
    * @return TODO:doc
    */
-  fun next(): Insn = Insn(method, insn.next)
+  fun next(): Insn? = insn.next?.let { Insn(method, it) }
 
   /** TODO:doc.
    *

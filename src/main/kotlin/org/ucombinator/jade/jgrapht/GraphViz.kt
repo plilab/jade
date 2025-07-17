@@ -143,7 +143,7 @@ object GraphViz {
         false
       }
       for (child in edges.map(tree::getEdgeSource)) {
-        val newIndent = if (v in isLoopHead) "$indent  " else indent
+        val newIndent = if (child in isLoopHead) "$indent  " else indent
         go(newIndent, child, newBgColor, sole)
       }
       if (v in isLoopHead) {

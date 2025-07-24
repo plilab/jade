@@ -130,19 +130,8 @@ object DecompileStatement {
       }
 
       fun simpleStmt(insn: Insn): Statement {
-        // ASSUMPTION: we ignore allocs but implement the constructors
-        val (retVal, decompiled) = DecompileInsn.decompileInsn(insn.insn, ssa)
-        return when (decompiled) {
-          is DecompiledInsn.If -> {
-            // log.debug { "IF: " + decompiled.labelNode + "///" + decompiled.labelNode.getLabel }
-            IfStmt(decompiled.condition, BreakStmt(labelString(decompiled.labelNode)), null)
-          }
-          is DecompiledInsn.Goto ->
-            BreakStmt(labelString(decompiled.labelNode)) // TODO: use instruction number?
-          else -> DecompileInsn.decompileInsn(retVal, decompiled)
-        }
-        // TODO: break vs continue
-        // TODO: labels in break or continue
+        val (retVar, decompiled) = DecompileInsn.decompileInsn(insn.insn, ssa)
+        return DecompileInsn.decompileInsn(retVar, decompiled, ssa)
       }
       // TODO: explicitly labeled instructions
 

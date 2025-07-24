@@ -2,6 +2,11 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.stmt.LabeledStmt
+import com.github.javaparser.ast.stmt.BreakStmt
+import com.github.javaparser.ast.stmt.ContinueStmt
+import com.github.javaparser.ast.stmt.ExpressionStmt
+import com.github.javaparser.ast.stmt.EmptyStmt
 import com.github.javaparser.ast.expr.VariableDeclarationExpr
 import com.github.javaparser.ast.body.VariableDeclarator
 import org.ucombinator.jade.util.Log
@@ -26,11 +31,10 @@ object OptimizeMethodBody {
         var optimizedBody = methodBody.clone()
         
         // Apply optimization passes in order
-        optimizedBody = removeRedundantComments(optimizedBody)
+        optimizedBody = deleteEmptyStatements(optimizedBody)
         optimizedBody = simplifyVariableNames(optimizedBody)
         optimizedBody = removeUnusedVariables(optimizedBody)
-        optimizedBody = mergeSequentialBlocks(optimizedBody)
-        optimizedBody = simplifyControlFlow(optimizedBody)
+        optimizedBody = simplifyControlFlowAndFlatten(optimizedBody)
         optimizedBody = reconstructHighLevelConstructs(optimizedBody)
         optimizedBody = cleanupPhiVariables(optimizedBody)
         optimizedBody = removeEmptyStatements(optimizedBody)
@@ -40,16 +44,19 @@ object OptimizeMethodBody {
     }
 
     /**
-     * Removes redundant or unhelpful comments that clutter the decompiled output.
+     * Removes redundant comments from the method body.
      * 
      * @param body The method body to process
-     * @return The method body with cleaned comments
+     * @return The method body with redundant comments removed
      */
-    private fun removeRedundantComments(body: BlockStmt): BlockStmt {
-        log.debug { "Applying removeRedundantComments optimization..." }
-        // TODO: Implement comment cleanup
-        // - Remove instruction-level comments that are not helpful
-        // - Keep meaningful comments about control flow or complex operations
+    private fun deleteEmptyStatements(body: BlockStmt): BlockStmt {
+        log.debug { "Applying deleteEmptyStatements optimization..." }
+
+        body.walk { node ->
+            if (node is EmptyStmt) {
+                node.remove()
+            }
+        }
         return body
     }
 
@@ -84,33 +91,167 @@ object OptimizeMethodBody {
     }
 
     /**
-     * Merges sequential block statements that can be flattened.
+     * Unified function that both removes unused labels and flattens blocks in a single pass.
+     * This approach is more efficient and avoids issues that arise from doing these operations separately.
      * 
      * @param body The method body to process
-     * @return The method body with merged blocks
+     * @return The method body with simplified control flow and flattened blocks
      */
-    private fun mergeSequentialBlocks(body: BlockStmt): BlockStmt {
-        log.debug { "Applying mergeSequentialBlocks optimization..." }
-        // TODO: Implement block merging
-        // - Flatten nested blocks where possible
-        // - Remove unnecessary block boundaries
-        // - Preserve scoping rules
-        return body
+    private fun simplifyControlFlowAndFlatten(body: BlockStmt): BlockStmt {
+        log.debug { "Applying simplifyControlFlowAndFlatten optimization..." }
+        
+        val optimizedBody = body.clone()
+        
+        // First pass: collect all label references (break/continue statements)
+        val referencedLabels = collectReferencedLabels(optimizedBody)
+        
+        // Second pass: recursively flatten and remove unused labels
+        flattenAndRemoveUnusedLabels(optimizedBody, referencedLabels)
+        
+        return optimizedBody
+    }
+    
+    /**
+     * Recursively flattens blocks and removes unused labeled statements in a single pass.
+     * When a LabeledStmt -> BlockStmt structure is found and the label is unused,
+     * it replaces the LabeledStmt directly with the children of the BlockStmt.
+     */
+    private fun flattenAndRemoveUnusedLabels(body: BlockStmt, referencedLabels: Set<String>) {
+        var changed = true
+        
+        while (changed) {
+            changed = false
+            val newStatements = mutableListOf<Statement>()
+            
+            for (statement in body.statements) {
+                val processedStatements = processStatementForFlatteningAndLabelRemoval(statement, referencedLabels)
+                if (processedStatements != listOf(statement)) {
+                    changed = true
+                }
+                newStatements.addAll(processedStatements)
+            }
+            
+            if (changed) {
+                body.statements.clear()
+                body.statements.addAll(newStatements)
+            }
+        }
+        
+        // Recursively process nested structures
+        body.walk { node ->
+            if (node is BlockStmt && node != body) {
+                flattenAndRemoveUnusedLabels(node, referencedLabels)
+            }
+        }
+    }
+    
+    /**
+     * Processes a single statement for flattening and label removal.
+     * Returns a list of statements that should replace the input statement.
+     */
+    private fun processStatementForFlatteningAndLabelRemoval(
+        statement: Statement, 
+        referencedLabels: Set<String>
+    ): List<Statement> {
+        return when (statement) {
+            is LabeledStmt -> {
+                val labelName = statement.label.identifier
+                val innerStatement = statement.statement
+                
+                // Check if this is an unused JADE_ label
+                val isUnusedJadeLabel = labelName.startsWith("JADE_") && !referencedLabels.contains(labelName)
+                
+                when {
+                    isUnusedJadeLabel && innerStatement is BlockStmt -> {
+                        // Replace LabeledStmt -> BlockStmt with the children of BlockStmt
+                        val childStatements = mutableListOf<Statement>()
+                        for (childStatement in innerStatement.statements) {
+                            childStatements.addAll(
+                                processStatementForFlatteningAndLabelRemoval(childStatement, referencedLabels)
+                            )
+                        }
+                        childStatements
+                    }
+                    isUnusedJadeLabel -> {
+                        // Replace unused label with just its inner statement
+                        processStatementForFlatteningAndLabelRemoval(innerStatement, referencedLabels)
+                    }
+                    innerStatement is BlockStmt -> {
+                        // Keep the label but flatten the block if it contains multiple statements
+                        val childStatements = mutableListOf<Statement>()
+                        for (childStatement in innerStatement.statements) {
+                            childStatements.addAll(
+                                processStatementForFlatteningAndLabelRemoval(childStatement, referencedLabels)
+                            )
+                        }
+                        
+                        when {
+                            childStatements.isEmpty() -> listOf(statement) // Keep as-is if empty
+                            childStatements.size == 1 -> {
+                                // Label the single child statement
+                                listOf(LabeledStmt(statement.label, childStatements[0]))
+                            }
+                            else -> {
+                                // Label the first statement, keep others unlabeled
+                                val result = mutableListOf<Statement>()
+                                result.add(LabeledStmt(statement.label, childStatements[0]))
+                                result.addAll(childStatements.drop(1))
+                                result
+                            }
+                        }
+                    }
+                    else -> {
+                        // Keep labeled statement as-is
+                        listOf(statement)
+                    }
+                }
+            }
+            is BlockStmt -> {
+                // Flatten simple blocks (non-control-flow blocks)
+                val childStatements = mutableListOf<Statement>()
+                for (childStatement in statement.statements) {
+                    childStatements.addAll(
+                        processStatementForFlatteningAndLabelRemoval(childStatement, referencedLabels)
+                    )
+                }
+                childStatements
+            }
+            // Don't flatten control flow statements - they need their block structure
+            is com.github.javaparser.ast.stmt.WhileStmt,
+            is com.github.javaparser.ast.stmt.ForStmt,
+            is com.github.javaparser.ast.stmt.IfStmt,
+            is com.github.javaparser.ast.stmt.DoStmt -> {
+                listOf(statement)
+            }
+            else -> {
+                // All other statements are kept as-is
+                listOf(statement)
+            }
+        }
     }
 
     /**
-     * Simplifies control flow by removing redundant jumps and labels.
-     * 
-     * @param body The method body to process
-     * @return The method body with simplified control flow
+     * Collects all labels that are referenced by break or continue statements.
      */
-    private fun simplifyControlFlow(body: BlockStmt): BlockStmt {
-        log.debug { "Applying simplifyControlFlow optimization..." }
-        // TODO: Implement control flow simplification
-        // - Remove unnecessary labels (JADE_1, JADE_2, etc.)
-        // - Simplify break/continue statements
-        // - Remove redundant conditional checks
-        return body
+    private fun collectReferencedLabels(body: BlockStmt): Set<String> {
+        val referencedLabels = mutableSetOf<String>()
+        
+        body.walk { node ->
+            when (node) {
+                is BreakStmt -> {
+                    node.label.ifPresent { label ->
+                        referencedLabels.add(label.identifier)
+                    }
+                }
+                is ContinueStmt -> {
+                    node.label.ifPresent { label ->
+                        referencedLabels.add(label.identifier)
+                    }
+                }
+            }
+        }
+        
+        return referencedLabels
     }
 
     /**
@@ -157,42 +298,4 @@ object OptimizeMethodBody {
         // - Clean up whitespace and formatting
         return body
     }
-
-    // Helper methods for optimization strategies
-
-    /**
-     * Performs a deep traversal of statements in the method body.
-     * Useful for implementing optimizations that need to visit all statements.
-     * 
-     * @param body The method body to traverse
-     * @param visitor A function that processes each statement
-     * @return The modified method body
-     */
-    private fun traverseStatements(body: BlockStmt, visitor: (Statement) -> Statement): BlockStmt {
-        // TODO: Implement statement traversal utility
-        // This will be useful for applying transformations to all statements recursively
-        return body
-    }
-
-    /**
-     * Analyzes variable usage patterns in the method body.
-     * 
-     * @param body The method body to analyze
-     * @return A map of variable names to their usage information
-     */
-    private fun analyzeVariableUsage(body: BlockStmt): Map<String, VariableUsageInfo> {
-        // TODO: Implement variable usage analysis
-        // Track where variables are declared, assigned, and used
-        return emptyMap()
-    }
-
-    /**
-     * Data class to track variable usage information.
-     */
-    private data class VariableUsageInfo(
-        val declarations: List<VariableDeclarator>,
-        val assignments: Int,
-        val usages: Int,
-        val isParameter: Boolean = false
-    )
 } 

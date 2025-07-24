@@ -236,6 +236,8 @@ object DecompileMethodBody {
         logSSAMap.debug { "ssa: $key -> $value" }
       }
 
+      // TODO: build reverse SSA map: phiOutputs = [y -> {x, w}, z -> {x}, v -> {w}...]
+
       val logDom = Log("dominator") {}
       logDom.debug { "**** Dominators ****" }
       val doms = Dominator.dominatorTree(cfg.graphWithExceptions, cfg.entry)
@@ -243,9 +245,9 @@ object DecompileMethodBody {
       val logDomTree = Log("dominator.tree") {}
       logDomTree.debug { "++++ dominator tree ++++\n${GraphViz.toString(doms.tree)}" }
 
+
       val logDomNesting = Log("dominator.nesting") {}
       logDomNesting.debug { "++++ dominator nesting ++++\n${GraphViz.nestingTree(cfg.graphWithExceptions, doms.tree, cfg.entry)}" }
-
       val logStructure = Log("structure") {}
       logStructure.debug { "**** Structure ****" }
 
@@ -258,8 +260,12 @@ object DecompileMethodBody {
       logStatement.debug { "**** Statement ****" }
       val statement = DecompileStatement.make(cfg, ssa, structure)
       logStatement.debug { statement }
-      setDeclarationBody(declaration, statement)
-      return statement
+      // TODO: add new pass
+      val statement2 = RemoveUnusedLabels.make(statement)
+      val statement3 = FlattenBlocks.make(statement2)
+
+      setDeclarationBody(declaration, BlockStmt(statement3))
+      return BlockStmt(statement3)
 //
 //      var statements : List<Statement> = mutableListOf()
 //      for (insn in method.instructions.toArray()) {
@@ -270,6 +276,7 @@ object DecompileMethodBody {
 //      setDeclarationBody(declaration, BlockStmt( NodeList(statements)))
 
     }
+    // TODO: is this code dead? Set a flag that chooses whether to generate this stub implementation
     val textifier = Textifier()
     method.accept(TraceMethodVisitor(null, textifier))
     val stringWriter = StringWriter()

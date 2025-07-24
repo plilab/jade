@@ -3,13 +3,7 @@ package org.ucombinator.jade.decompile
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.BooleanLiteralExpr
 import com.github.javaparser.ast.expr.VariableDeclarationExpr
-import com.github.javaparser.ast.stmt.BlockStmt
-import com.github.javaparser.ast.stmt.BreakStmt
-import com.github.javaparser.ast.stmt.ExpressionStmt
-import com.github.javaparser.ast.stmt.IfStmt
-import com.github.javaparser.ast.stmt.LabeledStmt
-import com.github.javaparser.ast.stmt.Statement
-import com.github.javaparser.ast.stmt.WhileStmt
+import com.github.javaparser.ast.stmt.*
 import javassist.bytecode.analysis.ControlFlow.Block
 import org.jgrapht.graph.AsSubgraph
 import org.jgrapht.graph.MaskSubgraph
@@ -86,6 +80,7 @@ object DecompileStatement {
     val graph = AsSubgraph(MaskSubgraph(cfg.graph, { false }, structure.backEdges::contains))
 
     fun labelString(label: LabelNode): String = "JADE_${jumpTargets.getValue(label.label).index()}"
+    fun endLabelString(label: LabelNode): String = "End of JADE_${jumpTargets.getValue(label.label).index()}"
 
     fun insnLabelString(insn: Insn): String = "JADE_${insn.index()}" // TODO: overload with labelString
 
@@ -137,8 +132,7 @@ object DecompileStatement {
             // log.debug { "IF: " + decompiled.labelNode + "///" + decompiled.labelNode.getLabel }
             IfStmt(decompiled.condition, BreakStmt(labelString(decompiled.labelNode)), null)
           }
-          is DecompiledInsn.Goto ->
-            BreakStmt(labelString(decompiled.labelNode)) // TODO: use instruction number?
+          is DecompiledInsn.Goto -> ContinueStmt(labelString(decompiled.labelNode)) // TODO: use instruction number?
           else -> DecompileInsn.decompileInsn(retVal, decompiled)
         }
         // TODO: break vs continue
@@ -153,9 +147,7 @@ object DecompileStatement {
         val insnIsALoopHead = cfg.graph.incomingEdgesOf(insn).any { structure.backEdges.contains(it) }
         return if (insnIsALoopHead) { // insn is the head of a structured statement
           // TODO: multiple nested structures starting at same place (for now assume everything is a loop)
-          println("inside recursion, Loophead: " + insn)
           val (stmt, newPending) = structuredBlock(insn)
-          println("exit recursion, loophead " + insn)
           addPending(newPending)
           // when (block.kind) {
           //   is Loops.Kind.Loop -> {
@@ -187,7 +179,7 @@ object DecompileStatement {
         val (_, decompiled) = DecompileInsn.decompileInsn(currentInsn!!.insn, ssa)
         val next = currentInsn?.next()
         val insnIsALoopHead = cfg.graph.incomingEdgesOf(currentInsn).any { structure.backEdges.contains(it) }
-        next?.let{ println("curr insn: " + insnLabelString(currentInsn!!) + ", next insn: " + insnLabelString(it)) } // debug
+        //next?.let{ println("curr insn: " + insnLabelString(currentInsn!!) + ", next insn: " + insnLabelString(it)) } // debug
         return when {
           pendingInside.isEmpty() -> {
             // Nothing left to process
@@ -199,32 +191,35 @@ object DecompileStatement {
             next
           }
           else -> {
-            println("else " + insnLabelString(next!!) + decompiled.usesNextInsn + " ," + pendingInside.contains(next))
             // Otherwise, take the smallest available instruction
-            if (insnIsALoopHead && !pendingInside.contains(next)) {
-              // avoid double processing of next insn after loophead
-              return pendingInside.first()
+            if (decompiled.usesNextInsn && !insnIsALoopHead) { // don't do on continues, breaks, etc.
+              // NOTE [Branch Targets]:
+              // We can't go to the sequencially next instruction (probably due to a CFG dependency)
+              // so we insert a `break` and pick the next instruction that we can go to.
+              // This line is why every statement is a potential break target.
+              currentStmt = BlockStmt(NodeList<Statement>(currentStmt, BreakStmt(insnLabelString(next!!))))
             }
-            // NOTE [Branch Targets]:
-            // We can't go to the sequencially next instruction (probably due to a CFG dependency)
-            // so we insert a `break` and pick the next instruction that we can go to.
-            // This line is why every statement is a potential break target.
-            currentStmt = BlockStmt(NodeList<Statement>(currentStmt, BreakStmt(insnLabelString(next!!))))
-            println(insnLabelString(pendingInside.first()))
             pendingInside.first()
           }
         }
       }
 
       while (true) {
+        var prevInsn: Insn? = currentInsn
         currentInsn = getNextInsn()
         if (currentInsn == null) { break }
-        currentStmt = LabeledStmt(
-           insnLabelString(currentInsn),
-           BlockStmt(NodeList<Statement>(currentStmt, structuredStmt(currentInsn)))
-         )
-      }
+        val insnIsALoopHead = cfg.graph.incomingEdgesOf(currentInsn).any { structure.backEdges.contains(it) }
+        if (insnIsALoopHead) {
+          // Don't rewrap in a labeled BlockStmt to allow for labeled while loop for continue to work
+          currentStmt = BlockStmt(NodeList<Statement>(currentStmt, structuredStmt(currentInsn)))
+        } else {
+          currentStmt = LabeledStmt(
+            insnLabelString(currentInsn),
+            BlockStmt(NodeList<Statement>(currentStmt, structuredStmt(currentInsn)))
+          )
+        }
 
+      }
       return Pair(currentStmt, pendingOutside)
     }
 
@@ -237,7 +232,7 @@ object DecompileStatement {
       v.basicValue.let { basicValue ->
         // TODO: modifiers
         if (basicValue == null || basicValue.type == null) {
-          JavaParser.noop(v.toString())
+          JavaParser.noop(v.toString()) // commented out var here
         } else {
           val t = Descriptor.fieldDescriptor(basicValue.type.descriptor)
           ExpressionStmt(VariableDeclarationExpr(t, v.name))
@@ -251,4 +246,6 @@ object DecompileStatement {
     val stmt2 = BlockStmt(statements)
     return stmt2
   }
+
+
 }

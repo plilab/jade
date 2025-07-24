@@ -8,7 +8,7 @@ fun main() {
     println("=".repeat(60))
 
     val inputDir = File("input")
-    val outputDir = File("out/playground_compiled")
+    val outputDir = File("output/classes")
     outputDir.mkdirs()
 
     val javaFiles = inputDir.listFiles { file -> file.extension == "java" && file.isFile }

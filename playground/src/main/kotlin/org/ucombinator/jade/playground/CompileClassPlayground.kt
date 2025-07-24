@@ -101,16 +101,3 @@ object JavaCompiler {
         }
     }
 }
-
-/**
- * Convenience function to compile Test3.java specifically.
- * The compiled .class file will be placed in "playground/compiled_classes".
- *
- * @return The compiled .class file.
- */
-fun compileTest3(): File {
-    val test3File = File("input/Test3.java")
-    val outputDir = File("output")
-    outputDir.mkdirs() // Ensure the output directory exists
-    return JavaCompiler.compileJavaFile(test3File, outputDir)
-}

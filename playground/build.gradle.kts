@@ -10,6 +10,7 @@ repositories {
 dependencies {
     // Depend on the main project
     implementation(project(":"))
+    implementation("com.github.javaparser:javaparser-core:3.25.1")
 
     // Logging
     implementation("ch.qos.logback:logback-classic:1.5.12")

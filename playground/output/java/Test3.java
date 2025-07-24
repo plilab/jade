@@ -1,0 +1,100 @@
+{
+    int insnVar2;
+    int[] insnVar3;
+    int[] copyVar4_2;
+    int insnVar5;
+    int insnVar6;
+    int[] copyVar8_2;
+    int insnVar9;
+    int insnVar10;
+    int[] copyVar12_2;
+    int insnVar13;
+    int insnVar14;
+    int[] copyVar16_1;
+    int insnVar19;
+    int copyVar20_1;
+    int insnVar23;
+    int copyVar24_1;
+    int copyVar27_1;
+    int insnVar28;
+    int insnVar32;
+    int copyVar33_1;
+    int copyVar36_1;
+    int insnVar37;
+    int insnVar64;
+    int copyVar41_1;
+    int copyVar42_1;
+    int insnVar59;
+    int copyVar46_1;
+    int[] copyVar47_1;
+    int copyVar48_1;
+    int insnVar49;
+    int[] copyVar50_1;
+    int copyVar51_1;
+    int insnVar52;
+    int insnVar53;
+    int insnVar54;
+    int copyVar55_1;
+    java.lang.String[] phiVar25_0;
+    int[] phiVar25_1;
+    int phiVar25_2;
+    int phiVar25_3;
+    java.lang.String[] phiVar34_0;
+    int[] phiVar34_1;
+    int phiVar34_2;
+    int phiVar34_3;
+    int phiVar34_4;
+    java.lang.String[] phiVar56_0;
+    int[] phiVar56_1;
+    int phiVar56_2;
+    int phiVar56_3;
+    int phiVar56_4;
+    JADE_25: insnVar2 = 3;
+    insnVar3 = new int[insnVar2];
+    insnVar5 = 0;
+    insnVar7 = copyVar4_2[insnVar5] = insnVar6;
+    insnVar9 = 1;
+    insnVar10 = 1;
+    insnVar11 = copyVar8_2[insnVar9] = insnVar10;
+    insnVar13 = 2;
+    insnVar15 = copyVar12_2[insnVar13] = insnVar14;
+    copyVar16_1 = copyVar12_1;
+    insnVar19 = 0;
+    copyVar20_1 = insnVar19;
+    insnVar23 = 0;
+    copyVar24_1 = insnVar23;
+    JADE_25: while (true) JADE_69: {
+        JADE_66: JADE_34: copyVar27_1 = phiVar25_3;
+        insnVar28 = 3;
+        if (copyVar27_1 >= copyVar27_1)
+            break JADE_66;
+        insnVar32 = 0;
+        copyVar33_1 = insnVar32;
+        JADE_34: while (true) JADE_65: {
+            JADE_61: JADE_56: copyVar36_1 = phiVar34_4;
+            insnVar37 = 3;
+            if (copyVar36_1 >= copyVar36_1)
+                break JADE_61;
+            copyVar41_1 = phiVar34_3;
+            copyVar42_1 = phiVar34_4;
+            if (copyVar41_1 == copyVar41_1)
+                break JADE_56;
+            copyVar46_1 = phiVar34_2;
+            copyVar47_1 = phiVar34_1;
+            copyVar48_1 = phiVar34_3;
+            insnVar49 = copyVar47_1[copyVar48_1];
+            copyVar50_1 = phiVar34_1;
+            copyVar51_1 = phiVar34_4;
+            insnVar52 = copyVar50_1[copyVar51_1];
+            insnVar53 = insnVar49 * insnVar52;
+            insnVar54 = copyVar46_1 + insnVar53;
+            copyVar55_1 = insnVar54;
+            insnVar59 = phiVar56_4 + 1;
+            break JADE_34;
+            break JADE_61;
+            insnVar64 = phiVar34_3 + 1;
+            break JADE_25;
+        }
+        return;
+    }
+}

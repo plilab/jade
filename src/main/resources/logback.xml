@@ -21,14 +21,6 @@
     </encoder>
   </appender>
 
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>jade-log.txt</file> <!-- You can change this path as needed -->
-    <append>true</append> <!-- Append to the file instead of overwriting -->
-    <encoder>
-      <pattern>%-5level %logger{org.ucombinator.jade.}: %message%n%caller</pattern>
-    </encoder>
-  </appender>
-
   <root level="info">
     <!-- TODO: STDERR (configurable?) -->
     <appender-ref ref="STDOUT" />

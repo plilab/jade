@@ -23,6 +23,9 @@ fun testMethodBodyDecompilation(classFile: File) {
     println("Decompiling method body for 'main' in ${classNode.name}...")
     val decompiledBody = DecompileMethodBody.decompileBody(classNode, mainMethodNode, dummyMethod)
 
+    var outputDecompiledFile = File("output/java-decompiled/${classNode.name}.java")
+    outputDecompiledFile.writeText(decompiledBody.toString())
+
     // Apply optimizations
     val optimizedBody = OptimizeMethodBody.optimize(decompiledBody)
 

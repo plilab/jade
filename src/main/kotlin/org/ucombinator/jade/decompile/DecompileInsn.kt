@@ -18,6 +18,7 @@ import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.NullLiteralExpr
 import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.expr.UnaryExpr
+import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.BreakStmt
 import com.github.javaparser.ast.stmt.EmptyStmt
 import com.github.javaparser.ast.stmt.ExpressionStmt
@@ -183,26 +184,44 @@ object DecompileInsn {
    *
    * @param retVar TODO:doc
    * @param expression TODO:doc
+   * @param ssa TODO:doc
    * @return TODO:doc
    */
-  fun decompileExpression(retVar: Var?, expression: Expression): ExpressionStmt =
+  fun decompileExpression(retVar: Var?, expression: Expression, ssa: StaticSingleAssignment): Statement {
     if (retVar == null) {
-      ExpressionStmt(expression)
-    } else {
-      ExpressionStmt(AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN))
+      return ExpressionStmt(expression)
     }
+
+    val mainAssign = AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN)
+
+    val dependentPhis = ssa.phiInputs.filter { (_, inputs) ->
+      inputs.any { it.second == retVar }
+    }.keys
+
+    if (dependentPhis.isEmpty()) {
+      return ExpressionStmt(mainAssign)
+    }
+
+    val statements = NodeList<Statement>(ExpressionStmt(mainAssign))
+    for (phiVar in dependentPhis) {
+      val phiAssign = AssignExpr(decompileVar(phiVar), decompileVar(retVar), AssignExpr.Operator.ASSIGN)
+      statements.add(ExpressionStmt(phiAssign))
+    }
+    return BlockStmt(statements)
+  }
 
   /** TODO:doc.
    *
    * @param retVar TODO:doc
    * @param insn TODO:doc
+   * @param ssa TODO:doc
    * @return TODO:doc
    */
-  fun decompileInsn(retVar: Var?, insn: DecompiledInsn): Statement =
+  fun decompileInsn(retVar: Var?, insn: DecompiledInsn, ssa: StaticSingleAssignment): Statement =
     @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "ktlint:standard:no-multi-spaces")
     when (insn) {
       is DecompiledInsn.Statement      -> insn.statement
-      is DecompiledInsn.Expression     -> decompileExpression(retVar, insn.expression)
+      is DecompiledInsn.Expression     -> decompileExpression(retVar, insn.expression, ssa)
       is DecompiledInsn.StackOperation -> JavaParser.noop("Operand Stack Operation: $insn")
       is DecompiledInsn.If             -> IfStmt(insn.condition, BreakStmt(insn.labelNode.toString()), null)
       is DecompiledInsn.Goto           -> BreakStmt(insn.labelNode.toString()) // TODO: use instruction number?

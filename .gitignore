@@ -6,3 +6,5 @@
 
 # Gradle build output directory
 build/
+
+playground/output/

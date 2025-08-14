@@ -1,0 +1,60 @@
+{
+	"name": "Jade Java Development",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	
+	"features": {
+		"ghcr.io/devcontainers-extra/features/gradle-sdkman:2": {
+			"version": "8.11.1",
+			"installMaven": false
+		},
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"vscjava.vscode-java-pack",
+				"fwcd.kotlin",
+				"gradle.gradle-language-support",
+				"ms-vscode.vscode-gradle",
+				"redhat.java",
+				"vscjava.vscode-gradle",
+				"vscjava.vscode-java-test",
+				"vscjava.vscode-java-debug"
+			],
+			"settings": {
+				"java.configuration.runtimes": [
+					{
+						"name": "JavaSE-17",
+						"path": "/usr/local/sdkman/candidates/java/current"
+					}
+				],
+				"java.compile.nullAnalysis.mode": "automatic",
+				"gradle.nestedProjects": true,
+				"files.exclude": {
+					"**/.gradle": true,
+					"**/.idea": true,
+					"**/build": true
+				}
+			}
+		}
+	},
+
+	"containerEnv": {
+		"JAVA_HOME": "/usr/local/sdkman/candidates/java/current",
+		"GRADLE_USER_HOME": "/workspace/.gradle"
+	},
+
+	"remoteUser": "vscode",
+
+	// "postCreateCommand": "chmod +x gradlew && ./gradlew --version",
+
+	"forwardPorts": [],
+
+	"mounts": [
+		"source=${localWorkspaceFolder}/.gradle,target=/workspace/.gradle,type=bind,consistency=cached"
+	]
+} 

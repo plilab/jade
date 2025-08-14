@@ -133,7 +133,7 @@ object DecompileStatement {
             IfStmt(decompiled.condition, BreakStmt(labelString(decompiled.labelNode)), null)
           }
           is DecompiledInsn.Goto -> ContinueStmt(labelString(decompiled.labelNode)) // TODO: use instruction number?
-          else -> DecompileInsn.decompileInsn(retVal, decompiled)
+          else -> DecompileInsn.decompileInsn(retVal, decompiled, ssa)
         }
         // TODO: break vs continue
         // TODO: labels in break or continue

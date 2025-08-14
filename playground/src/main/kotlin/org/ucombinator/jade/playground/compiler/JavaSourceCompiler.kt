@@ -1,4 +1,4 @@
-package org.ucombinator.jade.playground
+package org.ucombinator.jade.playground.compiler
 
 import java.io.File
 import java.nio.file.Files
@@ -10,9 +10,17 @@ import javax.tools.ToolProvider
 import org.ucombinator.jade.util.Log
 
 /**
+ * Represents the result of compiling a Java source file.
+ */
+data class CompilationResult(
+    val classFile: File,
+    val className: String
+)
+
+/**
  * Utility object for compiling Java source files.
  */
-object JavaCompiler {
+object JavaSourceCompiler {
     private val log = Log {}
 
     /**
@@ -20,10 +28,10 @@ object JavaCompiler {
      *
      * @param javaFile The Java source file to compile.
      * @param outputDir The directory where the compiled .class file should be placed.
-     * @return The compiled .class file.
+     * @return The compilation result containing the compiled .class file and class name.
      * @throws RuntimeException if compilation fails or the compiler is not available.
      */
-    fun compileJavaFile(javaFile: File, outputDir: File): File {
+    fun compileJavaFile(javaFile: File, outputDir: File): CompilationResult {
         require(javaFile.exists()) { "Java file does not exist: ${javaFile.absolutePath}" }
         require(javaFile.extension == "java") { "File must be a .java file: ${javaFile.name}" }
         require(outputDir.isDirectory || outputDir.mkdirs()) { "Output directory could not be created: ${outputDir.absolutePath}" }
@@ -57,7 +65,7 @@ object JavaCompiler {
                 throw RuntimeException("Expected class file not found after successful compilation: ${classFile.absolutePath}")
             }
             log.info { "Successfully compiled ${javaFile.name} to ${classFile.absolutePath}" }
-            return classFile
+            return CompilationResult(classFile, className)
 
         } finally {
             standardFileManager.close()
@@ -71,14 +79,14 @@ object JavaCompiler {
      * @param className The name of the class defined in the source (e.g., "MyClass").
      * @param tempDir Optional temporary directory for intermediate files (auto-created if null).
      * @param keepIntermediateFiles Whether to keep .java and .class files after compilation (default: false).
-     * @return The compiled .class file.
+     * @return The compilation result containing the compiled .class file and class name.
      */
     fun compileJavaSource(
         javaSource: String,
         className: String,
         tempDir: File? = null,
         keepIntermediateFiles: Boolean = false
-    ): File {
+    ): CompilationResult {
         val workingDir = tempDir ?: Files.createTempDirectory("jade_compilation").toFile()
         workingDir.mkdirs() // Ensure directory exists
 
@@ -86,18 +94,31 @@ object JavaCompiler {
         val javaFile = File(workingDir, "$className.java")
         javaFile.writeText(javaSource)
 
-        var compiledFile: File? = null
+        var result: CompilationResult? = null
         try {
-            compiledFile = compileJavaFile(javaFile, workingDir)
-            return compiledFile
+            result = compileJavaFile(javaFile, workingDir)
+            return result
         } finally {
             if (!keepIntermediateFiles) {
                 javaFile.delete() // Always delete the temp .java file
-                compiledFile?.delete() // Delete the compiled .class file if it was created
+                result?.classFile?.delete() // Delete the compiled .class file if it was created
                 if (tempDir == null) { // Only delete the working directory if we created it
                     workingDir.deleteRecursively()
                 }
             }
+        }
+    }
+
+    /**
+     * Compiles multiple Java source files.
+     *
+     * @param javaFiles The Java source files to compile.
+     * @param outputDir The directory where the compiled .class files should be placed.
+     * @return A list of compilation results for each successfully compiled file.
+     */
+    fun compileJavaFiles(javaFiles: List<File>, outputDir: File): List<CompilationResult> {
+        return javaFiles.map { javaFile ->
+            compileJavaFile(javaFile, outputDir)
         }
     }
 }

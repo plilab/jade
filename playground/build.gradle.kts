@@ -32,7 +32,7 @@ dependencies {
 }
 
 application {
-    mainClass = "org.ucombinator.jade.playground.PlaygroundKt"
+    mainClass = "org.ucombinator.jade.playground.cli.PlaygroundMainKt"
     applicationDefaultJvmArgs += listOf("-ea") // enable assertions, same as root project
 }
 

@@ -9,10 +9,8 @@ import org.objectweb.asm.tree.analysis.BasicInterpreter
 import org.objectweb.asm.tree.analysis.BasicValue
 import org.objectweb.asm.tree.analysis.Frame
 
-class AnalyzerHarness(
-    override val inputFile: File,
-    override val outputFile: File,
-) : PlaygroundHarness {
+class AnalyzerHarness() : PlaygroundHarness {
+    override var inputFile: File = File("")
     override val key: String = "webasm-analyzer"
     override val description: String = "Run ASM BasicInterpreter + Analyzer over a method and summarize frames"
 
@@ -21,7 +19,6 @@ class AnalyzerHarness(
         val analyzer = Analyzer(interpreter)
         try {
             val frames: Array<Frame<BasicValue>?> = analyzer.analyze(classNode.name, methodNode)
-            println("Analysis complete!")
             println("Method: ${methodNode.name}")
             println("Number of instructions: ${methodNode.instructions.size()}")
             println("Number of frames: ${frames.size}")
@@ -41,6 +38,8 @@ class AnalyzerHarness(
             println(e.stackTraceToString())
         }
     }
+
+    // Uses default implementation in PlaygroundHarness
 
     companion object {
         const val KEY: String = "webasm-analyzer"

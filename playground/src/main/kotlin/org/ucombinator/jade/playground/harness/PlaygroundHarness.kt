@@ -12,26 +12,28 @@ import org.objectweb.asm.tree.MethodNode
 interface PlaygroundHarness {
     val key: String
     val description: String
-    val inputFile: File
-    val outputFile: File
+    var inputFile: File
 
     fun run(classNode: ClassNode, methodNode: MethodNode)
 
+    fun withInput(file: File): PlaygroundHarness {
+        this.inputFile = file
+        return this
+    }
+
     fun print(text: String) {
         kotlin.io.print(text)
-        ensureOutputDir()
-        outputFile.appendText(text)
+        outputFile().appendText(text)
     }
 
     fun println(text: String = "") {
         kotlin.io.println(text)
-        ensureOutputDir()
-        outputFile.appendText(text + System.lineSeparator())
+        outputFile().appendText(text + System.lineSeparator())
     }
 
-    fun ensureOutputDir() {
-        outputFile.parentFile?.let { parent ->
-            if (!parent.exists()) parent.mkdirs()
-        }
+    fun outputFile(): File {
+        val dir = File("output/${key}")
+        if (!dir.exists()) dir.mkdirs()
+        return File(dir, "${inputFile.nameWithoutExtension}.txt")
     }
 }

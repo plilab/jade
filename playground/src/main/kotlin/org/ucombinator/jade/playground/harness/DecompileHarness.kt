@@ -6,12 +6,10 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import org.ucombinator.jade.decompile.DecompileClass
 import org.ucombinator.jade.decompile.DecompileMethodBody
-import org.ucombinator.jade.decompile.optimize.OptimizeMethodBody
+import org.ucombinator.jade.decompile.OptimizeMethodBody
 
-class MethodBodyDecompilationHarness(
-    override val inputFile: File,
-    override val outputFile: File,
-) : PlaygroundHarness {
+class DecompileHarness() : PlaygroundHarness {
+    override var inputFile: File = File("")
     override val key: String = "decompile"
     override val description: String = "Decompile a method body and print decompiled and optimized Java code"
 
@@ -28,6 +26,8 @@ class MethodBodyDecompilationHarness(
         println("Optimized Body:")
         println(optimizedBody.toString())
     }
+
+    // Uses default implementation in PlaygroundHarness
 
     companion object {
         const val KEY: String = "decompile"

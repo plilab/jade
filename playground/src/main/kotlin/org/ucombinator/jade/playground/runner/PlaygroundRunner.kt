@@ -31,8 +31,8 @@ object PlaygroundRunner {
      */
     fun run(config: PlaygroundConfig) {
         // Validate harness
-        val factory = HarnessRegistry.getFactory(config.harnessKey)
-        if (factory == null) {
+        val hasKey = HarnessRegistry.hasHarness(config.harnessKey)
+        if (!hasKey) {
             println("Unknown harness '${config.harnessKey}'. Available: ${HarnessRegistry.getAvailableKeys()}")
             return
         }
@@ -62,7 +62,9 @@ object PlaygroundRunner {
 
         // Print header
         println("=".repeat(60))
-        println("Playground Harness: ${factory.key} - ${factory.description}")
+        val descriptions = HarnessRegistry.getHarnessDescriptions()
+        val description = descriptions[config.harnessKey] ?: ""
+        println("Playground Harness: ${config.harnessKey} - ${description}")
         println("Method filter: ${config.methodName ?: "<default>"}")
         println("Processing ${filesToProcess.size} file(s)")
         println("=".repeat(60))
@@ -87,13 +89,8 @@ object PlaygroundRunner {
                     println("Method '${config.methodName ?: "main"}' not found in ${classNode.name}. Available: $availableMethods")
                 } else {
                     // Prepare output file per input and harness
-                    val harnessOutputDir = File("output/${factory.key}")
-                    if (!harnessOutputDir.exists()) harnessOutputDir.mkdirs()
-                    val outputFile = File(harnessOutputDir, "${javaFile.nameWithoutExtension}.txt")
-                    if (outputFile.exists()) outputFile.delete()
-
-                    // Create harness instance bound to this input/output
-                    val harness = factory.create(javaFile, outputFile)
+                    val harness = HarnessRegistry.newHarness(config.harnessKey, javaFile)
+                        ?: error("Failed to create harness for key ${config.harnessKey}")
 
                     // Run harness with streaming output via default print/println
                     harness.run(classNode, targetMethod)

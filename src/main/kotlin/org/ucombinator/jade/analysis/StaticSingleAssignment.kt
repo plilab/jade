@@ -56,8 +56,24 @@ data class StaticSingleAssignment(
 
       val frames = SsaAnalyzer(cfg, interpreter).analyze(owner, method)
 
-      return StaticSingleAssignment(frames, interpreter.insnVars, interpreter.phiInputs)
+      val obj = StaticSingleAssignment(frames, interpreter.insnVars, interpreter.phiInputs)
+
+      interpreter.phiInputs.forEach { (phiIn, phiOutPairs) ->
+        for (phiOutPair in phiOutPairs) {
+          val phiOut : Var? = phiOutPair.second
+          if (phiOut != null) {
+            obj.reverseLookupTable[phiOut] = obj.reverseLookupTable.getOrElse(phiOut, { listOf() }) + phiIn
+          }
+        }
+      }
+      return obj
     }
+  }
+
+  val reverseLookupTable = mutableMapOf<Var, List<Var>>()
+
+  fun reverseLookup(insn: Var): List<Var> {
+    return reverseLookupTable[insn] ?: listOf()
   }
 }
 

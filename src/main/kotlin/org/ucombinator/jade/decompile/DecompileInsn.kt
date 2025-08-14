@@ -194,13 +194,8 @@ object DecompileInsn {
 
     val mainAssign = AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN)
 
-    val dependentPhis = ssa.phiInputs.filter { (_, inputs) ->
-      inputs.any { it.second == retVar }
-    }.keys
-
-    if (dependentPhis.isEmpty()) {
-      return ExpressionStmt(mainAssign)
-    }
+    // TODO: implement reverse lookup hashtable. currently this is O(n)
+    val dependentPhis = ssa.reverseLookup(retVar)
 
     val statements = NodeList<Statement>(ExpressionStmt(mainAssign))
     for (phiVar in dependentPhis) {

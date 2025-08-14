@@ -26,7 +26,8 @@ import org.ucombinator.jade.util.Errors
 data class StaticSingleAssignment(
   val frames: Array<Frame<Var>>,
   val insnVars: Map<AbstractInsnNode, Pair<Var, List<Var>>>,
-  val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>, // TODO: change Set to Map?
+  val phiInputs: Map<Var, Set<Pair<AbstractInsnNode, Var?>>>, // TODO: change Set to Map? 
+  // TODO: change to phiInputs: Map<Var.Phi, Set<Var?>>
 ) {
   companion object {
     /** Performs a static single assignment (SSA) analysis on the given method and returns the result.
@@ -56,24 +57,24 @@ data class StaticSingleAssignment(
 
       val frames = SsaAnalyzer(cfg, interpreter).analyze(owner, method)
 
-      val obj = StaticSingleAssignment(frames, interpreter.insnVars, interpreter.phiInputs)
-
-      interpreter.phiInputs.forEach { (phiIn, phiOutPairs) ->
-        for (phiOutPair in phiOutPairs) {
-          val phiOut : Var? = phiOutPair.second
-          if (phiOut != null) {
-            obj.reverseLookupTable[phiOut] = obj.reverseLookupTable.getOrElse(phiOut, { listOf() }) + phiIn
-          }
-        }
-      }
-      return obj
+      return StaticSingleAssignment(frames, interpreter.insnVars, interpreter.phiInputs)
     }
   }
 
-  val reverseLookupTable = mutableMapOf<Var, List<Var>>()
+  // Immutable reverse lookup index computed from `phiInputs` at construction time
+  private val reverseLookupIndex: Map<Var, Set<Var>> = run {
+    // Edges from source variable to dependent phi variable
+    val edges = phiInputs.asSequence().flatMap { (phiIn, phiOutPairs) ->
+      phiOutPairs.asSequence().mapNotNull { (_, phiOut) -> phiOut?.let { it to phiIn } }
+    }
 
-  fun reverseLookup(insn: Var): List<Var> {
-    return reverseLookupTable[insn] ?: listOf()
+    // Group dependents by source and convert to Set to avoid duplicates
+    edges.groupBy(keySelector = { it.first }, valueTransform = { it.second })
+      .mapValues { (_, dependents) -> dependents.toSet() }
+  }
+
+  fun reverseLookup(variable: Var): Set<Var> {
+    return reverseLookupIndex[variable] ?: emptySet()
   }
 }
 

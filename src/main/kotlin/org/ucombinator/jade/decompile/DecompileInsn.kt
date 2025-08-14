@@ -194,7 +194,6 @@ object DecompileInsn {
 
     val mainAssign = AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN)
 
-    // TODO: implement reverse lookup hashtable. currently this is O(n)
     val dependentPhis = ssa.reverseLookup(retVar)
 
     val statements = NodeList<Statement>(ExpressionStmt(mainAssign))

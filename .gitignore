@@ -7,4 +7,8 @@
 # Gradle build output directory
 build/
 
+# Playground output directory
 playground/output/
+
+# Devcontainer directory
+.devcontainer/

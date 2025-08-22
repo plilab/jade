@@ -19,6 +19,7 @@ abstract class PlaygroundHarness {
 
     fun withInput(file: File): PlaygroundHarness {
         this.inputFile = file
+        resetOutputFile()
         return this
     }
 
@@ -30,12 +31,13 @@ abstract class PlaygroundHarness {
         outputFile().appendText(text + System.lineSeparator())
     }
 
+    fun resetOutputFile() {
+        if (outputFile().exists()) outputFile().delete()
+    }
+
     fun outputFile(): File {
         val dir = File("output/${key}")
         if (!dir.exists()) dir.mkdirs()
-        // reset file if it exists
-        val file = File(dir, "${inputFile.nameWithoutExtension}.${extension}")
-        if (file.exists()) file.delete()
-        return file
+        return File(dir, "${inputFile.nameWithoutExtension}.${extension}")
     }
 }

@@ -1,11 +1,7 @@
 package org.ucombinator.jade.playground.runner
 
 import java.io.File
-import org.ucombinator.jade.playground.harness.PlaygroundHarness
-import org.ucombinator.jade.playground.harness.AnalyzerHarness
-import org.ucombinator.jade.playground.harness.DecompileHarness
-import org.ucombinator.jade.playground.harness.SSATestHarness
-import org.ucombinator.jade.playground.harness.DotHarness
+import org.ucombinator.jade.playground.harness.*
 
 /**
  * Registry for managing available playground harnesses.
@@ -14,8 +10,9 @@ object HarnessRegistry {
     private val harnesses: List<PlaygroundHarness> = listOf(
         AnalyzerHarness(),
         DecompileHarness(),
-        SSATestHarness(),
+        SSADotHarness(),
         DotHarness(),
+        CFGDotHarness(),
     )
 
     private data class Entry(

@@ -9,6 +9,7 @@ import org.objectweb.asm.tree.MethodNode
 class SSATestHarness() : PlaygroundHarness {
     override var inputFile: File = File("")
     override val key: String = "ssa-test"
+    override var extension: String = "txt"
     override val description: String = "Run SSA analysis over a method and print the result"
 
     override fun run(classNode: ClassNode, methodNode: MethodNode) {

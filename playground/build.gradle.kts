@@ -36,6 +36,11 @@ application {
     applicationDefaultJvmArgs += listOf("-ea") // enable assertions, same as root project
 }
 
+// Enable stdin for the run task
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
-} 
+}

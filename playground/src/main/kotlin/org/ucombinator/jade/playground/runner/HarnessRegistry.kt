@@ -5,6 +5,7 @@ import org.ucombinator.jade.playground.harness.PlaygroundHarness
 import org.ucombinator.jade.playground.harness.AnalyzerHarness
 import org.ucombinator.jade.playground.harness.DecompileHarness
 import org.ucombinator.jade.playground.harness.SSATestHarness
+import org.ucombinator.jade.playground.harness.VisualizeDecompileHarness
 
 /**
  * Registry for managing available playground harnesses.
@@ -20,6 +21,7 @@ object HarnessRegistry {
         Entry(AnalyzerHarness.KEY, AnalyzerHarness.DESCRIPTION) { AnalyzerHarness() },
         Entry(DecompileHarness.KEY, DecompileHarness.DESCRIPTION) { DecompileHarness() },
         Entry(SSATestHarness.KEY, SSATestHarness.DESCRIPTION) { SSATestHarness() },
+        Entry(VisualizeDecompileHarness.KEY, VisualizeDecompileHarness.DESCRIPTION) { VisualizeDecompileHarness() },
     ).associateBy { it.key }
 
     fun getAvailableKeys(): Set<String> = entries.keys

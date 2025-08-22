@@ -13,6 +13,7 @@ interface PlaygroundHarness {
     val key: String
     val description: String
     var inputFile: File
+    var extension: String
 
     fun run(classNode: ClassNode, methodNode: MethodNode)
 
@@ -34,6 +35,9 @@ interface PlaygroundHarness {
     fun outputFile(): File {
         val dir = File("output/${key}")
         if (!dir.exists()) dir.mkdirs()
-        return File(dir, "${inputFile.nameWithoutExtension}.txt")
+        // reset file if it exists
+        val file = File(dir, "${inputFile.nameWithoutExtension}.${extension}")
+        if (file.exists()) file.delete()
+        return file
     }
 }

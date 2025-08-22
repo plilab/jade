@@ -178,7 +178,9 @@ object DecompileInsn {
    * @param variable TODO:doc
    * @return TODO:doc
    */
-  fun decompileVar(variable: Var): NameExpr = NameExpr(variable.name)
+  fun decompileVar(variable: Var): NameExpr {
+    return NameExpr(variable.name)
+  }
 
   /** TODO:doc.
    *
@@ -194,12 +196,23 @@ object DecompileInsn {
 
     val mainAssign = AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN)
 
-    val dependentPhis = ssa.reverseLookup(retVar)
-
+    val phiVars = mutableListOf<Var>()
+    val visitedVars = mutableListOf<Var>()
     val statements = NodeList<Statement>(ExpressionStmt(mainAssign))
-    for (phiVar in dependentPhis) {
-      val phiAssign = AssignExpr(decompileVar(phiVar), decompileVar(retVar), AssignExpr.Operator.ASSIGN)
-      statements.add(ExpressionStmt(phiAssign))
+    phiVars.add(retVar)
+
+    while (phiVars.isNotEmpty()) {
+      val phiVar = phiVars.removeAt(0)
+      val dependentPhis = ssa.reverseLookup(phiVar)
+
+      for (dependentPhi in dependentPhis) {
+        val phiAssign = AssignExpr(decompileVar(dependentPhi), decompileVar(phiVar), AssignExpr.Operator.ASSIGN)
+        statements.add(ExpressionStmt(phiAssign))
+        if (!visitedVars.contains(dependentPhi)) {
+          phiVars.add(dependentPhi)
+          visitedVars.add(dependentPhi)
+        }
+      }
     }
     return BlockStmt(statements)
   }

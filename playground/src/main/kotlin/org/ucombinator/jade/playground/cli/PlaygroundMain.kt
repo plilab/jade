@@ -14,7 +14,7 @@ fun selectHarnesses(harnessKeysList: List<String>, selectedHarnessIndexes: List<
         println("${i}. ${harness} ${if (selected) "[X]" else "[ ]"}")
     }
     println("Type in \"all\" to run all harnesses.")
-    println("Press \"Enter\" to quit this dialog.")
+    println("Press \"Enter\" to run selected harnesses.")
     print("Enter space-separated list of harness indexes: ")
     val input = readLine()
     when (input) {

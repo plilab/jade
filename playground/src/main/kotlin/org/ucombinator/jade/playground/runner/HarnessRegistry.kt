@@ -5,24 +5,28 @@ import org.ucombinator.jade.playground.harness.PlaygroundHarness
 import org.ucombinator.jade.playground.harness.AnalyzerHarness
 import org.ucombinator.jade.playground.harness.DecompileHarness
 import org.ucombinator.jade.playground.harness.SSATestHarness
-import org.ucombinator.jade.playground.harness.VisualizeDecompileHarness
+import org.ucombinator.jade.playground.harness.DotHarness
 
 /**
  * Registry for managing available playground harnesses.
  */
 object HarnessRegistry {
+    private val harnesses: List<PlaygroundHarness> = listOf(
+        AnalyzerHarness(),
+        DecompileHarness(),
+        SSATestHarness(),
+        DotHarness(),
+    )
+
     private data class Entry(
         val key: String,
         val description: String,
         val constructor: () -> PlaygroundHarness,
     )
 
-    private val entries: Map<String, Entry> = listOf(
-        Entry(AnalyzerHarness.KEY, AnalyzerHarness.DESCRIPTION) { AnalyzerHarness() },
-        Entry(DecompileHarness.KEY, DecompileHarness.DESCRIPTION) { DecompileHarness() },
-        Entry(SSATestHarness.KEY, SSATestHarness.DESCRIPTION) { SSATestHarness() },
-        Entry(VisualizeDecompileHarness.KEY, VisualizeDecompileHarness.DESCRIPTION) { VisualizeDecompileHarness() },
-    ).associateBy { it.key }
+    private val entries: Map<String, Entry> = harnesses.map { harness ->
+        Entry(harness.key, harness.description) { harness::class.java.getDeclaredConstructor().newInstance() }
+    }.associateBy { it.key }
 
     fun getAvailableKeys(): Set<String> = entries.keys
 

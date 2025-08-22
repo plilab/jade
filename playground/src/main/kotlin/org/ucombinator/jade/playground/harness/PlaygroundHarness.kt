@@ -5,17 +5,17 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 
 /**
- * A simple interface for plug-and-play playground harnesses.
+ * A simple abstract base class for plug-and-play playground harnesses.
  * Each harness receives a compiled [ClassNode] and a selected [MethodNode]
  * and can stream output to both stdout and a file using [print]/[println].
  */
-interface PlaygroundHarness {
-    val key: String
-    val description: String
-    var inputFile: File
-    var extension: String
+abstract class PlaygroundHarness {
+    abstract val key: String
+    abstract val description: String
+    lateinit var inputFile: File
+    var extension: String = "txt"
 
-    fun run(classNode: ClassNode, methodNode: MethodNode)
+    abstract fun run(classNode: ClassNode, methodNode: MethodNode)
 
     fun withInput(file: File): PlaygroundHarness {
         this.inputFile = file
@@ -23,12 +23,10 @@ interface PlaygroundHarness {
     }
 
     fun print(text: String) {
-        kotlin.io.print(text)
         outputFile().appendText(text)
     }
 
     fun println(text: String = "") {
-        kotlin.io.println(text)
         outputFile().appendText(text + System.lineSeparator())
     }
 

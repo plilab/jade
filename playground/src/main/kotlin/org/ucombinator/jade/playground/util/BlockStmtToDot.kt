@@ -5,6 +5,7 @@ import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.stmt.*
 import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.body.VariableDeclarator
+import com.github.javaparser.ast.type.*
 
 fun BlockStmt.toDot(): String {
     val dotGenerator = DotGenerator()
@@ -16,6 +17,7 @@ private class DotGenerator {
     private val nodeMap = mutableMapOf<Node, String>()
     private val edges = mutableListOf<String>()
     private val nodes = mutableListOf<String>()
+    private val blockStmtRanks = mutableMapOf<String, MutableList<String>>()
     
     fun generateDot(blockStmt: BlockStmt): String {
         // Reset state
@@ -23,6 +25,7 @@ private class DotGenerator {
         nodeMap.clear()
         edges.clear()
         nodes.clear()
+        blockStmtRanks.clear()
         
         // Generate the graph
         processNode(blockStmt, null, null)
@@ -48,11 +51,29 @@ private class DotGenerator {
         // Add all nodes
         nodes.forEach { sb.appendLine("  $it") }
         
+        // Add ranking constraints for BlockStmt children to ensure left-to-right ordering
+        blockStmtRanks.forEach { (blockId, childIds) ->
+            if (childIds.size > 1) {
+                sb.appendLine("  { rank=same; ${childIds.joinToString("; ")}; }")
+                // Add invisible edges to enforce left-to-right ordering
+                for (i in 0 until childIds.size - 1) {
+                    sb.appendLine("  ${childIds[i]} -> ${childIds[i + 1]} [style=invis];")
+                }
+            }
+        }
+        
         // Add all edges with proper ports for tree structure
         edges.forEach { sb.appendLine("  $it") }
         
         sb.appendLine("}")
         return sb.toString()
+    }
+    
+    private fun shouldFilterNode(node: Node): Boolean {
+        return when (node) {
+            is Type -> true  // Filter out all type nodes (PrimitiveType, ClassOrInterfaceType, etc.)
+            else -> false
+        }
     }
     
     private fun processNode(node: Node, parentId: String?, edgeLabel: String?): String {
@@ -74,8 +95,13 @@ private class DotGenerator {
         // Process children based on node type
         when (node) {
             is BlockStmt -> {
+                val childIds = mutableListOf<String>()
                 node.statements.forEachIndexed { index, stmt ->
-                    processNode(stmt, nodeId, "stmt$index")
+                    val childId = processNode(stmt, nodeId, "stmt$index")
+                    childIds.add(childId)
+                }
+                if (childIds.isNotEmpty()) {
+                    blockStmtRanks[nodeId] = childIds
                 }
             }
             is ExpressionStmt -> {
@@ -86,6 +112,12 @@ private class DotGenerator {
             is VariableDeclarationExpr -> {
                 node.variables.forEachIndexed { index, variable ->
                     processNode(variable, nodeId, "var$index")
+                }
+            }
+            is VariableDeclarator -> {
+                // Only process initializer, skip type information
+                node.initializer.ifPresent { init ->
+                    processNode(init, nodeId, "init")
                 }
             }
             is AssignExpr -> {
@@ -133,8 +165,8 @@ private class DotGenerator {
             }
             // Add more node types as needed
             else -> {
-                // Generic handling for other node types
-                node.childNodes.forEachIndexed { index, child ->
+                // Generic handling for other node types - filter out type nodes
+                node.childNodes.filterNot { shouldFilterNode(it) }.forEachIndexed { index, child ->
                     processNode(child, nodeId, "child$index")
                 }
             }

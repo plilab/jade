@@ -23,6 +23,12 @@ dependencies {
     implementation("org.ow2.asm:asm-tree:9.7.1")
     implementation("org.ow2.asm:asm-util:9.7.1")
 
+    implementation("org.jgrapht:jgrapht-core:1.5.2")
+    implementation("org.jgrapht:jgrapht-ext:1.5.2")
+    // implementation("org.jgrapht:jgrapht-guava:1.5.2")
+    implementation("org.jgrapht:jgrapht-io:1.5.2")
+    implementation("org.jgrapht:jgrapht-opt:1.5.2")
+
     // Add testing libraries from the root project for consistency
     testImplementation(kotlin("test"))
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")

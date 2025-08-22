@@ -32,11 +32,11 @@ For optimal visualization, install the [Graphviz Interactive Preview](https://ma
 ### Visual Output
 The DotHarness generates interactive visual representations of the decompiled BlockStmt structures:
 
-![DotHarness Preview](docs/dotPreview.gif)
+![DotHarness Preview](./docs/dotPreview.gif)
 
 You can directly interact with the generated visualizations to explore the code structure:
 
-![DotHarness Static Preview](docs/dotPreview.png)
+![DotHarness Static Preview](./docs/dotPreview.png)
 
 
 ## Creating Custom Harnesses

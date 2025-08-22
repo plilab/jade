@@ -43,7 +43,7 @@ fun selectHarnesses(harnessKeysList: List<String>, selectedHarnessIndexes: List<
 /**
  * Main entry point for the playground CLI.
  */
-fun main() {
+fun main(args: Array<String>) {
     val harnessKeys = HarnessRegistry.getAvailableKeys()
     if (harnessKeys.isEmpty()) {
         println("No harnesses registered.")
@@ -51,12 +51,26 @@ fun main() {
     }
     val harnessKeysList = harnessKeys.toList()
 
-    // Let user select which harnesses to run
-    val selectedHarnessIndexes = selectHarnesses(harnessKeysList, listOf())
+    val selectedHarnessKeys = if (args.isNotEmpty()) {
+        // Use command line arguments as harness keys
+        val providedKeys = args.toList()
+        val invalidKeys = providedKeys.filter { !harnessKeys.contains(it) }
+        
+        if (invalidKeys.isNotEmpty()) {
+            println("Invalid harness keys: ${invalidKeys.joinToString(", ")}")
+            println("Available harnesses: ${harnessKeys.joinToString(", ")}")
+            return
+        }
+        
+        providedKeys
+    } else {
+        // Let user select which harnesses to run via UI
+        val selectedHarnessIndexes = selectHarnesses(harnessKeysList, listOf())
+        selectedHarnessIndexes.map { harnessKeysList[it] }
+    }
 
     // Run the selected harnesses
-    for (index in selectedHarnessIndexes) {
-        val key = harnessKeysList[index]
+    for (key in selectedHarnessKeys) {
         val config = PlaygroundConfig(
             harnessKey = key,
             inputDir = File("input"),

@@ -8,6 +8,10 @@ The playground provides an interactive environment for testing and experimenting
 Place all Java files you want to process in the `playground/input` directory.
 
 ### 2. Run the Playground
+
+You can run the playground in two ways:
+
+#### Interactive Mode (with UI selection)
 Execute the following command from the project root:
 ```bash
 ./gradlew playground:run --console=plain
@@ -15,12 +19,26 @@ Execute the following command from the project root:
 
 > **Note:** The `--console=plain` flag enables cleaner interaction with stdin/stdout.
 
-### 3. Select Harnesses
 The playground will present an interactive dialog where you can:
 - Type the index number of any harness to toggle its enabled/disabled state
 - Press **Enter** to exit the dialog and run all selected harnesses
 
-Each enabled harness will process all input files and generate outputs in the corresponding `playground/output/{harness_key}/` directory.
+#### Command Line Mode (direct harness execution)
+Run specific harnesses directly without the interactive UI:
+```bash
+./gradlew playground:run --args="harness1 harness2 harness3"
+```
+
+Examples:
+```bash
+# Run both "ssa-dot" and "decompile" harnesses
+./gradlew playground:run --args="ssa-dot decompile"
+
+# Run a single "decompile" harness
+./gradlew playground:run --args="decompile"
+```
+
+Each harness will process all input files and generate outputs in the corresponding `playground/output/{harness_key}/` directory.
 
 ## Featured Example: DotHarness
 

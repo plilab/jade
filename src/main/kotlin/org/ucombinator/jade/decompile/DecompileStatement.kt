@@ -79,12 +79,10 @@ object DecompileStatement {
     // TODO: remove back edges
     val graph = AsSubgraph(MaskSubgraph(cfg.graph, { false }, structure.backEdges::contains))
 
-    fun labelString(label: LabelNode): String = "JADE_${jumpTargets.getValue(label.label).index()}"
-    fun endLabelString(label: LabelNode): String =
-      "End of JADE_${jumpTargets.getValue(label.label).index()}"
-
-    fun insnLabelString(insn: Insn): String =
-      "JADE_${insn.index()}" // TODO: overload with labelString
+    fun blockLabelString(insn: Insn): String = "JADE_BLOCK_${insn.index()}"
+    fun blockLabelString(label: LabelNode): String = "JADE_BLOCK_${jumpTargets.getValue(label.label).index()}"
+    fun loopLabelString(insn: Insn): String = "JADE_LOOP_${insn.index()}"
+    fun loopLabelString(label: LabelNode): String = "JADE_LOOP_${jumpTargets.getValue(label.label).index()}"
 
     fun structuredBlock(head: Insn): Pair<Statement, /* pendingOutside */ Set<Insn>> {
       // do statements in instruction order if possible
@@ -136,10 +134,14 @@ object DecompileStatement {
         return when (decompiled) {
           is DecompiledInsn.If -> {
             // log.debug { "IF: " + decompiled.labelNode + "///" + decompiled.labelNode.getLabel }
-            IfStmt(decompiled.condition, BreakStmt(labelString(decompiled.labelNode)), null)
+            IfStmt(decompiled.condition, BreakStmt(blockLabelString(decompiled.labelNode)), null)
           }
           is DecompiledInsn.Goto ->
-            ContinueStmt(labelString(decompiled.labelNode)) // TODO: use instruction number?
+            if (structure.backEdges.contains(ControlFlowGraph.Edge(insn, Insn(insn.method, decompiled.labelNode)))) {
+              ContinueStmt(loopLabelString(decompiled.labelNode))
+            } else {
+              BreakStmt(blockLabelString(decompiled.labelNode))
+            } // TODO: use instruction number?
           else -> DecompileInsn.decompileInsn(retVal, decompiled, ssa)
         }
         // TODO: break vs continue
@@ -160,8 +162,7 @@ object DecompileStatement {
           addPending(newPending)
           // when (block.kind) {
           //   is Loops.Kind.Loop -> {
-          val label = labelString(insn.insn as LabelNode) // TODO: do better
-          LabeledStmt(label, WhileStmt(BooleanLiteralExpr(true), stmt))
+          LabeledStmt(loopLabelString(insn), WhileStmt(BooleanLiteralExpr(true), stmt))
           //   }
           //   is Loops.Kind.Exception -> TODO()
           //   is Loops.Kind.Synchronized -> TODO()
@@ -190,8 +191,6 @@ object DecompileStatement {
         val next = currentInsn?.next()
         val insnIsALoopHead =
           cfg.graph.incomingEdgesOf(currentInsn).any { structure.backEdges.contains(it) }
-        // next?.let{ println("curr insn: " + insnLabelString(currentInsn!!) + ", next insn: " +
-        // insnLabelString(it)) } // debug
         return when {
           pendingInside.isEmpty() -> {
             // Nothing left to process
@@ -214,7 +213,7 @@ object DecompileStatement {
               // so we insert a `break` and pick the next instruction that we can go to.
               // This line is why every statement is a potential break target.
               currentStmt =
-                BlockStmt(NodeList<Statement>(currentStmt, BreakStmt(insnLabelString(next!!))))
+                BlockStmt(NodeList<Statement>(currentStmt, BreakStmt(blockLabelString(next!!))))
             }
             pendingInside.first()
           }
@@ -222,24 +221,36 @@ object DecompileStatement {
       }
 
       while (true) {
-        var prevInsn: Insn? = currentInsn
         currentInsn = getNextInsn()
-        if (currentInsn == null) {
-          break
-        }
-        val insnIsALoopHead =
-          cfg.graph.incomingEdgesOf(currentInsn).any { structure.backEdges.contains(it) }
-        if (insnIsALoopHead) {
-          // Don't rewrap in a labeled BlockStmt to allow for labeled while loop for continue to
-          // work
-          currentStmt = BlockStmt(NodeList<Statement>(currentStmt, structuredStmt(currentInsn)))
-        } else {
-          currentStmt =
-            LabeledStmt(
-              insnLabelString(currentInsn),
-              BlockStmt(NodeList<Statement>(currentStmt, structuredStmt(currentInsn))),
+        if (currentInsn == null) { break }
+        currentStmt =
+          BlockStmt(
+            NodeList<Statement>(
+              LabeledStmt(blockLabelString(currentInsn), currentStmt),
+              structuredStmt(currentInsn)
             )
-        }
+          )
+        // val insnIsALoopHead = cfg.graph.incomingEdgesOf(currentInsn).any { structure.backEdges.contains(it) }
+        // if (insnIsALoopHead) {
+        //   // Don't rewrap in a labeled BlockStmt to allow for labeled while loop for continue to work
+        //   currentStmt = BlockStmt(NodeList<Statement>(currentStmt, structuredStmt(currentInsn)))
+        // } else {
+        //   val inTarget = outerLoops.contains(currentInsn.next())
+        //   if (inTarget) {
+        //     currentStmt =
+        //       LabeledStmt(blockLabelString(currentInsn.next()?.insn as LabelNode),
+        //         BlockStmt(NodeList(currentStmt, structuredStmt(currentInsn))))
+        //   } else {
+        //     currentStmt =
+        //       BlockStmt(
+        //         NodeList<Statement>(
+        //           LabeledStmt(blockLabelString(currentInsn), currentStmt),
+        //           structuredStmt(currentInsn)
+        //         )
+        //       )
+        //   }
+
+        // }
       }
       return Pair(currentStmt, pendingOutside)
     }

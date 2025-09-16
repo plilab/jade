@@ -190,12 +190,12 @@ object DecompileInsn {
    * @return TODO:doc
    */
   fun decompileExpression(retVar: Var?, expression: Expression, ssa: StaticSingleAssignment): Statement {
-    if (retVar == null) {
+    if (retVar?.basicValue == null) {
+      // basicValue should not be null otherwise
       return ExpressionStmt(expression)
     }
 
     val mainAssign = AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN)
-
     val phiVars = mutableListOf<Var>()
     val visitedVars = mutableListOf<Var>()
     val statements = NodeList<Statement>(ExpressionStmt(mainAssign))
@@ -318,8 +318,8 @@ object DecompileInsn {
         Opcodes.DCONST_0    -> DecompiledInsn.Expression(DoubleLiteralExpr("0.0D"))
         Opcodes.DCONST_1    -> DecompiledInsn.Expression(DoubleLiteralExpr("1.0D"))
         // IntInsnNode
-        Opcodes.BIPUSH -> DecompiledInsn.StackOperation(node)
-        Opcodes.SIPUSH -> DecompiledInsn.StackOperation(node)
+        Opcodes.BIPUSH -> DecompiledInsn.Expression(DecompileClass.decompileLiteral((node as IntInsnNode).operand)!!)
+        Opcodes.SIPUSH -> DecompiledInsn.Expression(DecompileClass.decompileLiteral((node as IntInsnNode).operand)!!)
         // LdcInsnNode
         Opcodes.LDC -> DecompiledInsn.Expression(DecompileClass.decompileLiteral((node as LdcInsnNode).cst)!!)
         // VarInsnNode

@@ -17,10 +17,13 @@ import com.github.javaparser.ast.expr.MethodCallExpr
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.NullLiteralExpr
 import com.github.javaparser.ast.expr.SimpleName
+import com.github.javaparser.ast.expr.SuperExpr
+import com.github.javaparser.ast.expr.ThisExpr
 import com.github.javaparser.ast.expr.UnaryExpr
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.BreakStmt
 import com.github.javaparser.ast.stmt.EmptyStmt
+import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt
 import com.github.javaparser.ast.stmt.ExpressionStmt
 import com.github.javaparser.ast.stmt.IfStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
@@ -32,6 +35,7 @@ import com.github.javaparser.ast.type.PrimitiveType
 import com.github.javaparser.ast.type.Type
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
+import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.FieldInsnNode
 import org.objectweb.asm.tree.FrameNode
 import org.objectweb.asm.tree.IincInsnNode
@@ -178,10 +182,15 @@ object DecompileInsn {
    * @param variable TODO:doc
    * @return TODO:doc
    */
-  fun decompileVar(variable: Var): NameExpr {
+  fun decompileVar(variable: Var): Expression {
+// return expression
+    // check if param var index 1 and if in static method, add parameters maybe
+    if (variable is Var.Parameter && variable.local == 0) {
+      return ThisExpr() // change to "this"
+    }
     return NameExpr(variable.name)
   }
-
+  
   /** TODO:doc.
    *
    * @param retVar TODO:doc
@@ -200,7 +209,10 @@ object DecompileInsn {
     val visitedVars = mutableListOf<Var>()
     val statements = NodeList<Statement>(ExpressionStmt(mainAssign))
     phiVars.add(retVar)
-
+//    if (mainAssign.value.isThisExpr) {
+//      // check if corresponds to "this"
+//      thisVars.add(mainAssign.target as NameExpr)
+//    }
     while (phiVars.isNotEmpty()) {
       val phiVar = phiVars.removeAt(0)
       val dependentPhis = ssa.reverseLookup(phiVar)
@@ -228,7 +240,9 @@ object DecompileInsn {
     @Suppress("TOO_MANY_CONSECUTIVE_SPACES", "WRONG_WHITESPACE", "ktlint:standard:no-multi-spaces")
     when (insn) {
       is DecompiledInsn.Statement      -> insn.statement
-      is DecompiledInsn.Expression     -> decompileExpression(retVar, insn.expression, ssa)
+      is DecompiledInsn.Expression     -> {
+        decompileExpression(retVar, insn.expression, ssa)
+      }
       is DecompiledInsn.StackOperation -> JavaParser.noop("Operand Stack Operation: $insn")
       is DecompiledInsn.If             -> IfStmt(insn.condition, BreakStmt(insn.labelNode.toString()), null)
       is DecompiledInsn.Goto           -> BreakStmt(insn.labelNode.toString()) // TODO: use instruction number?
@@ -254,7 +268,7 @@ object DecompileInsn {
     "WRONG_WHITESPACE",
     "detekt:MaxLineLength",
   )
-  fun decompileInsn(node: AbstractInsnNode, ssa: StaticSingleAssignment): Pair<Var?, DecompiledInsn> {
+  fun decompileInsn(node: AbstractInsnNode, ssa: StaticSingleAssignment, classNode: ClassNode, thisVars: Set<String>): Pair<Var?, DecompiledInsn> {
     val (retVar, argVars) = ssa.insnVars.getOrElse(node, { Pair(null, listOf()) })
     val argsArray: Array<Expression> = argVars.map(::decompileVar).toTypedArray()
 
@@ -277,6 +291,46 @@ object DecompileInsn {
           NodeList(argumentTypes.indices.map { args(it + 1) }),
         ),
       )
+    }
+
+    fun superCall(node: AbstractInsnNode, classNode: ClassNode): DecompiledInsn {
+      val (insn, argumentTypes, typeArguments) = call(node)
+
+      // declare a constant if asm dont have
+      // can use ==
+      var insnName = insn.name
+      if (insn.name == "<init>" && args(0).toString() in thisVars) {
+        // check for <init> and nameExpr var refers to "this"?
+        // refers to super call
+        //TODO: need to further check target (super class or own constructor)
+        if (insn.owner == classNode.name) { // checks if its this()
+          return DecompiledInsn.Statement(
+            ExplicitConstructorInvocationStmt(
+              true,
+              null,
+              NodeList(argumentTypes.indices.map { args(it + 1) })
+            )
+          )
+        } else {
+          return DecompiledInsn.Statement(
+            ExplicitConstructorInvocationStmt(
+              false,
+              null,
+              NodeList(argumentTypes.indices.map { args(it + 1) })
+            )
+          )
+        }
+      } else {
+        // TODO: for creation of new instance, not checked yet
+        return DecompiledInsn.Expression(
+          MethodCallExpr(
+            /*TODO: cast to insn.owner?*/ args(0),
+            typeArguments,
+            insnName, //SuperExpr().toString()
+            NodeList(argumentTypes.indices.map { args(it + 1) }),
+          )
+        )
+      }
     }
 
     fun staticCall(node: AbstractInsnNode): DecompiledInsn {
@@ -466,7 +520,7 @@ object DecompileInsn {
         Opcodes.PUTFIELD  -> (node as FieldInsnNode).let { DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(it.name)), args(1), AssignExpr.Operator.ASSIGN)) }
         // MethodInsnNode
         Opcodes.INVOKEVIRTUAL   -> instanceCall(node)
-        Opcodes.INVOKESPECIAL   -> instanceCall(node) // TODO: only for <init> (new, this, and super)?
+        Opcodes.INVOKESPECIAL   -> superCall(node, classNode) // TODO: only for <init> (new, this, and super)?
         Opcodes.INVOKESTATIC    -> staticCall(node)
         Opcodes.INVOKEINTERFACE -> instanceCall(node)
         // InvokeDynamicInsnNode

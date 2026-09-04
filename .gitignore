@@ -19,6 +19,9 @@ playground/output/
 # Log files from Logback
 logs/
 
+# Artifacts for GitHub Pages docs
+site/
+
 # Devcontainer directory
 .devcontainer/
 

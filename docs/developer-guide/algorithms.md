@@ -1,24 +1,24 @@
-## Algorithms
+# Algorithms
 
-### Ordering
+## Ordering
 
-Step 1: Find Nesting Structure
+### Step 1: Find Nesting Structure
 
-- Use Dominators to find loops
-- What remains is a DAG within each loop
-- Resulting code:
+1. Use Dominators to find loops
+2. What remains is a DAG within each loop
+3. Resulting code:
 
-  ```text
+```
+...
+L1: while (true) {
   ...
-  L1: while (true) {
-    ...
-    if (...) { break L1; }
-    ...
-  }
+  if (...) { break L1; }
   ...
-  ```
+}
+...
+```
 
-Step 2: Order the DAGS
+### Step 2: Order the DAGS
 
 - Some orderings respect internal edges and thus avoid an extra "break" (i.e., GOTO).
 - Each vertex has at most one preferred next vertex, when that is not the next edge, we pay in an extra "break"/GOTO.
@@ -31,4 +31,4 @@ Step 2: Order the DAGS
 - Thus the greedy algorithm that always picks a viable preferred next vertex when it is available is optimal.
 - To ensure stability, we choose a tie breaker of choosing the earliest bytecode offset first.
 
-Step 3: Remove labels that are not used.
+### Step 3: Remove labels that are not used.

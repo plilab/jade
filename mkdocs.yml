@@ -36,17 +36,18 @@ markdown_extensions:
 nav:
   - Home: index.md
   - User Guide:
-      - Usage: USAGE.md
-      - FAQ: FAQ.md
+      - Overview: user-guide/overview.md
+      - Commands: user-guide/commands.md
   - Developer Guide:
-      - Overview: developer-guide.md
-      - Algorithms: algorithms.md
-      - Projects: projects.md
-      - Style: style.md
+      - Overview: developer-guide/overview.md
+      - Algorithms: developer-guide/algorithms.md
+      - Commands: developer-guide/commands.md
+      - Style Guide: developer-guide/style.md
   - Testing:
-      - Maven Development: maven.md
-  - Miscellaneous:
-      - Links: links.md
-      - Notes: NOTES.md
-      - TODO: TODO.md
-      - Ideas: ideas.md
+      - Overview: testing/overview.md
+      - Maven Development: testing/maven.md
+  - Internal:
+      - Roadmap: internal/roadmap.md
+      - Notes: internal/notes.md
+      - Links: internal/links.md
+      - Archive: internal/archive.md

@@ -13,7 +13,7 @@ on:
         type: string
       java-version:
         required: true
-        type: number
+        type: string
 
   workflow_dispatch:
     inputs:
@@ -30,8 +30,8 @@ on:
       java-version:
         description: java-version (see TODO)
         required: true
-        default: 17
-        type: number
+        default: "17"
+        type: string
 
 jobs:
   build-variant:

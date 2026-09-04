@@ -1,5 +1,7 @@
 # Links
 
+This is a dump of useful links.
+
 ## Kotlin
 
 - https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/fold.html
@@ -11,11 +13,9 @@
 
 - https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners
 - https://github.com/actions/runner-images/tree/main
-
 - https://github.com/gradle/actions/blob/fd87365911aa12c016c307ea21313f351dc53551/docs/dependency-submission.md
 - https://github.com/gradle/actions/blob/fd87365911aa12c016c307ea21313f351dc53551/docs/dependency-submission-faq.md
 - https://github.com/gradle/actions/blob/fd87365911aa12c016c307ea21313f351dc53551/docs/setup-gradle.md
-
 - https://github.com/actions/setup-java/tree/v4#supported-distributions
   - https://adoptium.net/temurin/releases/
 
@@ -99,7 +99,5 @@
 ## To Be Filed
 
 - https://github.com/jbachorik/btrace2/blob/master/docs/resources/docs/usersguide.html.orig
-
 - Multi-Release JAR Files: https://openjdk.org/jeps/238
-
 - https://stackoverflow.com/questions/6386917/strange-exception-table-entry-produced-by-suns-javac

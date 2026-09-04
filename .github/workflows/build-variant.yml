@@ -47,7 +47,6 @@ jobs:
       with:
         distribution: ${{ inputs.distribution }}
         java-version: ${{ inputs.java-version }}
-        cache: gradle
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
@@ -57,4 +56,13 @@ jobs:
         build-scan-terms-of-use-agree: "yes"
 
     - name: Build with Gradle Wrapper
-      run: ./gradlew build
+      shell: bash
+      run: |
+        for attempt in 1 2 3; do
+          ./gradlew build && exit 0
+          if [ "$attempt" -lt 3 ]; then
+            echo "Build failed; Retrying in 30 seconds..."
+            sleep 30
+          fi
+        done
+        exit 1

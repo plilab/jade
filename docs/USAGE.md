@@ -22,6 +22,39 @@ TODO
 
 All it currently does is run a very basic check on all the fields of the ClassNode.
 
+## Building Documentation
+
+Documentation is generated in from 2 sources:
+
+1. Markdown files in `docs/` are used to generate static HTML using [MkDocs](https://www.mkdocs.org/).
+2. Kotlin API documentation is generated using [Dokka](https://kotlinlang.org/docs/dokka-introduction.html).
+
+To build the site:
+
+```sh
+# Optionally create a Python environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install site dependencies
+python3 -m pip install -r docs/requirements.txt
+
+# Build the site
+./scripts/build_docs.sh
+```
+
+The generated site is written to `site/`. Serve it locally to view both the
+project documentation and API reference:
+
+```sh
+./scripts/serve_docs.sh
+```
+
+Then open <http://localhost:8000>. The API reference is available at
+<http://localhost:8000/api/>.
+
+GitHub Actions uses the `build_docs.sh` script before publishing the site to GitHub Pages.
+
 ## `maven` Commands
 
 ### Used Commands

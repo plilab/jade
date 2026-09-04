@@ -16,6 +16,9 @@ build/
 # Playground output directory
 playground/output/
 
+# Artifacts for GitHub Pages docs
+site/
+
 # Devcontainer directory
 .devcontainer/
 

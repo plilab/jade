@@ -30,9 +30,10 @@ object Decompile {
   /** The main entry point for the decompiler. It takes a list of files as input and attempts to decompile them.
    *
    * @param files The list of files to decompile.
-   * @param outputDir TODO
+   * @param outputDir Output directory for the decompiled java files
+   * @param toDisk Indicator if the compiled result is saved to disk
    */
-  fun main(files: List<File>, outputDir: File) {
+  fun main(files: List<File>, outputDir: File, toDisk: Boolean = true) : HashMap<String, String> {
     val readFiles = ReadFiles()
     for (file in files) readFiles.dir(file)
 
@@ -69,6 +70,8 @@ object Decompile {
       }
     }
 
+    val resultmap = HashMap<String, String>()
+
     topLevelClasses.forEachIndexed { i, topLevel ->
       nestChildren(topLevel)
 
@@ -80,8 +83,13 @@ object Decompile {
         throw Exception("Invalid file name: file $classFileName does not end with .class")
       }
 
-      // TODO: options for handling whether to override the existing file
-      AtomicWriteFile.write(File(outputDir, classFileName.replace(suffix, ".java")), "${compilationUnit}", false)
+      if (toDisk) {
+        // TODO: options for handling whether to override the existing file
+        AtomicWriteFile.write(File(outputDir, classFileName.replace(suffix, ".java")), "${compilationUnit}", false)
+      } else {
+        resultmap[classFileName.replace(suffix, ".java")] = "${compilationUnit}"
+      }
+
 
       for (type in compilationUnit.types) {
         log.debug { "type: ${type.javaClass}" }
@@ -100,6 +108,12 @@ object Decompile {
 
       log.debug { "compilationUnit\n${compilationUnit}" }
     }
+
+    // This in-memory result will be used for testing
+    // An empty map will be return for normal decompile commands
+    return resultmap
+
+
 
     // for (((name, readers), classIndex) <- VFS.classes.zipWithIndex) {
     //   for ((path, classReader) <- readers) { // TODO: pick "best" classReader

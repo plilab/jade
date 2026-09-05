@@ -49,6 +49,14 @@ class Decompile : JadeCommand() {
   }
 }
 
+class Test : JadeCommand() {
+  override fun help(context: Context) = "Run Unit Test Cases"
+
+  override fun run() {
+    org.ucombinator.jade.test.Test.main()
+  }
+}
+
 class Compile : JadeCommand() {
   override fun help(context: Context) = "Compile a java file"
 

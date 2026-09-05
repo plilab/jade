@@ -1,0 +1,53 @@
+site_name: Jade
+site_description: A Java decompiler that aims for high reliability through extensive testing.
+site_url: https://plilab.github.io/jade/
+repo_url: https://github.com/plilab/jade
+repo_name: plilab/jade
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - Overview: user-guide/overview.md
+      - Commands: user-guide/commands.md
+  - Developer Guide:
+      - Overview: developer-guide/overview.md
+      - Algorithms: developer-guide/algorithms.md
+      - Commands: developer-guide/commands.md
+      - Style Guide: developer-guide/style.md
+  - Testing:
+      - Overview: testing/overview.md
+      - Maven Development: testing/maven.md
+  - Internal:
+      - Roadmap: internal/roadmap.md
+      - Notes: internal/notes.md
+      - Links: internal/links.md
+      - Archive: internal/archive.md

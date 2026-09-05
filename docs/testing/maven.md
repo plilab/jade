@@ -57,19 +57,19 @@ transitive dependencies
 - https://storage-download.googleapis.com/maven-central/index.html
 
 
-https://stackoverflow.com/questions/11612671/how-to-query-maven-repository-from-application-to-obtain-metadata
-https://svn.apache.org/repos/asf/servicemix/m2-repo/
+- https://stackoverflow.com/questions/11612671/how-to-query-maven-repository-from-application-to-obtain-metadata
+- https://svn.apache.org/repos/asf/servicemix/m2-repo/
 
-https://maven.apache.org/resolver/xref/index.html
-https://maven.apache.org/resolver-archives/resolver-1.9.0/maven-resolver-demos/maven-resolver-demo-snippets/xref/org/apache/maven/resolver/examples/util/ConsoleDependencyGraphDumper.html
+- https://maven.apache.org/resolver/xref/index.html
+- https://maven.apache.org/resolver-archives/resolver-1.9.0/maven-resolver-demos/maven-resolver-demo-snippets/xref/org/apache/maven/resolver/examples/util/ConsoleDependencyGraphDumper.html
 
-https://stackoverflow.com/questions/2619598/differences-between-dependencymanagement-and-dependencies-in-maven
-https://howtodoinjava.com/maven/maven-dependency-management/
+- https://stackoverflow.com/questions/2619598/differences-between-dependencymanagement-and-dependencies-in-maven
+- https://howtodoinjava.com/maven/maven-dependency-management/
 
-getBaseVersion vs version
-maven parallel download
-https://stackoverflow.com/questions/32299902/parallel-downloads-of-maven-artifacts
-org.apache.maven.plugins parallel-downloads
+- getBaseVersion vs version
+- maven parallel download
+- https://stackoverflow.com/questions/32299902/parallel-downloads-of-maven-artifacts
+- org.apache.maven.plugins parallel-downloads
 
 ## Maven Libraries
 
@@ -110,9 +110,9 @@ org.apache.maven.plugins parallel-downloads
 
 ## Third Party
 
-https://github.com/borisbaldassari/maven-index-exporter/blob/main/docs/maven_repositories/list_maven_repositories_with_index.txt
+- https://github.com/borisbaldassari/maven-index-exporter/blob/main/docs/maven_repositories/list_maven_repositories_with_index.txt
 
-https://github.com/javasoze/clue
+- https://github.com/javasoze/clue
 
 ### Maven Index Explorer
 

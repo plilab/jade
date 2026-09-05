@@ -31,7 +31,10 @@ object Decompile {
    *
    * @param files The list of files to decompile.
    * @param outputDir Output directory for the decompiled java files
-   * @param toDisk Indicator if the compiled result is saved to disk
+   * @param toDisk Indicator if the compiled result is saved to disk, default true
+   * 
+   * @return a in-memory representation of the decompiled files
+   * empty if toDisk is true
    */
   fun main(files: List<File>, outputDir: File, toDisk: Boolean = true) : HashMap<String, String> {
     val readFiles = ReadFiles()
@@ -83,6 +86,7 @@ object Decompile {
         throw Exception("Invalid file name: file $classFileName does not end with .class")
       }
 
+      // Write to disk / in-memory files based on toDisk value
       if (toDisk) {
         // TODO: options for handling whether to override the existing file
         AtomicWriteFile.write(File(outputDir, classFileName.replace(suffix, ".java")), "${compilationUnit}", false)

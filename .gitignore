@@ -28,6 +28,9 @@ playground/output/
 # Setup for jenv
 .java-version
 
+# Setup for direnv
+.envrc
+
 #Claude.md
 Claude.md
 agent.md

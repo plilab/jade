@@ -59,22 +59,24 @@ import org.ucombinator.jade.util.Tuples.Fourple
 import com.github.javaparser.ast.Modifier
 import kotlin.jvm.optionals.getOrNull
 
-// TODO: rename package to `translate` or `transform` or `transformation`?
-
-/** Handles decompiling class-level constructs. It contains various methods that builds JavaParser abstract syntax tree
- * data structures from corresponding ASM data structures.
+/**
+ * Handles decompiling class-level constructs.
+ * It contains various methods that builds JavaParser AST data structures from corresponding ASM data structures.
  */
 object DecompileClass {
-  /** TODO:doc. */
-  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT") val CLASS_NODE = object : DataKey<ClassNode>() {}
+  /** Root node for the class. */
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT")
+  val CLASS_NODE = object : DataKey<ClassNode>() {}
 
-  /** TODO:doc. */
-  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT") val METHOD_NODE = object : DataKey<MethodNode>() {}
+  /** Root node for methods. */
+  @Suppress("VARIABLE_NAME_INCORRECT_FORMAT")
+  val METHOD_NODE = object : DataKey<MethodNode>() {}
 
-  /** TODO:doc.
+  /**
+   * Transforms node into a JavaParser literal expression.
    *
-   * @param node TODO:doc
-   * @return TODO:doc
+   * @param node the target node to decompile.
+   * @return a JavaParser Expression representing `node`.
    */
   fun decompileLiteral(node: Any?): Expression? =
     when (node) {
@@ -82,30 +84,37 @@ object DecompileClass {
       null -> NullLiteralExpr()
       is Int -> IntegerLiteralExpr(node.toString())
       is Long -> LongLiteralExpr("${node}L")
-      is Float -> DoubleLiteralExpr("${node}F") // `JavaParser` uses Doubles for Floats
+      // JavaParser uses Doubles for Floats
+      is Float -> DoubleLiteralExpr("${node}F")
       is Double -> DoubleLiteralExpr("${node}D")
       is String -> StringLiteralExpr(node)
       is org.objectweb.asm.Type -> ClassExpr(Descriptor.fieldDescriptor(node.descriptor))
       else -> Errors.unmatchedType(node)
     }
 
-  /** TODO:doc.
+  /**
+   * Transforms a JavaParser Type into a Name.
    *
-   * @param t TODO:doc
-   * @return TODO:doc
+   * @param t the target type.
+   * @return a JavaParser Name for `t`.
+   * @throws IllegalArgumentException if `t` is not null and not ClassOrInterfaceType.
    */
   private fun typeToName(t: Type?): Name? =
     when (t) {
       null -> null
       is ClassOrInterfaceType -> Name(typeToName(t.scope.orElse(null)), t.name.identifier)
-      else -> throw Exception("failed to convert type $t to a name")
+      else -> throw IllegalArgumentException("Failed to convert type $t to a name")
     }
 
-  /** 
-   * Decompiles the value of the key-value pairs representing annotations' parameters as described in https://asm.ow2.io/javadoc/org/objectweb/asm/tree/AnnotationNode.html#values for all possible types of such value. For example, it constructs an Expression representing the string literal "ABC" for the annotation @A(param1="ABC").
+  /**
+   * Decompiles the value of the key-value pairs representing annotations' parameters as described in
+   * https://asm.ow2.io/javadoc/org/objectweb/asm/tree/AnnotationNode.html#values, for all possible types of such value.
    *
-   * @param parameter The value of the key-value pairs.
-   * @return an Expression object representing the parameter
+   * For example, it constructs an Expression representing the string literal "ABC" for the annotation @A(param1="ABC").
+   *
+   * @param parameter the value of the key-value pairs.
+   * @return a JavaParser Expression representing `parameter`.
+   * @throws IllegalArgumentException if `parameter` is an invalid Array.
    */
   fun decompileAnnotationParameter(parameter: Any): Expression? = when (parameter) {
     is Array<*> -> {
@@ -124,10 +133,11 @@ object DecompileClass {
     else -> decompileLiteral(parameter)
   }
 
-  /** Decompiles an ASM AnnotationNode into a JavaParser AnnotationExpr
+  /**
+   * Decompiles an ASM AnnotationNode into a JavaParser AnnotationExpr.
    *
-   * @param node The node to be decompiled
-   * @return The JavaParser AnnotationExpr
+   * @param node the target node to decompile.
+   * @return a JavaParser AnnotationExpr representing `node`.
    */
   private fun decompileAnnotation(node: AnnotationNode): AnnotationExpr {
     val name = typeToName(Descriptor.fieldDescriptor(node.desc))
@@ -145,18 +155,20 @@ object DecompileClass {
     }
   }
 
-  /** TODO:doc.
+  /**
+   * Decompiles a list of ASM AnnotationNode.
    *
-   * @param nodes TODO:doc
-   * @return TODO:doc
+   * @param nodes list of nodes to decompile.
+   * @return a list of decompiled JavaParser AnnotationExpr.
    */
   private fun decompileAnnotations(vararg nodes: List<AnnotationNode>?): NodeList<AnnotationExpr> =
     NodeList<AnnotationExpr>(nodes.filterNotNull().flatMap { it.map(::decompileAnnotation) })
 
-  /** TODO:doc.
+  /**
+   * Decompiles a ASM FieldNode into a JavaParser FieldDeclaration.
    *
-   * @param node TODO:doc
-   * @return TODO:doc
+   * @param node the target node to decompile.
+   * @return a JavaParser FieldDeclaration representing `node`.
    */
   private fun decompileField(node: FieldNode): FieldDeclaration {
     // attrs (ignore?)
@@ -176,14 +188,13 @@ object DecompileClass {
     return FieldDeclaration(modifiers, annotations, variables)
   }
 
-  // TODO: flatten Pair<Pair<...>>
-
-  /** TODO:doc.
+  /**
+   * Decompiles a ASM ParameterNode into a JavaParser Parameter.
    *
-   * @param method TODO:doc
-   * @param paramCount TODO:doc
-   * @param parameter TODO:doc
-   * @return TODO:doc
+   * @param method the method that `parameter` belongs to.
+   * @param paramCount number of parameters in `method`.
+   * @param parameter the target parameter to decompile.
+   * @return a JavaParser Parameter representing `parameter`.
    */
   private fun decompileParameter(
     method: MethodNode,
@@ -204,12 +215,14 @@ object DecompileClass {
     return Parameter(modifiers, annotations, type, isVarArgs, varArgsAnnotations, name)
   }
 
-  /** TODO:doc.
+  /**
+   * Extracts a list of JavaParser Type from a list of ASM ParameterNode.
    *
-   * @param desc TODO:doc
-   * @param sig TODO:doc
-   * @param params TODO:doc
-   * @return TODO:doc
+   * @param desc types provided from a method descriptor.
+   * @param sig types provided from a method signature.
+   * @param params a list of ParameterNode.
+   * @return a list of JavaParser Type representing `params`.
+   * @throws IllegalArgumentException is `desc` is empty, or if parameter types cannot be constructed.
    */
   fun parameterTypes(desc: List<Type>, sig: List<Type>, params: List<ParameterNode>): List<Type> =
     when {
@@ -220,18 +233,17 @@ object DecompileClass {
       desc.isNotEmpty() && sig.isNotEmpty() && params.isNotEmpty() ->
         listOf(sig.first()) + parameterTypes(desc.tail(), sig.tail(), params.tail())
       params.isEmpty() -> sig
-      else -> throw Exception("failed to construct parameter types: $desc, $sig, $params")
+      else -> throw IllegalArgumentException("Failed to construct parameter types: $desc, $sig, $params")
     }
 
-  // TODO: rename node to methodNode
-
-  /** TODO:doc.
+  /**
+   * Decompiles a ASM MethodNode into a JavaParser BodyDeclaration.
    *
-   * @param classNode TODO:doc
-   * @param node TODO:doc
-   * @return TODO:doc
+   * @param classNode the class which the method belongs to.
+   * @param methodNode the target method to decompile.
+   * @return a JavaParser BodyDeclaration representing `methodNode`.
    */
-  fun decompileMethod(classNode: ClassNode, node: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
+  fun decompileMethod(classNode: ClassNode, methodNode: MethodNode): BodyDeclaration<out BodyDeclaration<*>> {
     // attr (ignore?)
     // instructions
     // tryCatchBlocks
@@ -240,36 +252,36 @@ object DecompileClass {
     // invisibleLocalVariableAnnotations
     // TODO: JPModifier.Keyword.DEFAULT
     // TODO: catch exceptions and return a stub method
-    val modifiers = Flag.toModifiers(Flag.methodFlags(node.access))
+    val modifiers = Flag.toModifiers(Flag.methodFlags(methodNode.access))
 
     // An interface might contain abstract methods, default methods or static methods (see https://docs.oracle.com/javase%2Ftutorial%2F/java/IandI/interfaceDef.html).
-    // When our method is either abstract or static, we can directly use the modifier list from node.access (access flags from ASM). However, there is no access flag for `default` (despite being present in raw .class bytecode files). Therefore, for default methods, default modifier has to be manually added as below.
+    // When our method is either abstract or static, we can directly use the modifier list from methodNode.access (access flags from ASM). However, there is no access flag for `default` (despite being present in raw .class bytecode files). Therefore, for default methods, default modifier has to be manually added as below.
     if ((0 != (classNode.access and Opcodes.ACC_INTERFACE)) &&
-      (0 == (node.access and Opcodes.ACC_STATIC)) &&
-      !DecompileMethodBody.isAbstract(node)) {
+      (0 == (methodNode.access and Opcodes.ACC_STATIC)) &&
+      !DecompileMethodBody.isAbstract(methodNode)) {
       modifiers.add(Modifier(Modifier.Keyword.DEFAULT))
     }
 
     val annotations: NodeList<AnnotationExpr> = decompileAnnotations(
-      node.visibleAnnotations,
-      node.invisibleAnnotations,
-      node.visibleTypeAnnotations,
-      node.invisibleTypeAnnotations,
+      methodNode.visibleAnnotations,
+      methodNode.invisibleAnnotations,
+      methodNode.visibleTypeAnnotations,
+      methodNode.invisibleTypeAnnotations,
     )
-    val descriptor = Descriptor.methodDescriptor(node.desc)
+    val descriptor = Descriptor.methodDescriptor(methodNode.desc)
     val sig =
-      if (node.signature == null) {
+      if (methodNode.signature == null) {
         MethodSignature(
           listOf(),
           descriptor.parameterTypes,
           descriptor.returnType,
-          node.exceptions.map(ClassName::classNameType),
+          methodNode.exceptions.map(ClassName::classNameType),
         )
       } else {
-        Signature.methodSignature(node.signature)
+        Signature.methodSignature(methodNode.signature)
       }
-    val parameterNodes = node.parameters ?: listOf()
-    if (node.parameters != null && sig.parameterTypes.size != node.parameters.size) {
+    val parameterNodes = methodNode.parameters ?: listOf()
+    if (methodNode.parameters != null && sig.parameterTypes.size != methodNode.parameters.size) {
       // TODO: check if always in an enum
     }
     val typeParameters: NodeList<TypeParameter> = NodeList(sig.typeParameters)
@@ -277,13 +289,13 @@ object DecompileClass {
       zipAll(
         parameterTypes(descriptor.parameterTypes, sig.parameterTypes, parameterNodes),
         parameterNodes,
-        node.visibleParameterAnnotations?.toList() ?: listOf(), // TODO: remove .toList()
-        node.invisibleParameterAnnotations?.toList() ?: listOf(),
+        methodNode.visibleParameterAnnotations?.toList() ?: listOf(), // TODO: remove .toList()
+        methodNode.invisibleParameterAnnotations?.toList() ?: listOf(),
       ).withIndex()
-    val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(node, sig.parameterTypes.size, it) })
+    val parameters: NodeList<Parameter> = NodeList(ps.map { decompileParameter(methodNode, sig.parameterTypes.size, it) })
     val type: Type = sig.returnType
     val thrownExceptions: NodeList<ReferenceType> = NodeList(sig.exceptionTypes)
-    val name: SimpleName = SimpleName(node.name)
+    val name: SimpleName = SimpleName(methodNode.name)
     val receiverParameter: ReceiverParameter? = null // TODO
 
     val dummyMethodDecl = MethodDeclaration(
@@ -298,10 +310,10 @@ object DecompileClass {
       receiverParameter  // receiverParameter
     )
 
-    val body: BlockStmt? = if (DecompileMethodBody.isAbstract(node)) null else DecompileMethodBody.decompileBody(classNode, node, dummyMethodDecl)
+    val body: BlockStmt? = if (DecompileMethodBody.isAbstract(methodNode)) null else DecompileMethodBody.decompileBody(classNode, methodNode, dummyMethodDecl)
     
     @Suppress("NULLABLE_PROPERTY_TYPE") // TODO: temporary until we remove null (remove blank line above when we do)
-    val bodyDeclaration = when (node.name) {
+    val bodyDeclaration = when (methodNode.name) {
       "<clinit>" ->
         InitializerDeclaration(true, body)
       "<init>" ->
@@ -330,15 +342,16 @@ object DecompileClass {
         methodDeclaration
       }
     }
-    bodyDeclaration.setData(METHOD_NODE, node)
-    // TODO: Decompile.methods.add(bodyDeclaration to ((classNode, node)))
+    bodyDeclaration.setData(METHOD_NODE, methodNode)
+    // TODO: Decompile.methods.add(bodyDeclaration to ((classNode, methodNode)))
     return bodyDeclaration
   }
 
-  /** TODO:doc.
+  /**
+   * Decompiles a ASM ClassNode into a JavaParser CompilationUnit.
    *
-   * @param node TODO:doc
-   * @return TODO:doc
+   * @param node the target node to decompile
+   * @return a JavaParser CompilationUnit representing node.
    */
   fun decompileClass(node: ClassNode): CompilationUnit {
     val comment = BlockComment(

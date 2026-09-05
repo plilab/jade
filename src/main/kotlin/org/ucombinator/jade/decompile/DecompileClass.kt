@@ -205,7 +205,10 @@ object DecompileClass {
       Descriptor.fieldDescriptor(node.desc)
     }
     val name = SimpleName(node.name)
-    val initializer = decompileLiteral(node.value)
+
+    // If node.value is null, we don't need to initialize anything.
+    // If this field is a primitive field, assigning null is invalid.
+    val initializer = node.value?.let { decompileLiteral(it) }
     val variables = NodeList<VariableDeclarator>(VariableDeclarator(type, name, initializer))
 
     return FieldDeclaration(modifiers, annotations, variables)

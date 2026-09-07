@@ -252,10 +252,10 @@ class About : NoOpJadeCommand() {
     override fun help(context: Context) = "List available loggers"
 
     val test: Boolean by option(help = "Send test messages to all loggers").flag(default = false)
+    val all: Boolean by option(help = "Include initialized loggers from dependencies").flag(default = false)
 
     override fun run() {
-      // TODO: shows only initialized loggers
-      for (log in Log.loggers()) {
+      for (log in Log.loggers(all)) {
         echo(log.name)
         if (test) {
           log.error("error in ${log}")

@@ -98,7 +98,7 @@ class Jade : JadeCommand() {
     help = """
       Set the logging level where LEVEL is a comma-seperated list of LVL or NAME=LVL.
       LVL is one of (case insensitive): off info warning error debug trace all.
-      NAME is a qualified package or class name and is relative to `org.ucombinator.jade` unless prefixed with `.`.
+      NAME is a qualified package or class name and is relative to `${BuildInformation.group}` unless prefixed with `.`.
     """.trimIndent(),
   ).convert { arg ->
     val r = arg.split("=", limit = 2)
@@ -133,17 +133,18 @@ class Jade : JadeCommand() {
 
   // TODO: command aliases for all command prefixes
   override fun run() {
-    DynamicCallerConverter.depthEnd = logCallerDepth
+    DynamicCallerConverter.setDepthEnd(logCallerDepth)
 
     ioThreads?.let { System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, it.toString()) }
 
+    val logRoot = requireNotNull(BuildInformation.group) { "Build group is required for logging" }
     for ((name, level) in log) {
       // TODO: warn if log exists
       // TODO: warn if no such class or package (and suggest qualifications)
       val parsedName = when {
         name.startsWith(".") -> name.substring(1)
         name == "" -> ""
-        else -> "org.ucombinator.jade.${level}" // TODO: autodetect or take from BuildInfo
+        else -> "$logRoot.${name}"
       }
       Log.getLog(parsedName).setLevel(level)
     }

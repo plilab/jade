@@ -84,13 +84,20 @@ object DecompileClass {
     when (node) {
       // TODO: improve formatting of literals?
       null -> NullLiteralExpr()
+
       is Int -> IntegerLiteralExpr(node.toString())
+
       is Long -> LongLiteralExpr("${node}L")
+
       // JavaParser uses Doubles for Floats
       is Float -> DoubleLiteralExpr("${node}F")
+
       is Double -> DoubleLiteralExpr("${node}D")
+
       is String -> StringLiteralExpr(node)
+
       is org.objectweb.asm.Type -> ClassExpr(Descriptor.fieldDescriptor(node.descriptor))
+
       else -> Errors.unmatchedType(node)
     }
 
@@ -146,9 +153,18 @@ object DecompileClass {
         // TODO: Populate typeArguments
         FieldAccessExpr(ClassName.classNameExpr(scope), NodeList(), enumName)
       }
-      is AnnotationNode -> decompileAnnotation(parameter)
-      is List<*> -> ArrayInitializerExpr(NodeList(parameter.map { decompileAnnotationParameter(it!!) }))
-      else -> decompileLiteral(parameter)
+
+      is AnnotationNode -> {
+        decompileAnnotation(parameter)
+      }
+
+      is List<*> -> {
+        ArrayInitializerExpr(NodeList(parameter.map { decompileAnnotationParameter(it!!) }))
+      }
+
+      else -> {
+        decompileLiteral(parameter)
+      }
     }
 
   /**
@@ -164,11 +180,14 @@ object DecompileClass {
     // Currently the SingleMemberAnnotation is written as a NormalAnnotationExpr with the parameter value=...
     return when {
       node.values == null -> MarkerAnnotationExpr(name)
-      else ->  NormalAnnotationExpr(
+
+      else -> NormalAnnotationExpr(
         name,
-        NodeList(node.values.pairs().map {
-          MemberValuePair(it.first as String, decompileAnnotationParameter(it.second))
-        }),
+        NodeList(
+          node.values.pairs().map {
+            MemberValuePair(it.first as String, decompileAnnotationParameter(it.second))
+          },
+        ),
       )
     }
   }
@@ -234,10 +253,10 @@ object DecompileClass {
     val annotations = decompileAnnotations(a1, a2, null, null)
     val isVarArgs = Flag.methodFlags(method.access).contains(Flag.ACC_VARARGS) && index == paramCount - 1
     val varArgsAnnotations = NodeList<AnnotationExpr>() // TODO?
-  
+
     // TODO: index = 0 or valid index to the pool table, access flags can be synthetic/mandated
     val isStatic = Flag.methodFlags(method.access).contains(Flag.ACC_STATIC)
-  
+
     // TODO: class files decompiled with the -parameters flags may contain original parameter name
     val parameterVarIndex = if (isStatic) index + 1 else index + 2
     val name = SimpleName(if (node == null) "parameterVar${parameterVarIndex}" else node.name)
@@ -261,8 +280,8 @@ object DecompileClass {
    */
   private fun doesMethodRequireDefaultModifier(classNode: ClassNode, methodNode: MethodNode): Boolean =
     (classNode.access and Opcodes.ACC_INTERFACE) != 0 &&
-    ((methodNode.access and Opcodes.ACC_STATIC) == 0) &&
-    !DecompileMethodBody.isAbstract(methodNode)
+      ((methodNode.access and Opcodes.ACC_STATIC) == 0) &&
+      !DecompileMethodBody.isAbstract(methodNode)
 
   /**
    * Extracts a list of JavaParser Type from a list of ASM ParameterNode.
@@ -288,27 +307,36 @@ object DecompileClass {
 
     return when {
       // TODO: Flag.checkParameter(access, Modifier)
-      Flag.parameterFlags(parameterNodes.first().access).any(listOf(Flag.ACC_SYNTHETIC, Flag.ACC_MANDATED)::contains) ->
+      Flag
+        .parameterFlags(
+          parameterNodes.first().access,
+        ).any(listOf(Flag.ACC_SYNTHETIC, Flag.ACC_MANDATED)::contains) -> {
         listOf(descriptorTypes.first()) + buildParameterTypes(
           descriptorTypes.tail(),
           signatureTypes,
           parameterNodes.tail(),
         )
-      signatureTypes.isNotEmpty() ->
+      }
+
+      signatureTypes.isNotEmpty() -> {
         listOf(signatureTypes.first()) + buildParameterTypes(
           descriptorTypes.tail(),
           signatureTypes.tail(),
           parameterNodes.tail(),
         )
-      else -> throw IllegalArgumentException(
-        "Failed to construct parameter types: $descriptorTypes, $signatureTypes, $parameterNodes",
-      )
+      }
+
+      else -> {
+        throw IllegalArgumentException(
+          "Failed to construct parameter types: $descriptorTypes, $signatureTypes, $parameterNodes",
+        )
+      }
     }
   }
 
   /**
    * Creates a MethodSignature representing `methodNode`.
-   * 
+   *
    * @param methodNode the target method.
    * @param descriptor the method's method descriptor.
    * @return a MethodSignature representing `methodNode`.
@@ -327,7 +355,7 @@ object DecompileClass {
 
   /**
    * Creates a list of parameters for a method.
-   * 
+   *
    * @param classNode the class which the method belongs to.
    * @param methodNode the target method.
    * @param signature the method's signature
@@ -343,17 +371,19 @@ object DecompileClass {
       // TODO: check if always in an enum
     }
 
-    return NodeList(zipAll(
-      buildParameterTypes(descriptor.parameterTypes, signature.parameterTypes, parameterNodes),
-      parameterNodes,
-      methodNode.visibleParameterAnnotations?.toList() ?: listOf(), // TODO: remove .toList()
-      methodNode.invisibleParameterAnnotations?.toList() ?: listOf(),
-    ).withIndex().map { decompileParameter(methodNode, signature.parameterTypes.size, it) })
+    return NodeList(
+      zipAll(
+        buildParameterTypes(descriptor.parameterTypes, signature.parameterTypes, parameterNodes),
+        parameterNodes,
+        methodNode.visibleParameterAnnotations?.toList() ?: listOf(), // TODO: remove .toList()
+        methodNode.invisibleParameterAnnotations?.toList() ?: listOf(),
+      ).withIndex().map { decompileParameter(methodNode, signature.parameterTypes.size, it) },
+    )
   }
 
   /**
    * Creates a method body for a given method.
-   * 
+   *
    * @param classNode the class which the method belongs to.
    * @param methodNode the target method to decompile.
    * @param modifiers the method's modifiers.
@@ -400,7 +430,10 @@ object DecompileClass {
     // TODO: temporary until we remove null (remove blank line above when we do)
     @Suppress("NULLABLE_PROPERTY_TYPE")
     return when (methodNode.name) {
-      "<clinit>" -> InitializerDeclaration(true, body)
+      "<clinit>" -> {
+        InitializerDeclaration(true, body)
+      }
+
       "<init>" -> {
         // TODO: there was a TODO with no description; maybe it's about checking `name` against `constructorName`?
         val constructorName = SimpleName(ClassName.className(classNode.name).identifier)
@@ -415,17 +448,20 @@ object DecompileClass {
           receiverParameter,
         )
       }
-      else -> MethodDeclaration(
-        modifiers,
-        annotations,
-        typeParameters,
-        type,
-        name,
-        parameters,
-        thrownExceptions,
-        body,
-        receiverParameter,
-      )
+
+      else -> {
+        MethodDeclaration(
+          modifiers,
+          annotations,
+          typeParameters,
+          type,
+          name,
+          parameters,
+          thrownExceptions,
+          body,
+          receiverParameter,
+        )
+      }
     }
   }
 
@@ -489,7 +525,7 @@ object DecompileClass {
 
   /**
    * Builds the type declaration for a class.
-   * 
+   *
    * @param classNode the target class.
    * @param className the name of the target class.
    * @return a TypeDeclaration representing the class.
@@ -528,7 +564,7 @@ object DecompileClass {
       implementedTypes: NodeList<ClassOrInterfaceType>,
       permittedTypes: NodeList<ClassOrInterfaceType>, // TODO: implement
     ) = if (classNode.signature == null) {
-       Fourple(
+      Fourple(
         NodeList<TypeParameter>(),
         if (classNode.superName == null) NodeList() else NodeList(ClassName.classNameType(classNode.superName)),
         NodeList(classNode.interfaces.map { ClassName.classNameType(it) }),
@@ -567,7 +603,7 @@ object DecompileClass {
 
   /**
    * Decompiles a ASM ClassNode into a JavaParser CompilationUnit.
-   * 
+   *
    * @param node the target node to decompile
    * @return a JavaParser CompilationUnit representing node.
    */

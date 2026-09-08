@@ -92,7 +92,7 @@ class Jade : JadeCommand() {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
   }
 
-  /** TODO:doc. */
+  /** Log level options. */
   val log: List<Pair<String, Level>> by option(
     metavar = "LEVEL",
     help = """
@@ -110,34 +110,41 @@ class Jade : JadeCommand() {
   }.split(Regex(","))
   .default(listOf())
 
-  /** TODO:doc. */
+  /** Number of callers to print in log messages. */
   val logCallerDepth: Int by option(
     metavar = "DEPTH",
-    help = "Number of callers to print after log messages",
+    help = "Number of callers to print after log messages.",
   ).int().default(DynamicCallerConverter.depthEnd)
 
-  /** TODO:doc. */
-  val ioThreads: Int? by option().int()
+  /** Number of IO threads to use for logging.. */
+  val ioThreads: Int? by option(
+    help = "Number of IO threads to use for logging."
+  ).int()
 
-  /** TODO:doc. */
+  /** Whether logging should wait for a user input before running. */
   val wait: Boolean by option(
-    help = "Wait for input from user before running.  This allows time for a debugger to attach to this process.",
+    help = "Wait for input from user before running. This allows time for a debugger to attach to this process.",
   ).flag(
     "--no-wait", // TODO: automate "off" names
     default = false,
   )
 
+  /** Whether or not to write log files to the logs/ directory. */
+  val logToFile: Boolean by option(
+    help = "Whether or not to write log files to the logs/ directory."
+  ).flag(default = false)
+
+  // TODO: command aliases for all command prefixes
   // override fun aliases(): Map<String, List<String>> = mapOf(
   //   "mvn" to listOf("maven"),
   // )
 
-  // TODO: command aliases for all command prefixes
-  override fun run() {
-    DynamicCallerConverter.setDepthEnd(logCallerDepth)
-
-    ioThreads?.let { System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, it.toString()) }
-
+  /**
+   * Configure logging options.
+   */
+  private fun configureLogging() {
     val logRoot = requireNotNull(BuildInformation.group) { "Build group is required for logging" }
+
     for ((name, level) in log) {
       // TODO: warn if log exists
       // TODO: warn if no such class or package (and suggest qualifications)
@@ -148,6 +155,18 @@ class Jade : JadeCommand() {
       }
       Log.getLog(parsedName).setLevel(level)
     }
+
+    if (logToFile) {
+      Log.enableFileAppender()
+    }
+  }
+
+  override fun run() {
+    DynamicCallerConverter.setDepthEnd(logCallerDepth)
+
+    ioThreads?.let { System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, it.toString()) }
+
+    configureLogging()
 
     if (wait) {
       // TODO: use Clikt prompt

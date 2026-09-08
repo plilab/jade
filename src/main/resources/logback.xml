@@ -20,19 +20,8 @@
     </encoder>
   </appender>
 
-  <timestamp key="runTimestamp" datePattern="yyyyMMdd-HHmmss.SSS" />
-
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>logs/test-output-${runTimestamp}.log</file>
-    <append>false</append>
-    <encoder>
-      <pattern>%highlight(%-5level %logger{org.ucombinator.jade.}:) %message%n%caller</pattern>
-    </encoder>
-  </appender>
-  
   <root level="info">
     <!-- TODO: STDERR (configurable?) -->
     <appender-ref ref="STDOUT" />
-    <appender-ref ref="FILE" />
   </root>
 </configuration>

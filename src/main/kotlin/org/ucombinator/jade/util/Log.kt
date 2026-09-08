@@ -1,15 +1,19 @@
 package org.ucombinator.jade.util
 
 import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.classic.pattern.ClassicConverter
 import ch.qos.logback.classic.spi.CallerData
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.CoreConstants
+import ch.qos.logback.core.FileAppender
 import ch.qos.logback.core.pattern.color.ANSIConstants
 import io.github.oshai.kotlinlogging.KLogger // TODO: consider other logger systems
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.slf4j.LoggerFactory
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 
 import ch.qos.logback.classic.Logger as LogbackLogger
@@ -56,6 +60,32 @@ object Log {
     val modifiedName = if (name.isEmpty()) Slf4jLogger.ROOT_LOGGER_NAME else name
     names += modifiedName
     return LoggerFactory.getLogger(modifiedName) as LogbackLogger
+  }
+
+  private const val FILE_APPENDER_NAME = "FILE"
+  private const val FILE_PATTERN = "%-5level %logger{org.ucombinator.jade.}: %message%n%caller"
+  private val RUN_TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss.SSS")
+
+  /** Creates and attaches a uniquely named file appender to the root logger. */
+  fun enableFileAppender() {
+    val root = getLog("")
+    if (root.getAppender(FILE_APPENDER_NAME) != null) return
+
+    val context = root.loggerContext
+    val encoder = PatternLayoutEncoder().apply {
+      this.context = context
+      pattern = FILE_PATTERN
+      start()
+    }
+    val appender = FileAppender<ILoggingEvent>().apply {
+      this.context = context
+      name = FILE_APPENDER_NAME
+      file = "logs/${RUN_TIMESTAMP_FORMAT.format(LocalDateTime.now())}.log"
+      // append = false
+      this.encoder = encoder
+      start()
+    }
+    root.addAppender(appender)
   }
 
   /**

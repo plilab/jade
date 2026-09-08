@@ -31,9 +31,10 @@ import java.io.File
 // TODO: throw ProgramResult(statusCode)
 // TODO: show default on boolean flags
 
-/** TODO:doc.
+/**
+ * Runs the Jade CLI interface and registers its top-level commands.
  *
- * @param args TODO:doc
+ * @param args command-line arguments supplied by the operating system.
  */
 fun main(args: Array<String>) {
   Jade().subcommands(
@@ -66,7 +67,7 @@ fun main(args: Array<String>) {
 //   showAtFileInUsageHelp = true,
 //   showEndOfOptionsDelimiterInUsageHelp = true,
 
-/** TODO: doc. */
+/** Base class for Jade commands with shared terminal and argument-file configuration. */
 abstract class JadeCommand() : CliktCommand() {
   init {
     // TODO: color and other formatting in help messages
@@ -81,12 +82,12 @@ abstract class JadeCommand() : CliktCommand() {
 }
 
 // TODO: read user options from configuration file
-/** TODO: doc. */
+/** A grouping command whose behavior is provided by its subcommands. */
 open class NoOpJadeCommand() : JadeCommand() {
   final override fun run() { /* do nothing */ }
 }
 
-/** TODO:doc. */
+/** Root Jade command containing options that apply to the entire invocation. */
 class Jade : JadeCommand() {
   init {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })

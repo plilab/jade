@@ -3,11 +3,11 @@ package org.ucombinator.jade.main
 import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.core.context
-import com.github.ajalt.clikt.core.main
-import com.github.ajalt.clikt.core.installMordantMarkdown
-import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.context
+import com.github.ajalt.clikt.core.installMordantMarkdown
+import com.github.ajalt.clikt.core.main
+import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
@@ -18,6 +18,7 @@ import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.int
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
+
 import java.io.File
 
 // TODO: analysis to ensure using only the canonical constructor (helps with detecting forward version changes) (as a
@@ -37,26 +38,27 @@ import java.io.File
  * @param args command-line arguments supplied by the operating system.
  */
 fun main(args: Array<String>) {
-  Jade().subcommands(
-    Decompile(),
-    Compile(),
-    Diff(),
-    Maven().subcommands(
-      Maven.Mirrors(),
-      Maven.Index(),
-      Maven.IndexToJson(),
-      Maven.Versions(),
-      Maven.Dependencies(),
-      Maven.Download(),
-      Maven.ClearLocks(),
-    ),
-    About().subcommands(
-      About.BuildInfo(),
-      // TODO: About.Configuration(),
-      About.Loggers(),
-      CompletionCommand(),
-    ),
-  ).main(args)
+  Jade()
+    .subcommands(
+      Decompile(),
+      Compile(),
+      Diff(),
+      Maven().subcommands(
+        Maven.Mirrors(),
+        Maven.Index(),
+        Maven.IndexToJson(),
+        Maven.Versions(),
+        Maven.Dependencies(),
+        Maven.Download(),
+        Maven.ClearLocks(),
+      ),
+      About().subcommands(
+        About.BuildInfo(),
+        // TODO: About.Configuration(),
+        About.Loggers(),
+        CompletionCommand(),
+      ),
+    ).main(args)
 }
 
 // TODO: optionalValue()
@@ -68,7 +70,7 @@ fun main(args: Array<String>) {
 //   showEndOfOptionsDelimiterInUsageHelp = true,
 
 /** Base class for Jade commands with shared terminal and argument-file configuration. */
-abstract class JadeCommand() : CliktCommand() {
+abstract class JadeCommand : CliktCommand() {
   init {
     // TODO: color and other formatting in help messages
     // TODO: better terminal colors for `code`
@@ -82,8 +84,9 @@ abstract class JadeCommand() : CliktCommand() {
 }
 
 // TODO: read user options from configuration file
+
 /** A grouping command whose behavior is provided by its subcommands. */
-open class NoOpJadeCommand() : JadeCommand() {
+open class NoOpJadeCommand : JadeCommand() {
   final override fun run() { /* do nothing */ }
 }
 
@@ -109,7 +112,7 @@ class Jade : JadeCommand() {
       else -> TODO("impossible")
     }
   }.split(Regex(","))
-  .default(listOf())
+    .default(listOf())
 
   /** Number of callers to print in log messages. */
   val logCallerDepth: Int by option(
@@ -119,7 +122,7 @@ class Jade : JadeCommand() {
 
   /** Number of IO threads to use for logging.. */
   val ioThreads: Int? by option(
-    help = "Number of IO threads to use for logging."
+    help = "Number of IO threads to use for logging.",
   ).int()
 
   /** Whether logging should wait for a user input before running. */
@@ -132,7 +135,7 @@ class Jade : JadeCommand() {
 
   /** Whether or not to write log files to the logs/ directory. */
   val logToFile: Boolean by option(
-    help = "Whether or not to write log files to the logs/ directory."
+    help = "Whether or not to write log files to the logs/ directory.",
   ).flag(default = false)
 
   // TODO: command aliases for all command prefixes

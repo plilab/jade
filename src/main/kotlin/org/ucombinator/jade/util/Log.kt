@@ -141,7 +141,7 @@ class DynamicCallerConverter : ClassicConverter() {
 
     /**
      * Sets the callerData index at which to stop.
-     * 
+     *
      * @param value the target depth end.
      */
     fun setDepthEnd(value: Int) {

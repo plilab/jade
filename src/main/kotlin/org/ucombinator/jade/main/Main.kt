@@ -3,11 +3,11 @@ package org.ucombinator.jade.main
 import ch.qos.logback.classic.Level
 import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.core.context
-import com.github.ajalt.clikt.core.main
-import com.github.ajalt.clikt.core.installMordantMarkdown
-import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.context
+import com.github.ajalt.clikt.core.installMordantMarkdown
+import com.github.ajalt.clikt.core.main
+import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
@@ -18,6 +18,7 @@ import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.int
 import org.ucombinator.jade.util.DynamicCallerConverter
 import org.ucombinator.jade.util.Log
+
 import java.io.File
 
 // TODO: analysis to ensure using only the canonical constructor (helps with detecting forward version changes) (as a
@@ -31,31 +32,33 @@ import java.io.File
 // TODO: throw ProgramResult(statusCode)
 // TODO: show default on boolean flags
 
-/** TODO:doc.
+/**
+ * Runs the Jade CLI interface and registers its top-level commands.
  *
- * @param args TODO:doc
+ * @param args command-line arguments supplied by the operating system.
  */
 fun main(args: Array<String>) {
-  Jade().subcommands(
-    Decompile(),
-    Compile(),
-    Diff(),
-    Maven().subcommands(
-      Maven.Mirrors(),
-      Maven.Index(),
-      Maven.IndexToJson(),
-      Maven.Versions(),
-      Maven.Dependencies(),
-      Maven.Download(),
-      Maven.ClearLocks(),
-    ),
-    About().subcommands(
-      About.BuildInfo(),
-      // TODO: About.Configuration(),
-      About.Loggers(),
-      CompletionCommand(),
-    ),
-  ).main(args)
+  Jade()
+    .subcommands(
+      Decompile(),
+      Compile(),
+      Diff(),
+      Maven().subcommands(
+        Maven.Mirrors(),
+        Maven.Index(),
+        Maven.IndexToJson(),
+        Maven.Versions(),
+        Maven.Dependencies(),
+        Maven.Download(),
+        Maven.ClearLocks(),
+      ),
+      About().subcommands(
+        About.BuildInfo(),
+        // TODO: About.Configuration(),
+        About.Loggers(),
+        CompletionCommand(),
+      ),
+    ).main(args)
 }
 
 // TODO: optionalValue()
@@ -66,8 +69,8 @@ fun main(args: Array<String>) {
 //   showAtFileInUsageHelp = true,
 //   showEndOfOptionsDelimiterInUsageHelp = true,
 
-/** TODO: doc. */
-abstract class JadeCommand() : CliktCommand() {
+/** Base class for Jade commands with shared terminal and argument-file configuration. */
+abstract class JadeCommand : CliktCommand() {
   init {
     // TODO: color and other formatting in help messages
     // TODO: better terminal colors for `code`
@@ -81,24 +84,25 @@ abstract class JadeCommand() : CliktCommand() {
 }
 
 // TODO: read user options from configuration file
-/** TODO: doc. */
-open class NoOpJadeCommand() : JadeCommand() {
+
+/** A grouping command whose behavior is provided by its subcommands. */
+open class NoOpJadeCommand : JadeCommand() {
   final override fun run() { /* do nothing */ }
 }
 
-/** TODO:doc. */
+/** Root Jade command containing options that apply to the entire invocation. */
 class Jade : JadeCommand() {
   init {
     versionOption(BuildInformation.version!!, message = { BuildInformation.versionMessage })
   }
 
-  /** TODO:doc. */
+  /** Log level options. */
   val log: List<Pair<String, Level>> by option(
     metavar = "LEVEL",
     help = """
       Set the logging level where LEVEL is a comma-seperated list of LVL or NAME=LVL.
       LVL is one of (case insensitive): off info warning error debug trace all.
-      NAME is a qualified package or class name and is relative to `org.ucombinator.jade` unless prefixed with `.`.
+      NAME is a qualified package or class name and is relative to `${BuildInformation.group}` unless prefixed with `.`.
     """.trimIndent(),
   ).convert { arg ->
     val r = arg.split("=", limit = 2)
@@ -108,34 +112,42 @@ class Jade : JadeCommand() {
       else -> TODO("impossible")
     }
   }.split(Regex(","))
-  .default(listOf())
+    .default(listOf())
 
-  /** TODO:doc. */
+  /** Number of callers to print in log messages. */
   val logCallerDepth: Int by option(
     metavar = "DEPTH",
-    help = "Number of callers to print after log messages",
+    help = "Number of callers to print after log messages.",
   ).int().default(DynamicCallerConverter.depthEnd)
 
-  /** TODO:doc. */
-  val ioThreads: Int? by option().int()
+  /** Number of IO threads to use for logging.. */
+  val ioThreads: Int? by option(
+    help = "Number of IO threads to use for logging.",
+  ).int()
 
-  /** TODO:doc. */
+  /** Whether logging should wait for a user input before running. */
   val wait: Boolean by option(
-    help = "Wait for input from user before running.  This allows time for a debugger to attach to this process.",
+    help = "Wait for input from user before running. This allows time for a debugger to attach to this process.",
   ).flag(
     "--no-wait", // TODO: automate "off" names
     default = false,
   )
 
+  /** Whether or not to write log files to the logs/ directory. */
+  val logToFile: Boolean by option(
+    help = "Whether or not to write log files to the logs/ directory.",
+  ).flag(default = false)
+
+  // TODO: command aliases for all command prefixes
   // override fun aliases(): Map<String, List<String>> = mapOf(
   //   "mvn" to listOf("maven"),
   // )
 
-  // TODO: command aliases for all command prefixes
-  override fun run() {
-    DynamicCallerConverter.depthEnd = logCallerDepth
-
-    ioThreads?.let { System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, it.toString()) }
+  /**
+   * Configure logging options.
+   */
+  private fun configureLogging() {
+    val logRoot = requireNotNull(BuildInformation.group) { "Build group is required for logging" }
 
     for ((name, level) in log) {
       // TODO: warn if log exists
@@ -143,10 +155,22 @@ class Jade : JadeCommand() {
       val parsedName = when {
         name.startsWith(".") -> name.substring(1)
         name == "" -> ""
-        else -> "org.ucombinator.jade.${level}" // TODO: autodetect or take from BuildInfo
+        else -> "$logRoot.${name}"
       }
       Log.getLog(parsedName).setLevel(level)
     }
+
+    if (logToFile) {
+      Log.enableFileAppender()
+    }
+  }
+
+  override fun run() {
+    DynamicCallerConverter.setDepthEnd(logCallerDepth)
+
+    ioThreads?.let { System.setProperty(kotlinx.coroutines.IO_PARALLELISM_PROPERTY_NAME, it.toString()) }
+
+    configureLogging()
 
     if (wait) {
       // TODO: use Clikt prompt

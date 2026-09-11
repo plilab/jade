@@ -2,9 +2,16 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.expr.AssignExpr
+import com.github.javaparser.ast.expr.BinaryExpr
+import com.github.javaparser.ast.expr.ConditionalExpr
+import com.github.javaparser.ast.expr.EnclosedExpr
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.FieldAccessExpr
+import com.github.javaparser.ast.expr.LiteralExpr
 import com.github.javaparser.ast.expr.NameExpr
+import com.github.javaparser.ast.expr.SuperExpr
+import com.github.javaparser.ast.expr.ThisExpr
+import com.github.javaparser.ast.expr.UnaryExpr
 import com.github.javaparser.ast.expr.VariableDeclarationExpr
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.EmptyStmt
@@ -179,18 +186,51 @@ object Elimination {
     return liveVariables
   }
 
+  /** Whether evaluating [expression] can be removed without losing side effects or exceptions. */
+  private fun canDiscard(expression: Expression): Boolean =
+    when (expression) {
+      is LiteralExpr -> true
+      is NameExpr -> true
+      is ThisExpr -> true
+      is SuperExpr -> true
+      is EnclosedExpr -> canDiscard(expression.inner)
+      // Prefix/Postfix operators will mutate the operand, so they cannot be discarded.
+      is UnaryExpr -> when (expression.operator) {
+        UnaryExpr.Operator.PREFIX_INCREMENT,
+        UnaryExpr.Operator.PREFIX_DECREMENT,
+        UnaryExpr.Operator.POSTFIX_INCREMENT,
+        UnaryExpr.Operator.POSTFIX_DECREMENT -> false
+        else -> canDiscard(expression.expression)
+      }
+      // Division/Remainder can throw exceptions, so they cannot be discarded.
+      is BinaryExpr -> when(expression.operator) {
+        BinaryExpr.Operator.DIVIDE,
+        BinaryExpr.Operator.REMAINDER -> false
+        else -> canDiscard(expression.left) && canDiscard(expression.right)
+      }
+      is ConditionalExpr ->
+        canDiscard(expression.condition) &&
+          canDiscard(expression.thenExpr) &&
+          canDiscard(expression.elseExpr)
+      else -> false
+    }
+
   private fun applyExpressionTransfer(statement: ExpressionStmt, liveVariables: MutableSet<String>) {
     when (val expression = statement.expression) {
       is AssignExpr -> {
-        if (isAssignmentTargetLive(expression, liveVariables)) {
-          liveVariables.addAll(collectReferencedNames(expression.value))
+        if (mustKeepAssignment(expression, liveVariables)) {
+          // Include the target so that a retained local assignment also retains its declaration.
+          liveVariables.addAll(collectReferencedNames(expression))
         }
       }
       is VariableDeclarationExpr -> {
-        for (variable in expression.variables) {
+        val mustKeepDeclaration = mustKeepDeclaration(expression, liveVariables)
+        for (variable in expression.variables.reversed()) {
           liveVariables.remove(variable.nameAsString)
-          variable.initializer.ifPresent {
-            liveVariables.addAll(collectReferencedNames(it))
+          if (mustKeepDeclaration) {
+            variable.initializer.ifPresent {
+              liveVariables.addAll(collectReferencedNames(it))
+            }
           }
         }
       }
@@ -198,32 +238,39 @@ object Elimination {
     }
   }
 
-  private fun isAssignmentTargetLive(expression: AssignExpr, liveVariables: Set<String>): Boolean {
-    val target = expression.target
-    return target is NameExpr && target.nameAsString in liveVariables
-  }
-
   private fun collectReferencedNames(expression: Expression): Set<String> {
     val variables = mutableSetOf<String>()
     expression.walk {
-      if (isVariableReference(it)) {
+      if (isVariableReferenced(it)) {
         variables.add((it as NameExpr).nameAsString)
       }
     }
     return variables
   }
 
-  private fun isVariableReference(node: Node): Boolean =
+  private fun isVariableReferenced(node: Node): Boolean =
     node is NameExpr &&
       !node.parentNode.map { it is FieldAccessExpr && it.name == node }.orElse(false)
 
-  private fun shouldPruneAssignment(expression: AssignExpr, liveOut: Set<String>): Boolean {
+  private fun mustKeepAssignment(expression: AssignExpr, liveVariables: Set<String>): Boolean {
     val target = expression.target
-    return target is NameExpr && target.nameAsString !in liveOut
+    return target !is NameExpr ||
+      target.nameAsString in liveVariables ||
+      expression.operator != AssignExpr.Operator.ASSIGN ||
+      !canDiscard(expression.value)
   }
 
+  private fun mustKeepDeclaration(expression: VariableDeclarationExpr, liveVariables: Set<String>): Boolean =
+    expression.variables.any { variable ->
+      variable.nameAsString in liveVariables ||
+        variable.initializer.map { !canDiscard(it) }.orElse(false)
+    }
+
+  private fun shouldPruneAssignment(expression: AssignExpr, liveOut: Set<String>): Boolean =
+    !mustKeepAssignment(expression, liveOut)
+
   private fun shouldPruneDeclaration(expression: VariableDeclarationExpr, liveOut: Set<String>): Boolean =
-    expression.variables.all { it.nameAsString !in liveOut }
+    !mustKeepDeclaration(expression, liveOut)
 
   private fun findNodesToPrune(
     current: Node,

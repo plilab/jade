@@ -19,7 +19,7 @@ class EliminationTest {
     """.trimMargin())
     val original = input.clone()
 
-    assertEquals(parseBlock("{ return; }"), Elimination.eliminateDeadStores(input))
+    assertEquals(parseBlock("{ return; }"), Elimination.make(input))
     assertEquals(original, input)
   }
 
@@ -33,7 +33,7 @@ class EliminationTest {
       |}
     """.trimMargin())
 
-    assertEquals(input.clone(), Elimination.eliminateDeadStores(input))
+    assertEquals(input.clone(), Elimination.make(input))
   }
 
   @Test
@@ -48,7 +48,7 @@ class EliminationTest {
       |}
     """.trimMargin())
 
-    assertEquals(input.clone(), Elimination.eliminateDeadStores(input))
+    assertEquals(input.clone(), Elimination.make(input))
   }
 
   @Test
@@ -63,7 +63,7 @@ class EliminationTest {
       |}
     """.trimMargin())
 
-    assertEquals(input.clone(), Elimination.eliminateDeadStores(input))
+    assertEquals(input.clone(), Elimination.make(input))
   }
 
   @Test
@@ -78,7 +78,7 @@ class EliminationTest {
       |}
     """.trimMargin())
 
-    assertEquals(input.clone(), Elimination.eliminateDeadStores(input))
+    assertEquals(input.clone(), Elimination.make(input))
   }
 
   @Test
@@ -91,7 +91,7 @@ class EliminationTest {
       |}
     """.trimMargin())
 
-    assertEquals(parseBlock("{ return; }"), Elimination.eliminateDeadStores(input))
+    assertEquals(parseBlock("{ return; }"), Elimination.make(input))
   }
 
   @Test
@@ -111,7 +111,7 @@ class EliminationTest {
     val exit = input.statements[2]
     val graph = Elimination.buildGraph(input)
 
-    assertEquals(input.clone(), Elimination.eliminateDeadStores(input))
+    assertEquals(input.clone(), Elimination.make(input))
     assertEquals(setOf(loop, exit), graph.successors.getValue(label))
     assertEquals(setOf(bodyEnd), graph.successors.getValue(loop))
     assertEquals(setOf(label), graph.successors.getValue(bodyEnd))
@@ -139,6 +139,98 @@ class EliminationTest {
 
     assertNull(graph.entry)
     assertTrue(graph.nodes.isEmpty())
-    assertEquals(input, Elimination.eliminateDeadStores(input))
+    assertEquals(input, Elimination.make(input))
+  }
+
+  @Test
+  fun removesDeadDeclarationAndDiscardableInitializerDependencies() {
+    val input = parseBlock("""
+      |{
+      |  int source = 1;
+      |  int unused = source + 1;
+      |  return;
+      |}
+    """.trimMargin())
+
+    assertEquals(parseBlock("{ return; }"), Elimination.make(input))
+  }
+
+  @Test
+  fun preservesSideEffectingDeclarationInitializerAndDependencies() {
+    val input = parseBlock("""
+      |{
+      |  int argument = 1;
+      |  int unused = consume(argument);
+      |  return;
+      |}
+    """.trimMargin())
+
+    assertEquals(input.clone(), Elimination.make(input))
+  }
+
+  @Test
+  fun removesDeadDeclarationWithoutInitializer() {
+    val input = parseBlock("""
+      |{
+      |  int unused;
+      |  return;
+      |}
+    """.trimMargin())
+
+    assertEquals(parseBlock("{ return; }"), Elimination.make(input))
+  }
+
+  @Test
+  fun preservesSideEffectingAssignmentAndTargetDeclaration() {
+    val input = parseBlock("""
+      |{
+      |  int argument = 1;
+      |  int target = 0;
+      |  target = consume(argument);
+      |  return;
+      |}
+    """.trimMargin())
+
+    assertEquals(input.clone(), Elimination.make(input))
+  }
+
+  @Test
+  fun removesDeadAssignmentAndDiscardableDependencies() {
+    val input = parseBlock("""
+      |{
+      |  int source = 1;
+      |  int target = 0;
+      |  target = source + 1;
+      |  return;
+      |}
+    """.trimMargin())
+
+    assertEquals(parseBlock("{ return; }"), Elimination.make(input))
+  }
+
+  @Test
+  fun preservesFieldWrites() {
+    val input = parseBlock("""
+      |{
+      |  int value = 1;
+      |  receiver.field = value;
+      |  return;
+      |}
+    """.trimMargin())
+
+    assertEquals(input.clone(), Elimination.make(input))
+  }
+
+  @Test
+  fun preservesInitializersThatMayThrow() {
+    val input = parseBlock("""
+      |{
+      |  int divisor = 0;
+      |  int unused = 1 / divisor;
+      |  return;
+      |}
+    """.trimMargin())
+
+    assertEquals(input.clone(), Elimination.make(input))
   }
 }

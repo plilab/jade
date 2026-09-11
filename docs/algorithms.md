@@ -45,4 +45,4 @@ It runs after constant propagation in three phases:
 Each invocation has independent graph and analysis state. Empty blocks have no entry or nodes.
 
 The analysis currently tracks syntactic names and supports sequential statements, nested blocks, while loops, and labels.
-It does not yet model every Java control-flow construct or preserve side effects in otherwise-dead initializers.
+It conservatively retains expressions that may have side effects or throw, but does not yet model every Java control-flow construct.

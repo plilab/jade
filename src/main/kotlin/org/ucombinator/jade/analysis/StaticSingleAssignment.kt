@@ -152,8 +152,28 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   override fun newOperation(insn: AbstractInsnNode): Var =
     record(insn, listOf(), Var.Instruction(TypedBasicInterpreter.newOperation(insn), Insn(method, insn)))
 
+  /**
+   * Stack rearrangement instructions duplicate or move an existing value, they do not create a new source-level value.
+   *
+   * Since new values aren't created, performing the copy would just create extra variable aliases. Preserving identity
+   * also avoids losing one of the multiple outputs when an instruction such as DUP invokes copyOperation more than
+   * once.
+   */
+  private fun shouldCopyInsn(insn: AbstractInsnNode): Boolean =
+    insn.opcode != Opcodes.DUP &&
+    insn.opcode != Opcodes.DUP_X1 &&
+    insn.opcode != Opcodes.DUP_X2 &&
+    insn.opcode != Opcodes.DUP2 &&
+    insn.opcode != Opcodes.DUP2_X1 &&
+    insn.opcode != Opcodes.DUP2_X2 &&
+    insn.opcode != Opcodes.SWAP
+
   @Throws(AnalyzerException::class)
   override fun copyOperation(insn: AbstractInsnNode, value: Var): Var {
+    if (!shouldCopyInsn(insn)) {
+      return value
+    }
+
     this.copyOperationPosition += 1
     return record(
       insn,

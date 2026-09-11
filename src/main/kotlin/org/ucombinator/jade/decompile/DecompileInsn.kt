@@ -212,10 +212,17 @@ object DecompileInsn {
       return ExpressionStmt(expression)
     }
 
-    val mainAssign = AssignExpr(decompileVar(retVar), expression, AssignExpr.Operator.ASSIGN)
+    val target = decompileVar(retVar)
+    val statements = NodeList<Statement>()
+
+    // Skip redundant assignments (e.g. this = this, x = x)
+    if (target != expression) {
+      val mainAssign = AssignExpr(target, expression, AssignExpr.Operator.ASSIGN)
+      statements.add(ExpressionStmt(mainAssign))
+    }
+
     val phiVars = mutableListOf<Var>()
     val visitedVars = mutableListOf<Var>()
-    val statements = NodeList<Statement>(ExpressionStmt(mainAssign))
     phiVars.add(retVar)
 //    if (mainAssign.value.isThisExpr) {
 //      // check if corresponds to "this"
@@ -226,15 +233,19 @@ object DecompileInsn {
       val dependentPhis = ssa.reverseLookup(phiVar)
 
       for (dependentPhi in dependentPhis) {
-        val phiAssign = AssignExpr(decompileVar(dependentPhi), decompileVar(phiVar), AssignExpr.Operator.ASSIGN)
-        statements.add(ExpressionStmt(phiAssign))
+        val phiTarget = decompileVar(dependentPhi)
+        val phiValue = decompileVar(phiVar)
+        if (phiTarget != phiValue) {
+          val phiAssign = AssignExpr(phiTarget, phiValue, AssignExpr.Operator.ASSIGN)
+          statements.add(ExpressionStmt(phiAssign))
+        }
         if (!visitedVars.contains(dependentPhi)) {
           phiVars.add(dependentPhi)
           visitedVars.add(dependentPhi)
         }
       }
     }
-    return BlockStmt(statements)
+    return if (statements.isEmpty()) EmptyStmt() else BlockStmt(statements)
   }
 
   /** TODO:doc.

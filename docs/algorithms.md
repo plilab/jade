@@ -32,3 +32,17 @@ Step 2: Order the DAGS
 - To ensure stability, we choose a tie breaker of choosing the earliest bytecode offset first.
 
 Step 3: Remove labels that are not used.
+
+### Dead-store elimination
+
+`Elimination` removes local-variable assignments and declarations whose values are not live after the statement.
+It runs after constant propagation in three phases:
+
+1. Build a statement-level control-flow graph.
+2. Compute `liveIn` and `liveOut` sets.
+3. Clone the input and remove stores whose targets are not live.
+
+Each invocation has independent graph and analysis state. Empty blocks have no entry or nodes.
+
+The analysis currently tracks syntactic names and supports sequential statements, nested blocks, while loops, and labels.
+It does not yet model every Java control-flow construct or preserve side effects in otherwise-dead initializers.

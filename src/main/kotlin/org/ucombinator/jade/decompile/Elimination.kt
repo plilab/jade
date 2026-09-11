@@ -1,352 +1,274 @@
 package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.Node
-import com.github.javaparser.ast.expr.*
-import com.github.javaparser.ast.stmt.*
-//import org.ucombinator.jade.decompile.applyPropagation
+import com.github.javaparser.ast.expr.AssignExpr
+import com.github.javaparser.ast.expr.Expression
+import com.github.javaparser.ast.expr.FieldAccessExpr
+import com.github.javaparser.ast.expr.NameExpr
+import com.github.javaparser.ast.expr.VariableDeclarationExpr
+import com.github.javaparser.ast.stmt.BlockStmt
+import com.github.javaparser.ast.stmt.EmptyStmt
+import com.github.javaparser.ast.stmt.ExpressionStmt
+import com.github.javaparser.ast.stmt.IfStmt
+import com.github.javaparser.ast.stmt.LabeledStmt
+import com.github.javaparser.ast.stmt.ReturnStmt
+import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.stmt.WhileStmt
+import org.ucombinator.jade.util.Log
 
+/** Removes assignments and declarations whose values are not subsequently used. */
 object Elimination {
-  val liveInStates = mutableMapOf<Statement, Set<String>>()
-  val liveOutStates = mutableMapOf<Statement, Set<String>>()
+  private val log = Log {}
 
-  fun make(statement: BlockStmt): BlockStmt {
-    predecessors.clear()
-    successors.clear()
-    buildGraph(statement)
-    // println(predecessors)
-    backwardAnalyse(statement)
-    val res = removeUneeded(statement)
-    return removeEmptyStmt(res)
-  }
+  /**
+   * A statement-level control-flow graph.
+   *
+   * The collections are independent, read-only snapshots. Their statement nodes belong to the
+   * source AST and should not be mutated while the graph is in use. [entry] is null when the source
+   * block is empty.
+   */
   data class DataflowGraph(
-    val entry: Statement,
+    val entry: Statement?,
     val predecessors: Map<Statement, Set<Statement>>,
     val successors: Map<Statement, Set<Statement>>,
-    val nodes: Set<Statement>
+    val nodes: Set<Statement>,
   )
-  val successors = mutableMapOf<Statement, MutableSet<Statement>>()
-  val predecessors = mutableMapOf<Statement, MutableSet<Statement>>()
-  val nodes = mutableSetOf<Statement>()
 
-  fun buildGraph(statement: BlockStmt): DataflowGraph {
-    build(statement, null)
-    return DataflowGraph(statement.statements[0], predecessors, successors, nodes)
+  /** Liveness at the entry and exit of every statement in a [DataflowGraph]. */
+  data class LivenessResult(
+    val liveIn: Map<Statement, Set<String>>,
+    val liveOut: Map<Statement, Set<String>>,
+  )
+
+  /** Builds a graph, computes liveness, and removes dead stores from a clone of [block]. */
+  fun make(block: BlockStmt): BlockStmt {
+    val graph = buildGraph(block)
+    val liveness = analyzeLiveness(graph)
+    return prune(block, liveness)
   }
-//
-fun build(statement: BlockStmt, exit: Statement?) {
-//    statement.walk { stmt -> println("walking.. stmt is $stmt") }
-  val statements = statement.statements
-  for (i in statements.indices) {
-    val curr = statements[i]
-//      println("processing $curr children is:")
-//      println(curr.walk { node -> println("within curr, node is $node") })
-    val next =
-      if (i + 1 < statements.size) {
-        statements[i + 1]
-      } else {
-        exit
-      }
-    when (curr) {
-      is LabeledStmt -> { // these are the targets
-        val inner = curr.statement
-        edge(curr, inner)
-//          println("type of labelled statement is ${curr.statement.javaClass}")
-        if (inner is WhileStmt) {
-          val whileStmt = inner as WhileStmt
-          val body = whileStmt.body
-          if (body is BlockStmt && body.statements.isNonEmpty) {
-            edge(inner, body.statements[0])
-            build(body, curr) // loops back
-          }
-          if (next != null) {
-            edge(curr, next)
-          }
-        } else if (inner is BlockStmt) {
-          if (inner.statements.isNonEmpty) {
-            edge(inner, inner.statements[0])
-            build(inner, next)
-          } else if (next != null) {
-            edge(curr, next)
-          }
 
-        }
+  /** Builds an independent control-flow graph for [block]. */
+  fun buildGraph(block: BlockStmt): DataflowGraph = GraphBuilder().build(block)
 
-      }
-      is WhileStmt -> {
-        val body = curr.body
-        if (body is BlockStmt && body.statements.isNonEmpty) {
-          edge(curr, body.statements[0])
-          build(body, curr) // loops back
-        }
-        if (next != null) {
-          edge(curr, next)
-        }
-      }
-      is BlockStmt -> {
-        if (curr.statements.isNotEmpty()) {
-          edge(curr, curr.statements[0])
-          build(curr, next)
-        } else if (next != null) {
-          edge(curr, next)
-        }
+  /** Computes liveness to a fixed point without mutating [graph]. */
+  fun analyzeLiveness(graph: DataflowGraph): LivenessResult {
+    val liveIn = graph.nodes.associateWith { emptySet<String>() }.toMutableMap()
+    val liveOut = graph.nodes.associateWith { emptySet<String>() }.toMutableMap()
+    val workList = ArrayDeque<Statement>()
+    val queued = mutableSetOf<Statement>()
 
-      }
-
-      else -> if (next != null) {
-        edge(curr, next)
-      }
-    }
-  }
-}
-
-  fun backwardAnalyse(statement: BlockStmt) {
-    val statements = statement.statements
-    if (statement.isEmpty) {
-      return
-    }
-    val workList: ArrayDeque<Statement> = ArrayDeque()
-    statements.forEach {
-      liveInStates[it] = mutableSetOf()
-      liveOutStates[it] = mutableSetOf()
+    graph.nodes.forEach {
       workList.add(it)
-    } // initialize
-    while (!workList.isEmpty()) {
-      // backwards traversal, from last stmt
-      val stmt = workList.removeLast()
-      // println("processing $stmt")
+      queued.add(it)
+    }
 
-      when (stmt) {
-        is LabeledStmt -> {
-          when (val inner = stmt.statement) {
-            is BlockStmt -> backwardAnalyse(inner)
-            is WhileStmt -> {
-              if (inner.body is BlockStmt) {
-                val innerBlk = inner.body as BlockStmt
-                backwardAnalyse(innerBlk)
-              }
-            }
+    while (workList.isNotEmpty()) {
+      val current = workList.removeLast()
+      queued.remove(current)
+      log.debug { "analyzeLiveness: processing ${current}" }
+
+      val outgoing = graph.successors
+        .getValue(current)
+        .flatMapTo(mutableSetOf()) { liveIn.getValue(it) }
+      liveOut[current] = outgoing
+
+      val incoming = computeLiveIn(current, outgoing)
+      if (incoming != liveIn[current]) {
+        liveIn[current] = incoming
+        graph.predecessors.getValue(current).forEach {
+          if (queued.add(it)) {
+            workList.add(it)
           }
         }
-
       }
-      val successor = successors[stmt] ?: emptySet()
-//      println("successor of $stmt is $successor")
-      val outgoing =
-        if (successor.isEmpty()) {
-          mutableSetOf()
-        } else {
-          for (s in successor) {
-            if (s is BlockStmt) {
-              // recursively process block (backwards)
-              backwardAnalyse(s)
-            }
-          }
-          // gather live vars from successors, indicates we still need them
-          successor.map { liveInStates[it] ?: emptySet() }.reduce{ acc, set -> (acc + set).toMutableSet()}
-        }
-//      println("setting liveout as $outgoing")
-      liveOutStates[stmt] = outgoing // liveIn of successors is liveOut of curr stmt
-//      println("+++ now with $stmt +++")
-      val newIn = backTransfer(stmt, outgoing)
-//      println("newin has $newIn")
+    }
 
-      if (newIn != liveInStates[stmt]) {
-        // if updated, reprocess predecessor since values required has changed
-        liveInStates[stmt] = newIn.toMutableSet()
-        predecessors[stmt]?.forEach {
-            v ->
-          // println("predecessor is $v !!!!!")
-          if (!workList.contains(v)) {
-            // println("adding $v to the list!!!!!")
-            workList.add(v)
+    return LivenessResult(
+      liveIn = liveIn.mapValues { (_, variables) -> variables.toSet() },
+      liveOut = liveOut.mapValues { (_, variables) -> variables.toSet() },
+    )
+  }
+
+  /** Builds one control-flow graph using mutable state scoped to that build. */
+  private class GraphBuilder {
+    private val predecessors = mutableMapOf<Statement, MutableSet<Statement>>()
+    private val successors = mutableMapOf<Statement, MutableSet<Statement>>()
+    private val nodes = linkedSetOf<Statement>()
+
+    fun build(block: BlockStmt): DataflowGraph {
+      buildBlock(block, null)
+      return DataflowGraph(
+        entry = block.statements.firstOrNull(),
+        predecessors = snapshot(predecessors),
+        successors = snapshot(successors),
+        nodes = nodes.toSet(),
+      )
+    }
+
+    private fun snapshot(edges: Map<Statement, Set<Statement>>): Map<Statement, Set<Statement>> =
+      nodes.associateWith { edges[it]?.toSet() ?: emptySet() }
+
+    private fun addEdge(source: Statement, target: Statement) {
+      successors.getOrPut(source) { mutableSetOf() }.add(target)
+      predecessors.getOrPut(target) { mutableSetOf() }.add(source)
+      nodes.add(source)
+      nodes.add(target)
+    }
+
+    private fun buildLabeledStatement(current: LabeledStmt, next: Statement?) {
+      val innerStatement = current.statement
+      addEdge(current, innerStatement)
+      log.debug { "type of labelled inner statement is ${innerStatement.javaClass}" }
+
+      when (innerStatement) {
+        is WhileStmt -> buildWhileStatement(innerStatement, next, current)
+        is BlockStmt -> buildNestedBlock(innerStatement, next, current)
+      }
+    }
+
+    private fun buildWhileStatement(current: WhileStmt, next: Statement?, loopTarget: Statement = current) {
+      val body = current.body
+      if (body is BlockStmt && body.statements.isNonEmpty) {
+        addEdge(current, body.statements[0])
+        buildBlock(body, loopTarget)
+      }
+      if (next != null) {
+        addEdge(loopTarget, next)
+      }
+    }
+
+    private fun buildNestedBlock(block: BlockStmt, next: Statement?, emptySource: Statement = block) {
+      if (block.statements.isNonEmpty) {
+        addEdge(block, block.statements[0])
+        buildBlock(block, next)
+      } else if (next != null) {
+        addEdge(emptySource, next)
+      }
+    }
+
+    private fun buildBlock(block: BlockStmt, exit: Statement?) {
+      val statements = block.statements
+      for ((current, next) in (statements + exit).zipWithNext()) {
+        if (current == null) {
+          continue
+        }
+
+        nodes.add(current)
+        when (current) {
+          is LabeledStmt -> buildLabeledStatement(current, next)
+          is WhileStmt -> buildWhileStatement(current, next)
+          is BlockStmt -> buildNestedBlock(current, next)
+          else -> if (next != null) {
+            addEdge(current, next)
           }
         }
       }
     }
   }
-  private fun edge(source: Statement, target: Statement) {
-    successors.getOrPut(source) { mutableSetOf()}.add(target)
-    predecessors.getOrPut(target) { mutableSetOf()}.add(source)
-    nodes.add(source)
-    nodes.add(target)
-  }
 
-  fun backTransfer(statement: Statement, state: Set<String>): Set<String> {
-    val res = state.toMutableSet() // live vars going out to successors
+  private fun computeLiveIn(statement: Statement, liveOut: Set<String>): Set<String> {
+    val liveVariables = liveOut.toMutableSet()
     when (statement) {
-      is ExpressionStmt -> {
-        when (val expr = statement.expression) {
-          is AssignExpr -> {
-            val target = expr.target
-            if (target is NameExpr && res.contains(target.nameAsString)) {
-//              res.remove(target.nameAsString)
-              // vars used on rhs are live
-              res.addAll(processVars(expr.value))
-            }
-          }
-          is VariableDeclarationExpr -> {
-            for (v in expr.variables) {
-              res.remove(v.nameAsString)
-              val initialVal = v.initializer.orElse(null)
-              if (initialVal != null) {
-                // add those vars assigned to target
-                res.addAll(processVars(initialVal))
-              }
-            }
-          }
-          else -> res.addAll(processVars(expr))
-        }
+      is ExpressionStmt -> applyExpressionTransfer(statement, liveVariables)
+      is ReturnStmt -> statement.expression.ifPresent {
+        liveVariables.addAll(collectReferencedNames(it))
       }
-//      is LabeledStmt -> return backTransfer(statement.statement, res)
-//      is BlockStmt -> return res
-      is ReturnStmt -> statement.expression.ifPresent { res.addAll(processVars(it)) }
-      is WhileStmt -> res.addAll(processVars(statement.condition))
-      is IfStmt -> {
-        // println("in a if condition with $statement")
-        res.addAll(processVars(statement.condition))
-      }
+      is WhileStmt -> liveVariables.addAll(collectReferencedNames(statement.condition))
+      is IfStmt -> liveVariables.addAll(collectReferencedNames(statement.condition))
     }
-    return res // liveIn for this, = liveOut of predecessor
+    return liveVariables
   }
-  fun processVars(expression: Expression): Set<String> {
-    // println("===== processing $expression =====")
-    val vars = mutableSetOf<String>()
-    expression.walk { node ->
-      if (node is NameExpr) {
-        val isQualified =
-          node.parentNode.map {
-            it is FieldAccessExpr && it.name == node
-          }.orElse(false)
-        if (!isQualified) {
-          // println("=== adding $node ===")
-          vars.add(node.nameAsString)
-        }
-      }
-    }
-    return vars
-  }
-  fun removeUneeded(statement: BlockStmt): BlockStmt {
-    val cloned = statement.clone()
-    val toRemove = mutableListOf<Statement>()
-//    println("liveout is $liveOutStates")
-    removal(statement, cloned, toRemove)
-    toRemove.forEach { it.replace(EmptyStmt()) }
-    return cloned
-  }
-  fun removal(original: Node, cloned:Node, set: MutableList<Statement>) {
-    if (original is Statement && cloned is Statement) {
-      val liveOut = liveOutStates[original]?: emptySet()
-//      println("processing $original with $cloned")
-//      println("liveout has ${liveOutStates[original]}")
-//      cloned.walk(ExpressionStmt::class.java) { node ->
-        if (cloned is ExpressionStmt) {
-          val expr = cloned.expression
-          when (expr) {
-            is AssignExpr -> {
-              val target = expr.target
-              if (target is NameExpr && !liveOut.contains(target.nameAsString)) {
-                // target is not needed in future statements, can remove this assignexpr
-                set.add(cloned)
-              }
-            }
-            is VariableDeclarationExpr -> {
-              val vars = expr.variables
-              // if any var on rhs is needed, don't delete this declaration
-              val varUsage = vars.any{ v ->
-                liveOut.contains(v.nameAsString)}
-              if (!varUsage) {
-                set.add(cloned)
-              }
-            }
-          }
-        }
-//      }
-      for (i in original.childNodes.indices) {
-        if (i < cloned.childNodes.size) {
-          removal(original.childNodes[i], cloned.childNodes[i], set)
-        }
-      }
-    }
-  }
-//  fun removeUneeded(statement: BlockStmt): BlockStmt {
-//    val toRemove = mutableSetOf<Statement>()
-//    val statements = statement.clone().statements
-//    statements.forEachIndexed { idx, stmt ->
-//      val liveOut = liveOutStates[statement.statements[idx]] ?: emptySet()
-//      stmt.walk {node ->
-//        if (node is ExpressionStmt) {
-//          val expr = node.expression
-//          when (expr) {
-//            is AssignExpr -> {
-//              val target = expr.target
-////              println("processing ${target}")
-////              println("liveout has: ${liveOut}")
-//              if (target is NameExpr && !liveOut.contains(target.nameAsString)) {
-//                toRemove.add(node)
-//              }
-//            }
-//            is VariableDeclarationExpr -> {
-//              val vars = expr.variables
-//              val varUsage = vars.any{ v -> println(liveOut.contains(v.nameAsString))
-//                println("processing $v with $liveOut")
-//                liveOut.contains(v.nameAsString)}
-//              if (!varUsage) {
-//                toRemove.add(node)
-//              }
-//            }
-//          }
-//        }
-//      }
-//
-//
-//    }
-//    return BlockStmt(statements)
-//  }
-//  fun removeUneeded(statement: BlockStmt): BlockStmt {
-//    val statements = statement.clone().statements
-//    statements.forEachIndexed { idx, stmt ->
-//      val liveOut = liveOutStates[statement.statements[idx]] ?: emptySet()
-//      stmt.walk {node ->
-//        if (node is ExpressionStmt) {
-//          val expr = node.expression
-//          when (expr) {
-//            is AssignExpr -> {
-//              val target = expr.target
-////              println("processing ${target}")
-////              println("liveout has: ${liveOut}")
-//              if (target is NameExpr && !liveOut.contains(target.nameAsString)) {
-//                node.replace(EmptyStmt())
-//              }
-//            }
-//            is VariableDeclarationExpr -> {
-//              val vars = expr.variables
-//              val varUsage = vars.any{ v -> println(liveOut.contains(v.nameAsString))
-//                println("processing $v with $liveOut")
-//                liveOut.contains(v.nameAsString)}
-//              if (!varUsage) {
-//                node.replace(EmptyStmt())
-//              }
-//            }
-//          }
-//        }
-//      }
-//
-//
-//    }
-//    return BlockStmt(statements)
-//  }
 
-  fun removeEmptyStmt(statement: BlockStmt): BlockStmt {
-    val statements = statement.clone().statements
-    val emptyStmts = mutableListOf<EmptyStmt>()
-    statements.forEach { stmt ->
-      stmt.walk { node ->
+  private fun applyExpressionTransfer(statement: ExpressionStmt, liveVariables: MutableSet<String>) {
+    when (val expression = statement.expression) {
+      is AssignExpr -> {
+        if (isAssignmentTargetLive(expression, liveVariables)) {
+          liveVariables.addAll(collectReferencedNames(expression.value))
+        }
+      }
+      is VariableDeclarationExpr -> {
+        for (variable in expression.variables) {
+          liveVariables.remove(variable.nameAsString)
+          variable.initializer.ifPresent {
+            liveVariables.addAll(collectReferencedNames(it))
+          }
+        }
+      }
+      else -> liveVariables.addAll(collectReferencedNames(expression))
+    }
+  }
+
+  private fun isAssignmentTargetLive(expression: AssignExpr, liveVariables: Set<String>): Boolean {
+    val target = expression.target
+    return target is NameExpr && target.nameAsString in liveVariables
+  }
+
+  private fun collectReferencedNames(expression: Expression): Set<String> {
+    val variables = mutableSetOf<String>()
+    expression.walk {
+      if (isVariableReference(it)) {
+        variables.add((it as NameExpr).nameAsString)
+      }
+    }
+    return variables
+  }
+
+  private fun isVariableReference(node: Node): Boolean =
+    node is NameExpr &&
+      !node.parentNode.map { it is FieldAccessExpr && it.name == node }.orElse(false)
+
+  private fun shouldPruneAssignment(expression: AssignExpr, liveOut: Set<String>): Boolean {
+    val target = expression.target
+    return target is NameExpr && target.nameAsString !in liveOut
+  }
+
+  private fun shouldPruneDeclaration(expression: VariableDeclarationExpr, liveOut: Set<String>): Boolean =
+    expression.variables.all { it.nameAsString !in liveOut }
+
+  private fun findNodesToPrune(
+    current: Node,
+    cloned: Node,
+    liveOutStates: Map<Statement, Set<String>>,
+  ): List<Statement> {
+    if (current !is Statement || cloned !is Statement) {
+      return emptyList()
+    }
+
+    val liveOut = liveOutStates[current] ?: emptySet()
+    val shouldPruneCurrent = (cloned as? ExpressionStmt)?.expression?.let {
+      when (it) {
+        is AssignExpr -> shouldPruneAssignment(it, liveOut)
+        is VariableDeclarationExpr -> shouldPruneDeclaration(it, liveOut)
+        else -> false
+      }
+    } ?: false
+
+    val nodesToPrune = current.childNodes
+      .zip(cloned.childNodes)
+      .flatMapTo(mutableListOf()) { (currentChild, clonedChild) ->
+        findNodesToPrune(currentChild, clonedChild, liveOutStates)
+      }
+
+    if (shouldPruneCurrent) {
+      nodesToPrune.add(cloned)
+    }
+    return nodesToPrune
+  }
+
+  private fun prune(block: BlockStmt, liveness: LivenessResult): BlockStmt {
+    val cloned = block.clone()
+    findNodesToPrune(block, cloned, liveness.liveOut).forEach { it.replace(EmptyStmt()) }
+
+    val statements = cloned.clone().statements
+    val emptyStatements = mutableListOf<EmptyStmt>()
+    statements.forEach { statement ->
+      statement.walk { node ->
         if (node is EmptyStmt) {
-          emptyStmts.add(node)
+          emptyStatements.add(node)
         }
       }
     }
-    emptyStmts.forEach { it.remove() }
+    emptyStatements.forEach { it.remove() }
     return BlockStmt(statements)
   }
 }

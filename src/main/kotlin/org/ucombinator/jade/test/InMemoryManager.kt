@@ -45,7 +45,7 @@ class InMemoryFileManager(
     fileManager: StandardJavaFileManager
 ) : ForwardingJavaFileManager<StandardJavaFileManager>(fileManager) {
 
-    lateinit var bytecodeFile: BytecodeJavaFileObject
+    val bytecodeFiles = HashMap<String, BytecodeJavaFileObject>()
 
     override fun getJavaFileForOutput(
         location: JavaFileManager.Location,
@@ -53,7 +53,8 @@ class InMemoryFileManager(
         kind: JavaFileObject.Kind,
         sibling: FileObject?
     ): JavaFileObject {
-        bytecodeFile = BytecodeJavaFileObject(className)
+        val bytecodeFile = BytecodeJavaFileObject(className)
+        bytecodeFiles[className] = bytecodeFile
         return bytecodeFile
     }
 }

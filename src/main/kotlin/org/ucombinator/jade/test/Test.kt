@@ -12,14 +12,11 @@ import java.io.StringWriter
 object Test {
     fun main () {
         //TODO: Integrate with the testcases written by Leslie
-        val dummyClass = File("./src/main/kotlin/org/ucombinator/jade/test/simpleTest1.class")
-        // The output directory is not used since the files are not saved to disk during testing
-        // So a place holder is used here
-        val dummyDir = File("dummy")
+        val dummyClass = File("./src/main/kotlin/org/ucombinator/jade/test/Dummy.class")
         val initialBytes = dummyClass.readBytes()
 
         val files: List<File> = listOf(dummyClass)
-        val result = org.ucombinator.jade.decompile.Decompile.main(files, dummyDir, false)
+        val result = org.ucombinator.jade.decompile.Decompile.decompile(files)
 
         val cu = mutableListOf<StringJavaFileObject>()
 

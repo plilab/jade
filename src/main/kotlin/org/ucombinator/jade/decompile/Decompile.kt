@@ -113,7 +113,7 @@ object Decompile {
             log.debug { "method: $callable" }
           }
         } else {
-          TODO()
+          // TODO()
         }
       }
 

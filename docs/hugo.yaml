@@ -1,0 +1,135 @@
+baseURL: https://plilab.github.io/jade/
+languageCode: en-us
+title: Jade
+
+disableKinds:
+  - taxonomy
+  - term
+
+outputFormats:
+  Search:
+    mediaType: application/json
+    baseName: search-index
+    isPlainText: true
+    notAlternative: true
+
+outputs:
+  home:
+    - html
+    - search
+  section:
+    - html
+
+markup:
+  goldmark:
+    parser:
+      attribute:
+        block: true
+    renderHooks:
+      image:
+        useEmbedded: fallback
+      link:
+        useEmbedded: always
+    renderer:
+      unsafe: true
+  highlight:
+    noClasses: false
+
+module:
+  mounts:
+    - source: .
+      target: content
+      includeFiles:
+        - '*.md'
+        - '**/*.md'
+    - source: _layouts
+      target: layouts
+    - source: _static
+      target: static
+    - source: assets
+      target: static/assets
+    - source: ../build/dokka/html
+      target: static/api
+
+params:
+  description: A Java decompiler that aims for high reliability through extensive testing.
+  repository: https://github.com/plilab/jade
+
+menus:
+  main:
+    - identifier: home
+      name: Home
+      pageRef: /
+      weight: 10
+    - identifier: user-guide
+      name: User Guide
+      weight: 20
+    - name: Overview
+      identifier: user-guide-overview
+      parent: user-guide
+      pageRef: /user-guide/overview
+      weight: 10
+    - name: Commands
+      identifier: user-guide-commands
+      parent: user-guide
+      pageRef: /user-guide/commands
+      weight: 20
+    - identifier: developer-guide
+      name: Developer Guide
+      weight: 30
+    - name: Overview
+      identifier: developer-guide-overview
+      parent: developer-guide
+      pageRef: /developer-guide/overview
+      weight: 10
+    - name: Algorithms
+      identifier: developer-guide-algorithms
+      parent: developer-guide
+      pageRef: /developer-guide/algorithms
+      weight: 20
+    - name: Commands
+      identifier: developer-guide-commands
+      parent: developer-guide
+      pageRef: /developer-guide/commands
+      weight: 30
+    - name: Style Guide
+      identifier: developer-guide-style
+      parent: developer-guide
+      pageRef: /developer-guide/style
+      weight: 40
+    - identifier: testing
+      name: Testing
+      weight: 40
+    - name: Overview
+      identifier: testing-overview
+      parent: testing
+      pageRef: /testing/overview
+      weight: 10
+    - name: Maven Development
+      identifier: testing-maven
+      parent: testing
+      pageRef: /testing/maven
+      weight: 20
+    - identifier: internal
+      name: Internal
+      weight: 50
+    - name: Roadmap
+      identifier: internal-roadmap
+      parent: internal
+      pageRef: /internal/roadmap
+      weight: 10
+    - name: Notes
+      identifier: internal-notes
+      parent: internal
+      pageRef: /internal/notes
+      weight: 20
+    - name: Links
+      identifier: internal-links
+      parent: internal
+      pageRef: /internal/links
+      weight: 30
+    - name: Archive
+      identifier: internal-archive
+      parent: internal
+      pageRef: /internal/archive
+      weight: 40

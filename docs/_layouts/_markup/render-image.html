@@ -1,0 +1,5 @@
+{{- $destination := .Destination -}}
+{{- if findRE `^(?:\.\./)*assets/` $destination -}}
+  {{- $destination = replaceRE `^(?:\.\./)*assets/` "assets/" $destination | relURL -}}
+{{- end -}}
+<img src="{{ $destination | safeURL }}" alt="{{ .PlainText }}"{{ with .Title }} title="{{ . }}"{{ end }} loading="lazy">

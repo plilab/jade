@@ -1,0 +1,9 @@
+{{ define "main" }}
+  <article>
+    {{ .Content }}
+  </article>
+  <nav class="page-nav" aria-label="Adjacent pages">
+    {{ with .PrevInSection }}<a href="{{ .RelPermalink }}">← {{ partial "page-title.html" . }}</a>{{ end }}
+    {{ with .NextInSection }}<a href="{{ .RelPermalink }}">{{ partial "page-title.html" . }} →</a>{{ end }}
+  </nav>
+{{ end }}

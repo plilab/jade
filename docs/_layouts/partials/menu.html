@@ -1,0 +1,14 @@
+<ul class="nav-list">
+  {{- range .entries }}
+    <li>
+      {{- if .HasChildren }}
+        <details open>
+          <summary>{{ .Name }}</summary>
+          {{ partial "menu.html" (dict "page" $.page "entries" .Children) }}
+        </details>
+      {{- else }}
+        <a href="{{ .URL }}"{{ if $.page.IsMenuCurrent "main" . }} aria-current="page"{{ end }}>{{ .Name }}</a>
+      {{- end }}
+    </li>
+  {{- end }}
+</ul>

@@ -22,36 +22,29 @@ Fix linter warnings:
 
 ## Building and Deploying the Documentation Site
 
-Documentation is generated in from 2 sources:
+Documentation is generated from two sources:
 
-1. Markdown files in `docs/` are used to generate static HTML using [MkDocs](https://www.mkdocs.org/).
+1. Markdown files in `docs/` are used to generate static HTML using [Hugo](https://gohugo.io/).
 2. Kotlin API documentation is generated using [Dokka](https://kotlinlang.org/docs/dokka-introduction.html).
 
-A static site can be generated from both sources (a Python installation is required).
-To build the site:
+A pinned Hugo binary is downloaded and cached by Gradle, so no system-wide Hugo
+or Python installation is required. To build the complete site:
 
 ```sh
-# Create a Python environment (optional)
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install site dependencies
-python3 -m pip install -r docs/requirements.txt
-
-./scripts/build_docs.sh
+./gradlew hugoBuild
 ```
 
-The generated site is written to `site/`. Serve it locally to view both the
-project documentation and API reference:
+The generated site is written to `site/`. To preview the project documentation
+and API reference with live reload:
 
 ```sh
-./scripts/serve_docs.sh
+./gradlew hugoServer
 ```
 
-Then open <http://localhost:8000>. The API reference is available at
-<http://localhost:8000/api/>.
+Then open <http://localhost:1313>. The API reference is available at
+<http://localhost:1313/api/>.
 
-GitHub Actions uses the same script before publishing the site to GitHub Pages.
+GitHub Actions uses the same Gradle task before publishing the site to GitHub Pages.
 
 ## Gradle-related Commands
 

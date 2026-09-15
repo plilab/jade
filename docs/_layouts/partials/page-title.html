@@ -1,0 +1,5 @@
+{{- $title := .Title -}}
+{{- if not $title -}}
+  {{- $title = replaceRE `(?s)^#\s+([^\r\n]+).*$` "$1" .RawContent -}}
+{{- end -}}
+{{- return $title -}}

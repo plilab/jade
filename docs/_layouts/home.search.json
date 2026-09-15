@@ -1,0 +1,9 @@
+{{- $pages := slice -}}
+{{- range site.RegularPages -}}
+  {{- $pages = $pages | append (dict
+    "title" (partial "page-title.html" .)
+    "url" .RelPermalink
+    "text" .Plain
+  ) -}}
+{{- end -}}
+{{- $pages | jsonify -}}

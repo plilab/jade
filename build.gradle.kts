@@ -18,6 +18,7 @@ plugins {
   application // Provides "./gradlew installDist" then "./build/install/jade/bin/jade"
 
   // Documentation
+  id("io.github.fstaudt.hugo") version "0.12.0" // Adds: ./gradlew hugo{Build,Server}
   id("org.jetbrains.dokka") version "1.9.20" // Adds: ./gradlew dokka{Gfm,Html,Javadoc,Jekyll}
 
   // Linting and Code Formatting
@@ -200,6 +201,24 @@ tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
       includes.from("dokka/module.md")
     }
   }
+}
+
+hugo {
+  version = "0.152.2"
+  sourceDirectory = "docs"
+}
+
+tasks.hugoBuild {
+  dependsOn("dokkaHtml")
+  inputs.dir(layout.buildDirectory.dir("dokka/html"))
+  outputDirectory = rootProject.file("site")
+  args = "--minify --panicOnWarning"
+}
+
+tasks.hugoServer {
+  dependsOn("dokkaHtml")
+  baseURL = "http://localhost:1313/"
+  args = "--disableFastRender --renderToMemory"
 }
 
 listOf("runKtlintCheckOverMainSourceSet", "runKtlintCheckOverTestSourceSet").forEach { name ->

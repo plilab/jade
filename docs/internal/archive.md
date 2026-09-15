@@ -1,8 +1,8 @@
 # Archive
 
-!!! warning
-    This archive contains content that I don't know how to migrate.
-    A lot of it is broken / seems outdated.
+> [!WARNING]
+> This archive contains content that I don't know how to migrate.
+> A lot of it is broken / seems outdated.
 
 ## `jade maven` documentation
 

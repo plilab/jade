@@ -27,16 +27,8 @@ jobs:
           distribution: temurin
           java-version: 19
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Install documentation dependencies
-        run: python -m pip install -r docs/requirements.txt
-
       - name: Build documentation
-        run: ./scripts/build_docs.sh
+        run: ./gradlew hugoBuild --no-daemon
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

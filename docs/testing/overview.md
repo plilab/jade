@@ -36,17 +36,17 @@ javac -classpath ".:bar.jar:baz.jar" Foo.java -s tmp
 jade diff Foo.class tmp/Foo.class
 ```
 
-!!! note
-	Alternatively, the `.class` files can also be compared using `javap -p -s` with `diff`:
-
-	```sh
-	javap -p -s Foo.class > original.txt
-	javap -p -s tmp/Foo.class > recompiled.txt
-	diff original.txt recompiled.txt
-
-	# Piped version; No temporary files
-	diff <(javap -p -s Foo.class) <(javap -p -s tmp/Foo.class)
-	```
+> [!NOTE]
+> Alternatively, the `.class` files can also be compared using `javap -p -s` with `diff`:
+>
+> ```sh
+> javap -p -s Foo.class > original.txt
+> javap -p -s tmp/Foo.class > recompiled.txt
+> diff original.txt recompiled.txt
+>
+> # Piped version; No temporary files
+> diff <(javap -p -s Foo.class) <(javap -p -s tmp/Foo.class)
+> ```
 
 ## Obtaining test data from Maven
 

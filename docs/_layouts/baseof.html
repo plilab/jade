@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="{{ site.Language.LanguageCode }}">
+  {{- $pageTitle := partial "page-title.html" . -}}
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ site.Params.description }}">
+    <meta name="color-scheme" content="light dark">
+    <title>{{ if not .IsHome }}{{ $pageTitle }} · {{ end }}{{ site.Title }}</title>
+    <link rel="canonical" href="{{ .Permalink }}">
+    <link rel="stylesheet" href="{{ "css/site.css" | relURL }}">
+    <script>
+      const savedTheme = localStorage.getItem("jade-docs-theme");
+      if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      <a class="brand" href="{{ site.Home.RelPermalink }}">Jade</a>
+      <nav class="header-actions" aria-label="Site actions">
+        <a href="{{ "api/" | relURL }}">API</a>
+        <a href="{{ site.Params.repository }}">GitHub</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle color theme">◐</button>
+      </nav>
+    </header>
+
+    <div class="site-grid">
+      <aside class="sidebar" aria-label="Documentation navigation">
+        <label class="search-label" for="docs-search">Search documentation</label>
+        <input id="docs-search" class="search" type="search" placeholder="Search" autocomplete="off">
+        <div id="search-results" class="search-results" data-index-url="{{ "search-index.json" | relURL }}" hidden></div>
+        <nav id="docs-navigation">
+          {{ partial "menu.html" (dict "page" . "entries" site.Menus.main) }}
+        </nav>
+      </aside>
+
+      <main class="content">
+        {{ block "main" . }}{{ end }}
+      </main>
+
+      <aside class="toc" aria-label="On this page">
+        {{ if and (not .IsHome) .TableOfContents }}
+          <p>On this page</p>
+          {{ .TableOfContents }}
+        {{ end }}
+      </aside>
+    </div>
+
+    <script src="{{ "js/site.js" | relURL }}"></script>
+  </body>
+</html>

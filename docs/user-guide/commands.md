@@ -49,8 +49,8 @@ jade decompile <source_path>... <output_directory>
 
 ### `jade compile`
 
-!!! warning
-    This is currently broken. Consider using `javac` instead.
+> [!WARNING]
+> This is currently broken. Consider using `javac` instead.
 
 Compile `.java` files into `.class` files:
 
@@ -138,35 +138,35 @@ By default, `remote` is set to <https://maven-central.storage-download.googleapi
 
 Converts an index to JSON.
 
-!!! warning
-    This seems to be broken.
+> [!WARNING]
+> This seems to be broken.
 
 ```sh
 jade maven index-to-json ../repo/index | zstd --stdout >../repo/index/nexus-maven-repository-index.jsonl.zst
 ```
 
-!!! todo
-    Migrate docs from [archive](../internal/archive.md).
+> [!IMPORTANT]
+> Migrate docs from [archive](../internal/archive.md).
 
 ### `jade maven versions`
 
-!!! todo
-    Migrate docs from [archive](../internal/archive.md).
+> [!IMPORTANT]
+> Migrate docs from [archive](../internal/archive.md).
 
 #### `jade maven dependencies`
 
-!!! todo
-    Migrate docs from [archive](../internal/archive.md).
+> [!IMPORTANT]
+> Migrate docs from [archive](../internal/archive.md).
 
 #### `jade maven download`
 
-!!! todo
-    Migrate docs from [archive](../internal/archive.md).
+> [!IMPORTANT]
+> Migrate docs from [archive](../internal/archive.md).
 
 #### `jade maven clear-locks`
 
-!!! todo
-    Migrate docs from [archive](../internal/archive.md).
+> [!IMPORTANT]
+> Migrate docs from [archive](../internal/archive.md).
 
 ### `jade about`
 

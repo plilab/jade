@@ -20,6 +20,7 @@ playground/output/
 logs/
 
 # Artifacts for GitHub Pages docs
+docs/.hugo_build.lock
 site/
 
 # Devcontainer directory

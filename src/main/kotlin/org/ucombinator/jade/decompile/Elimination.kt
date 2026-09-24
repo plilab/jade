@@ -187,32 +187,32 @@ object Elimination {
   }
 
   /** Whether evaluating [expression] can be removed without losing side effects or exceptions. */
-  private fun canDiscard(expression: Expression): Boolean =
+  private fun hasSideEffect(expression: Expression): Boolean =
     when (expression) {
-      is LiteralExpr -> true
-      is NameExpr -> true
-      is ThisExpr -> true
-      is SuperExpr -> true
-      is EnclosedExpr -> canDiscard(expression.inner)
+      is LiteralExpr -> false
+      is NameExpr -> false
+      is ThisExpr -> false
+      is SuperExpr -> false
+      is EnclosedExpr -> hasSideEffect(expression.inner)
       // Prefix/Postfix operators will mutate the operand, so they cannot be discarded.
       is UnaryExpr -> when (expression.operator) {
         UnaryExpr.Operator.PREFIX_INCREMENT,
         UnaryExpr.Operator.PREFIX_DECREMENT,
         UnaryExpr.Operator.POSTFIX_INCREMENT,
-        UnaryExpr.Operator.POSTFIX_DECREMENT -> false
-        else -> canDiscard(expression.expression)
+        UnaryExpr.Operator.POSTFIX_DECREMENT -> true
+        else -> hasSideEffect(expression.expression)
       }
       // Division/Remainder can throw exceptions, so they cannot be discarded.
       is BinaryExpr -> when(expression.operator) {
         BinaryExpr.Operator.DIVIDE,
-        BinaryExpr.Operator.REMAINDER -> false
-        else -> canDiscard(expression.left) && canDiscard(expression.right)
+        BinaryExpr.Operator.REMAINDER -> true
+        else -> hasSideEffect(expression.left) || hasSideEffect(expression.right)
       }
       is ConditionalExpr ->
-        canDiscard(expression.condition) &&
-          canDiscard(expression.thenExpr) &&
-          canDiscard(expression.elseExpr)
-      else -> false
+        hasSideEffect(expression.condition) ||
+          hasSideEffect(expression.thenExpr) ||
+          hasSideEffect(expression.elseExpr)
+      else -> true
     }
 
   private fun applyExpressionTransfer(statement: ExpressionStmt, liveVariables: MutableSet<String>) {
@@ -257,13 +257,13 @@ object Elimination {
     return target !is NameExpr ||
       target.nameAsString in liveVariables ||
       expression.operator != AssignExpr.Operator.ASSIGN ||
-      !canDiscard(expression.value)
+      hasSideEffect(expression.value)
   }
 
   private fun mustKeepDeclaration(expression: VariableDeclarationExpr, liveVariables: Set<String>): Boolean =
     expression.variables.any { variable ->
       variable.nameAsString in liveVariables ||
-        variable.initializer.map { !canDiscard(it) }.orElse(false)
+        variable.initializer.map { hasSideEffect(it) }.orElse(false)
     }
 
   private fun shouldPruneAssignment(expression: AssignExpr, liveOut: Set<String>): Boolean =

@@ -162,6 +162,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
         TypedBasicInterpreter.copyOperation(insn, value.basicValue),
         Insn(method, insn),
         this.copyOperationPosition,
+        value,
       ),
     )
   }

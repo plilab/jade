@@ -274,7 +274,9 @@ object DecompileStatement {
     val (stmt, pendingOutside) = structuredBlock(cfg.entry)
     assert(pendingOutside.isEmpty())
     val variables = (ssa.insnVars.values.map(Pair<Var, List<Var>>::first) + ssa.phiInputs.keys)
-      .filter { it != Var.Empty } // Filter out empty variables created for non-parameter locals
+      // Copies are internal transfer definitions and render as their source variable.
+      .filter { it != Var.Empty && it !is Var.Copy }
+      .distinctBy { it.name }
 
     fun decompileVarDecl(v: Var): Statement =
     // TODO: express mutability of variables in a better way

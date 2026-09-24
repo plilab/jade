@@ -69,7 +69,15 @@ object RemoveUnusedLabels {
     // is LocalClassDeclarationStmt ->
     // is LocalRecordDeclarationStmt ->
     is ReturnStmt -> node
-    is SwitchStmt -> SwitchStmt(node.selector, NodeList(node.entries.map{ SwitchEntry(it.labels, it.type, NodeList(it.statements.map { keepOnlyLabels(labels, it) }),it.isDefault) }))
+    is SwitchStmt -> SwitchStmt(node.selector, NodeList(node.entries.map {
+      SwitchEntry(
+        it.labels,
+        it.type,
+        NodeList(it.statements.map { statement -> keepOnlyLabels(labels, statement) }),
+        it.isDefault,
+        it.guard.orElse(null),
+      )
+    }))
     // is SynchronizedStmt ->
     is ThrowStmt -> node
     is TryStmt -> TryStmt(BlockStmt(NodeList(keepOnlyLabels(labels, node.tryBlock))), NodeList(node.catchClauses.map { CatchClause(it.parameter, BlockStmt(NodeList(keepOnlyLabels(labels, it.body)))) }), node.finallyBlock.map{BlockStmt(NodeList(keepOnlyLabels(labels,it)))}.orElse(null))

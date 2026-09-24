@@ -18,6 +18,9 @@ object RewriteConstructorCalls {
   fun make(statements: NodeList<Statement>): NodeList<Statement> {
     if (statements.isEmpty()) return statements
 
+    // TODO: Preserve the constructor prologue permitted by Java 25 flexible constructor bodies instead of
+    // moving every explicit super() call to the first statement.
+
     // Build assignment map: variable name -> RHS expression
     val assignMap: Map<String, Expression> = statements
       .filterIsInstance<ExpressionStmt>()

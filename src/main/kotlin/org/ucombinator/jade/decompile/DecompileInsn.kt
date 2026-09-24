@@ -182,14 +182,12 @@ object DecompileInsn {
    * A variable is "this" if it is the receiver parameter of an instance method or a Copy derived
    * from it.
    */
-  private fun isThisVar(v: Var, ssa: StaticSingleAssignment): Boolean = when (v) {
-    is Var.Parameter -> v.isThis
-    is Var.Copy -> ssa.insnVars.values
-      .find { (retVar, _) -> retVar == v }
-      ?.second?.firstOrNull()
-      ?.let { isThisVar(it, ssa) } ?: false
-    else -> false
-  }
+  private fun isThisVar(v: Var): Boolean =
+    when (v) {
+      is Var.Parameter -> v.isThis
+      is Var.Copy -> isThisVar(v.source)
+      else -> false
+    }
 
   /** TODO:doc.
    *
@@ -197,7 +195,11 @@ object DecompileInsn {
    * @return TODO:doc
    */
   fun decompileVar(variable: Var): Expression =
-    if (variable is Var.Parameter && variable.isThis) ThisExpr() else NameExpr(variable.name)
+    when (variable) {
+      is Var.Copy -> decompileVar(variable.source)
+      is Var.Parameter -> if (variable.isThis) ThisExpr() else NameExpr(variable.name)
+      else -> NameExpr(variable.name)
+    }
 
   /** TODO:doc.
    *
@@ -317,7 +319,7 @@ object DecompileInsn {
 
       // Check if this is a constructor call on "this" (super() or this())
       val firstArg = argVars.firstOrNull()
-      if (insn.name == "<init>" && firstArg != null && isThisVar(firstArg, ssa)) {
+      if (insn.name == "<init>" && firstArg != null && isThisVar(firstArg)) {
         // check for <init> and nameExpr var refers to "this"?
         // refers to super call
         //TODO: need to further check target (super class or own constructor)

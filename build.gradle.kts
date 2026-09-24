@@ -23,7 +23,7 @@ plugins {
   // Linting and Code Formatting
   // id("com.ncorti.ktfmt.gradle") version "0.21.0" // Adds: ./gradlew ktfmtCheck (omit because issues errors not warnings)
   id("com.saveourtool.diktat") version "2.0.0" // Adds: ./gradlew diktatCheck
-  id("io.gitlab.arturbosch.detekt") version "1.23.8" // Adds: ./gradlew detekt
+  id("dev.detekt") version "2.0.0-alpha.3" // Adds: ./gradlew detekt
   id("org.jlleitschuh.gradle.ktlint") version "14.2.0" // Adds: ./gradlew ktlintCheck
   id("se.solrike.sonarlint") version "2.1.0" // Tasks: sonarlint{Main,Test} (omit because issues errors not warnings)
 
@@ -49,9 +49,9 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.3")
 
   // Linting and Code Formatting
-  // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.7") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
-  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.8")
-  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.8")
+  // detektPlugins("dev.detekt:detekt-rules-ktlint-wrapper:2.0.0-alpha.3") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
+  detektPlugins("dev.detekt:detekt-rules-libraries:2.0.0-alpha.3")
+  detektPlugins("dev.detekt:detekt-rules-ruleauthors:2.0.0-alpha.3")
   sonarlintPlugins("org.sonarsource.kotlin:sonar-kotlin-plugin:2.13.0.2116") // TODO: others
 
   // Logging
@@ -147,7 +147,7 @@ diktat {
   }
 }
 
-// See https://github.com/detekt/detekt/blob/v1.23.7/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
+// See https://github.com/detekt/detekt/blob/v2.0.0-alpha.3/detekt-gradle-plugin/src/main/kotlin/dev/detekt/gradle/extensions/DetektExtension.kt
 detekt {
   ignoreFailures = true
   allRules = true

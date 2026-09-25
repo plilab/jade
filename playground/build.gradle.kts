@@ -10,18 +10,18 @@ repositories {
 dependencies {
     // Depend on the main project
     implementation(project(":"))
-    implementation("com.github.javaparser:javaparser-core:3.25.1")
+    implementation("com.github.javaparser:javaparser-core:3.28.2")
 
     // Logging
     implementation("ch.qos.logback:logback-classic:1.5.12")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
 
     // Add ASM dependencies explicitly for the playground
-    implementation("org.ow2.asm:asm:9.7.1")
-    implementation("org.ow2.asm:asm-analysis:9.7.1")
-    implementation("org.ow2.asm:asm-commons:9.7.1")
-    implementation("org.ow2.asm:asm-tree:9.7.1")
-    implementation("org.ow2.asm:asm-util:9.7.1")
+    implementation("org.ow2.asm:asm:9.10.1")
+    implementation("org.ow2.asm:asm-analysis:9.10.1")
+    implementation("org.ow2.asm:asm-commons:9.10.1")
+    implementation("org.ow2.asm:asm-tree:9.10.1")
+    implementation("org.ow2.asm:asm-util:9.10.1")
 
     implementation("org.jgrapht:jgrapht-core:1.5.2")
     implementation("org.jgrapht:jgrapht-ext:1.5.2")

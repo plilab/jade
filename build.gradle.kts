@@ -23,16 +23,16 @@ plugins {
   // Linting and Code Formatting
   // id("com.ncorti.ktfmt.gradle") version "0.21.0" // Adds: ./gradlew ktfmtCheck (omit because issues errors not warnings)
   id("com.saveourtool.diktat") version "2.0.0" // Adds: ./gradlew diktatCheck
-  id("io.gitlab.arturbosch.detekt") version "1.23.7" // Adds: ./gradlew detekt
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.1" // Adds: ./gradlew ktlintCheck
+  id("dev.detekt") version "2.0.0-alpha.3" // Adds: ./gradlew detekt
+  id("org.jlleitschuh.gradle.ktlint") version "14.2.0" // Adds: ./gradlew ktlintCheck
   id("se.solrike.sonarlint") version "2.1.0" // Tasks: sonarlint{Main,Test} (omit because issues errors not warnings)
 
   // Code Coverage
   id("jacoco") // version built into Gradle // Adds: ./gradlew jacocoTestReport
-  id("org.jetbrains.kotlinx.kover") version "0.8.3" // Adds: ./gradlew koverMergedHtmlReport
+  id("org.jetbrains.kotlinx.kover") version "0.9.9" // Adds: ./gradlew koverHtmlReport
 
   // Dependency Versions and Licenses
-  id("com.github.ben-manes.versions") version "0.51.0" // Adds: ./gradlew dependencyUpdates
+  id("io.github.ben-manes.versions") version "0.64.0" // Adds: ./gradlew dependencyUpdates
   id("com.github.jk1.dependency-license-report") version "2.9" // Adds: ./gradlew generateLicenseReport
 
   // Local Plugins
@@ -49,9 +49,9 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.3")
 
   // Linting and Code Formatting
-  // detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.7") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
-  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-libraries:1.23.7")
-  detektPlugins("io.gitlab.arturbosch.detekt:detekt-rules-ruleauthors:1.23.7")
+  // detektPlugins("dev.detekt:detekt-rules-ktlint-wrapper:2.0.0-alpha.3") // We use org.jlleitschuh.gradle.ktlint instead to use the newest ktlint
+  detektPlugins("dev.detekt:detekt-rules-libraries:2.0.0-alpha.3")
+  detektPlugins("dev.detekt:detekt-rules-ruleauthors:2.0.0-alpha.3")
   sonarlintPlugins("org.sonarsource.kotlin:sonar-kotlin-plugin:2.13.0.2116") // TODO: others
 
   // Logging
@@ -63,9 +63,9 @@ dependencies {
   implementation("com.github.ajalt.clikt:clikt-markdown:5.0.1")
 
   // Java source abstract syntax trees
-  implementation("com.github.javaparser:javaparser-core:3.26.2") // Main library
-  implementation("com.github.javaparser:javaparser-core-serialization:3.26.2") // Serialization to/from JSON
-  implementation("com.github.javaparser:javaparser-symbol-solver-core:3.26.2") // Resolving symbols and identifiers
+  implementation("com.github.javaparser:javaparser-core:3.28.2") // Main library
+  implementation("com.github.javaparser:javaparser-core-serialization:3.28.2") // Serialization to/from JSON
+  implementation("com.github.javaparser:javaparser-symbol-solver-core:3.28.2") // Resolving symbols and identifiers
   // Omitting the JavaParser "parent" package as it is just metadata
   // Omitting the JavaParser "generator" and "metamodel" packages as they are just for building JavaParser
 
@@ -87,12 +87,12 @@ dependencies {
   implementation("org.jgrapht:jgrapht-opt:1.5.2")
 
   // JVM Bytecode / Class files
-  implementation("org.ow2.asm:asm:9.7.1")
-  implementation("org.ow2.asm:asm-analysis:9.7.1")
-  implementation("org.ow2.asm:asm-commons:9.7.1")
-  // implementation("org.ow2.asm:asm-test:9.7.1")
-  implementation("org.ow2.asm:asm-tree:9.7.1")
-  implementation("org.ow2.asm:asm-util:9.7.1")
+  implementation("org.ow2.asm:asm:9.10.1")
+  implementation("org.ow2.asm:asm-analysis:9.10.1")
+  implementation("org.ow2.asm:asm-commons:9.10.1")
+  // implementation("org.ow2.asm:asm-test:9.10.1")
+  implementation("org.ow2.asm:asm-tree:9.10.1")
+  implementation("org.ow2.asm:asm-util:9.10.1")
 
   // Maven
   // TODO: trim?
@@ -147,21 +147,21 @@ diktat {
   }
 }
 
-// See https://github.com/detekt/detekt/blob/v1.23.7/detekt-gradle-plugin/src/main/kotlin/io/gitlab/arturbosch/detekt/extensions/DetektExtension.kt
+// See https://github.com/detekt/detekt/blob/v2.0.0-alpha.3/detekt-gradle-plugin/src/main/kotlin/dev/detekt/gradle/extensions/DetektExtension.kt
 detekt {
   ignoreFailures = true
   allRules = true
   buildUponDefaultConfig = true
 }
 
-// See https://github.com/JLLeitschuh/ktlint-gradle/blob/v12.1.1/plugin/src/main/kotlin/org/jlleitschuh/gradle/ktlint/KtlintExtension.kt
+// See https://github.com/JLLeitschuh/ktlint-gradle/blob/v14.2.0/plugin/src/main/kotlin/org/jlleitschuh/gradle/ktlint/KtlintExtension.kt
 ktlint {
-  version = "1.4.1"
+  version = "1.8.0"
   verbose = true
   ignoreFailures = true
   enableExperimentalRules = true
 
-  // See https://github.com/JLLeitschuh/ktlint-gradle/blob/v12.1.1/plugin/src/adapter/kotlin/org/jlleitschuh/gradle/ktlint/reporter/ReporterType.kt
+  // See https://github.com/JLLeitschuh/ktlint-gradle/blob/v14.2.0/plugin/src/adapter/kotlin/org/jlleitschuh/gradle/ktlint/reporter/ReporterType.kt
   reporters {
     org.jlleitschuh.gradle.ktlint.reporter.ReporterType.let {
       reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)

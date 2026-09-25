@@ -39,7 +39,15 @@ object FlattenBlocks { // TODO: rename to FlattenBlocks
     // is LocalClassDeclarationStmt -> 
     // is LocalRecordDeclarationStmt -> 
     is ReturnStmt -> NodeList(node)
-    is SwitchStmt -> NodeList(SwitchStmt(node.selector, NodeList(node.entries.map{ SwitchEntry(it.labels, it.type, NodeList(it.statements.map{ BlockStmt(make(it)) }),it.isDefault) })))
+    is SwitchStmt -> NodeList(SwitchStmt(node.selector, NodeList(node.entries.map {
+      SwitchEntry(
+        it.labels,
+        it.type,
+        NodeList(it.statements.map { statement -> BlockStmt(make(statement)) }),
+        it.isDefault,
+        it.guard.orElse(null),
+      )
+    })))
     // is SynchronizedStmt -> 
     is ThrowStmt -> NodeList(node)
     // is TryStmt -> 

@@ -17,13 +17,11 @@ import com.github.javaparser.ast.expr.MethodCallExpr
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.NullLiteralExpr
 import com.github.javaparser.ast.expr.SimpleName
-import com.github.javaparser.ast.expr.SuperExpr
 import com.github.javaparser.ast.expr.ThisExpr
 import com.github.javaparser.ast.expr.UnaryExpr
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.BreakStmt
 import com.github.javaparser.ast.stmt.EmptyStmt
-import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt
 import com.github.javaparser.ast.stmt.ExpressionStmt
 import com.github.javaparser.ast.stmt.IfStmt
 import com.github.javaparser.ast.stmt.ReturnStmt
@@ -177,18 +175,6 @@ sealed class DecompiledInsn {
 
 /** Handles decompiling individual instructions. */
 object DecompileInsn {
-  /**
-   * Checks if a Var represents "this" by tracing back through SSA.
-   * A variable is "this" if it is the receiver parameter of an instance method or a Copy derived
-   * from it.
-   */
-  private fun isThisVar(v: Var): Boolean =
-    when (v) {
-      is Var.Parameter -> v.isThis
-      is Var.Copy -> isThisVar(v.source)
-      else -> false
-    }
-
   /** TODO:doc.
    *
    * @param variable TODO:doc
@@ -312,45 +298,6 @@ object DecompileInsn {
           NodeList(argumentTypes.indices.map { args(it + 1) }),
         ),
       )
-    }
-
-    fun superCall(node: AbstractInsnNode, classNode: ClassNode): DecompiledInsn {
-      val (insn, argumentTypes, typeArguments) = call(node)
-
-      // Check if this is a constructor call on "this" (super() or this())
-      val firstArg = argVars.firstOrNull()
-      if (insn.name == "<init>" && firstArg != null && isThisVar(firstArg)) {
-        // check for <init> and nameExpr var refers to "this"?
-        // refers to super call
-        //TODO: need to further check target (super class or own constructor)
-        if (insn.owner == classNode.name) { // checks if its this()
-          return DecompiledInsn.Statement(
-            ExplicitConstructorInvocationStmt(
-              true,
-              null,
-              NodeList(argumentTypes.indices.map { args(it + 1) })
-            )
-          )
-        } else {
-          return DecompiledInsn.Statement(
-            ExplicitConstructorInvocationStmt(
-              false,
-              null,
-              NodeList(argumentTypes.indices.map { args(it + 1) })
-            )
-          )
-        }
-      } else {
-        // TODO: for creation of new instance, not checked yet
-        return DecompiledInsn.Expression(
-          MethodCallExpr(
-            /*TODO: cast to insn.owner?*/ args(0),
-            typeArguments,
-            insn.name, //SuperExpr().toString()
-            NodeList(argumentTypes.indices.map { args(it + 1) }),
-          )
-        )
-      }
     }
 
     fun staticCall(node: AbstractInsnNode): DecompiledInsn {
@@ -540,13 +487,13 @@ object DecompileInsn {
         Opcodes.PUTFIELD  -> (node as FieldInsnNode).let { DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(it.name)), args(1), AssignExpr.Operator.ASSIGN)) }
         // MethodInsnNode
         Opcodes.INVOKEVIRTUAL   -> instanceCall(node)
-        Opcodes.INVOKESPECIAL   -> superCall(node, classNode) // TODO: only for <init> (new, this, and super)?
+        Opcodes.INVOKESPECIAL   -> DecompileInvokeSpecial.decompile(node, classNode, argVars, argsArray)
         Opcodes.INVOKESTATIC    -> staticCall(node)
         Opcodes.INVOKEINTERFACE -> instanceCall(node)
         // InvokeDynamicInsnNode
         Opcodes.INVOKEDYNAMIC -> TODO() // TODO: lambda
         // TypeInsnNode
-        Opcodes.NEW -> DecompiledInsn.New(ClassName.classNameType((node as TypeInsnNode).desc)) // TODO: pair with <init>
+        Opcodes.NEW -> DecompiledInsn.New(ClassName.classNameType((node as TypeInsnNode).desc)) // Object creation is reconstructed at the matching INVOKESPECIAL <init> via SSA
         // IntInsnNode
         Opcodes.NEWARRAY -> {
           val type = when ((node as IntInsnNode).operand) {

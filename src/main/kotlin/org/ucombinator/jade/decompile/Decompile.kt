@@ -34,7 +34,7 @@ object Decompile {
    * @param toDisk Indicator if the compiled result is saved to disk, default true
    * 
    */
-  fun main(files: List<File>, outputDir: File, toDisk: Boolean = true) {
+  fun main(files: List<File>, outputDir: File) {
     val resultmap = decompile(files)
     for ((classFileName, compilationUnit) in resultmap) {
       AtomicWriteFile.write(File(outputDir, classFileName), compilationUnit, false)

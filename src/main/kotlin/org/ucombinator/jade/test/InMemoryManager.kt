@@ -48,9 +48,12 @@ class InMemoryFileManager(
     val bytecodeFiles = HashMap<String, BytecodeJavaFileObject>()
 
     override fun getJavaFileForOutput(
+        // is it trying to read from the class path/local directory... module management
         location: JavaFileManager.Location,
         className: String,
+        // Type of the file, add assertion
         kind: JavaFileObject.Kind,
+        // Right next to files?
         sibling: FileObject?
     ): JavaFileObject {
         val bytecodeFile = BytecodeJavaFileObject(className)

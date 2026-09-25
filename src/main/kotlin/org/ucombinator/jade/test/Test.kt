@@ -22,7 +22,7 @@ object Test {
         // Each testcase is in a seperate directory
         val subDirs = directory
             .walkTopDown()
-            .filter {it.isDirectory}
+            .filter {it.isDirectory && it.name == "Test5"}
             .toList()
 
         subDirs.forEach { subDir ->

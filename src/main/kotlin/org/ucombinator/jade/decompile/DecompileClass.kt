@@ -17,7 +17,7 @@ import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.ast.body.ReceiverParameter
 import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.body.VariableDeclarator
-import com.github.javaparser.ast.comments.JavadocComment
+import com.github.javaparser.ast.comments.TraditionalJavadocComment
 import com.github.javaparser.ast.expr.AnnotationExpr
 import com.github.javaparser.ast.expr.ArrayInitializerExpr
 import com.github.javaparser.ast.expr.ClassExpr
@@ -641,7 +641,7 @@ object DecompileClass {
     // TODO: maybe move CompilationUnit out of this function
     val compilationUnit = CompilationUnit(packageDeclaration, imports, types, module)
 
-    val comment = JavadocComment(
+    val comment = TraditionalJavadocComment(
       """
       Source File: ${classNode.sourceFile}
       Class-file Format Version: ${classNode.version}

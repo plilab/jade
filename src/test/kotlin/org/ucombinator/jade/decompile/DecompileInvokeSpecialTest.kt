@@ -8,11 +8,14 @@ import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.InsnNode
+import org.objectweb.asm.tree.LdcInsnNode
 import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.TypeInsnNode
 import org.objectweb.asm.tree.VarInsnNode
 import org.objectweb.asm.tree.analysis.BasicValue
+import org.ucombinator.jade.analysis.ControlFlowGraph
+import org.ucombinator.jade.analysis.StaticSingleAssignment
 import org.ucombinator.jade.analysis.Var
 import org.ucombinator.jade.asm.Insn
 
@@ -107,7 +110,7 @@ class DecompileInvokeSpecialTest {
       decompileSpecial(
         className = "example/Animal",
         superName = "java/lang/Object",
-        owner = "example/Example",
+        owner = "example/Animal",
         name = "makeSound",
       ),
     )
@@ -125,7 +128,7 @@ class DecompileInvokeSpecialTest {
     val owner = "example/Dog"
 
     assertExpression(
-      "insnVar0 = new example.Dog(\"Alice\")",
+      "new example.Dog(\"Alice\")",
       decompileSpecial(
         className = "example/Main",
         superName = "java/lang/Object",
@@ -135,6 +138,57 @@ class DecompileInvokeSpecialTest {
         receiver = newObject(owner),
         arguments = listOf(argument(StringLiteralExpr("Alice"), local = 0)),
       ),
+    )
+  }
+
+  /*
+   * class Main {
+   *   static void main(String[] args) {
+   *     Dog dog = new Dog("Alice");
+   *   }
+   * }
+   */
+  @Test
+  fun objectConstructorAssignmentUsesCommonExpressionPath() {
+    val className = "example/Main"
+    val owner = "example/Dog"
+    val method = MethodNode(
+      Opcodes.ASM9,
+      Opcodes.ACC_STATIC,
+      "main",
+      "()V",
+      null,
+      null,
+    ).also {
+      it.maxStack = 3
+      it.maxLocals = 0
+    }
+    val allocation = TypeInsnNode(Opcodes.NEW, owner)
+    val constructor = MethodInsnNode(
+      Opcodes.INVOKESPECIAL,
+      owner,
+      "<init>",
+      "(Ljava/lang/String;)V",
+      false,
+    )
+    method.instructions.add(allocation)
+    method.instructions.add(InsnNode(Opcodes.DUP))
+    method.instructions.add(LdcInsnNode("Alice"))
+    method.instructions.add(constructor)
+    method.instructions.add(InsnNode(Opcodes.POP))
+    method.instructions.add(InsnNode(Opcodes.RETURN))
+
+    val cfg = ControlFlowGraph.make(className, method)
+    val ssa = StaticSingleAssignment.make(className, method, cfg)
+    val (resultVariable, decompiled) = DecompileInsn.decompileInsn(
+      constructor,
+      ssa,
+      classNode(className, "java/lang/Object", emptyList()),
+    )
+
+    assertEquals(
+      "{\n    insnVar0 = new example.Dog(insnVar2);\n}",
+      DecompileInsn.decompileInsn(resultVariable, decompiled, ssa).toString(),
     )
   }
 
@@ -196,19 +250,6 @@ class DecompileInvokeSpecialTest {
     )
   }
 
-  @Test
-  fun objectConstructorMustMatchAllocationOwner() {
-    assertIs<DecompiledInsn.Unsupported>(
-      decompileSpecial(
-        className = "example/ConstructorInit",
-        superName = "java/lang/Object",
-        owner = "example/Cat",
-        name = "<init>",
-        receiver = newObject("example/Dog"),
-      ),
-    )
-  }
-
   private fun decompileSpecial(
     className: String,
     superName: String?,
@@ -222,7 +263,7 @@ class DecompileInvokeSpecialTest {
   ): DecompiledInsn {
     val node = MethodInsnNode(Opcodes.INVOKESPECIAL, owner, name, descriptor, isInterface)
     val operands = listOf(receiver) + arguments
-    return DecompileInvokeSpecial.decompile(
+    return DecompileInsn.specialCall(
       node,
       classNode(className, superName, interfaces),
       operands.map(Operand::variable),

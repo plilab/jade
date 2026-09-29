@@ -4,6 +4,7 @@ import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.StringLiteralExpr
 import com.github.javaparser.ast.expr.ThisExpr
+import com.github.javaparser.ast.stmt.BlockStmt
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.ClassNode
@@ -186,9 +187,12 @@ class DecompileInvokeSpecialTest {
       classNode(className, "java/lang/Object", emptyList()),
     )
 
+    val block = assertIs<BlockStmt>(
+      DecompileInsn.decompileInsn(resultVariable, decompiled, ssa),
+    )
     assertEquals(
-      "{\n    insnVar0 = new example.Dog(insnVar2);\n}",
-      DecompileInsn.decompileInsn(resultVariable, decompiled, ssa).toString(),
+      listOf("insnVar0 = new example.Dog(insnVar2);"),
+      block.statements.map { it.toString() },
     )
   }
 

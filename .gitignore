@@ -16,6 +16,9 @@ build/
 # Playground output directory
 playground/output/
 
+# Log files from Logback
+logs/
+
 # Devcontainer directory
 .devcontainer/
 

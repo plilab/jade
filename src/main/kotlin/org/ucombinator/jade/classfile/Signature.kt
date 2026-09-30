@@ -34,12 +34,14 @@ data class ClassSignature(
   val interfaces: List<ClassOrInterfaceType>,
 )
 
-/** TODO:doc.
+/**
+ * Represents a method signature.
+ * See https://docs.oracle.com/javase/specs/jls/se26/html/jls-8.html#jls-8.4.2.
  *
- * @property typeParameters TODO:doc
- * @property parameterTypes TODO:doc
- * @property returnType TODO:doc
- * @property exceptionTypes TODO:doc
+ * @property typeParameters the type parameters of the method.
+ * @property parameterTypes the parameter types of the method.
+ * @property returnType the return type of the method.
+ * @property exceptionTypes the exceptions thrown by the method.
  */
 data class MethodSignature(
   val typeParameters: List<TypeParameter>,

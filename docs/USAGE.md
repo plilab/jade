@@ -1,5 +1,19 @@
 # Jade Usage
 
+## Logging
+
+You can specify different logging levels by supplying the `--log` flag:
+
+```sh
+jade --log=debug ...
+```
+
+You can also log to file by supplying to `--log-to-file` flag:
+
+```sh
+jade --log-to-file ...
+```
+
 ## Classfile Commands
 
 TODO: should these be in own subcommand

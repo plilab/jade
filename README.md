@@ -9,13 +9,14 @@ Jade is a Java decompiler that aims for high reliability through extensive testi
 - Install [Java](https://www.oracle.com/java/technologies/downloads/)
 - Install [Gradle](https://docs.gradle.org/current/userguide/installation.html)
 
-Jade uses [Gradle 8.11.1](gradle/wrapper/gradle-wrapper.properties), so you will not be able to run `./gradlew` if your Java version is >= 24.
-You can check if your Java version is compatible [here](https://docs.gradle.org/current/userguide/compatibility.html).
-If you machine has multiple Java installations, consider using [`jenv`](https://github.com/jenv/jenv) to manage the environment.
+Jade uses [Gradle 9.4.0](gradle/wrapper/gradle-wrapper.properties), which requires Java 17 or newer to run.
+You can check whether your Java version is compatible [here](https://docs.gradle.org/current/userguide/compatibility.html).
+If your machine has multiple Java installations, consider using [`jenv`](https://github.com/jenv/jenv) to manage the environment.
+
+Jade may emit source code that uses Java 25 flexible constructor bodies, including statements before an explicit `super(...)` or `this(...)` call. Compiling such decompiled source requires JDK 25 or newer.
 
 Building the tool automatically downloads the other parts that are needed.
 
-TODO: It has only been tested on Java version 19; Consider testing other Java versions as well
 TODO: Consider using Docker to avoid "works on my machine" issues
 
 ## Building

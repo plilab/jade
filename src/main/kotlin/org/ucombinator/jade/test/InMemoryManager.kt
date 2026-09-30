@@ -48,16 +48,23 @@ class InMemoryFileManager(
     val bytecodeFiles = HashMap<String, BytecodeJavaFileObject>()
 
     override fun getJavaFileForOutput(
+        // TODO: 
+        // 1. Integrate module location after Jade is intergrated with module
+        // 2. Integrate path location
         // is it trying to read from the class path/local directory... module management
         location: JavaFileManager.Location,
         className: String,
-        // Type of the file, add assertion
         kind: JavaFileObject.Kind,
-        // Right next to files?
+        // Can be safely ignored due to in-memory implementation
         sibling: FileObject?
     ): JavaFileObject {
+        
+        // Verify the file kind is class file
+        require(kind == JavaFileObject.Kind.CLASS)
         val bytecodeFile = BytecodeJavaFileObject(className)
-        bytecodeFiles[className] = bytecodeFile
+        val key = location.name + className
+        bytecodeFiles[key] = bytecodeFile
+        //bytecodeFiles[className] = bytecodeFile
         return bytecodeFile
     }
 }

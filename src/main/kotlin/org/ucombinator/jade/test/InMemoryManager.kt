@@ -62,7 +62,7 @@ class InMemoryFileManager(
         // Verify the file kind is class file
         require(kind == JavaFileObject.Kind.CLASS)
         val bytecodeFile = BytecodeJavaFileObject(className)
-        val key = location.name + className
+        val key = className
         bytecodeFiles[key] = bytecodeFile
         //bytecodeFiles[className] = bytecodeFile
         return bytecodeFile

@@ -42,7 +42,6 @@ fun main(args: Array<String>) {
     Decompile(),
     Compile(),
     Diff(),
-    Test(),
     Maven().subcommands(
       Maven.Mirrors(),
       Maven.Index(),

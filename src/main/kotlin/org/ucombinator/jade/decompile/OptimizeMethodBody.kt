@@ -49,7 +49,7 @@ object OptimizeMethodBody {
      * @param body The method body to process
      * @return The method body with redundant comments removed
      */
-    private fun deleteEmptyStatements(body: BlockStmt): BlockStmt {
+    public fun deleteEmptyStatements(body: BlockStmt): BlockStmt {
         log.debug { "Applying deleteEmptyStatements optimization..." }
 
         body.walk { node ->
@@ -66,7 +66,7 @@ object OptimizeMethodBody {
      * @param body The method body to process
      * @return The method body with simplified variable names
      */
-    private fun simplifyVariableNames(body: BlockStmt): BlockStmt {
+    public fun simplifyVariableNames(body: BlockStmt): BlockStmt {
         log.debug { "Applying simplifyVariableNames optimization..." }
         // TODO: Implement variable name simplification
         // - Replace insnVar1, insnVar2, etc. with meaningful names like temp1, temp2
@@ -81,7 +81,7 @@ object OptimizeMethodBody {
      * @param body The method body to process
      * @return The method body with unused variables removed
      */
-    private fun removeUnusedVariables(body: BlockStmt): BlockStmt {
+    public fun removeUnusedVariables(body: BlockStmt): BlockStmt {
         log.debug { "Applying removeUnusedVariables optimization..." }
         // TODO: Implement dead code elimination
         // - Identify variables that are declared but never used
@@ -97,7 +97,7 @@ object OptimizeMethodBody {
      * @param body The method body to process
      * @return The method body with simplified control flow and flattened blocks
      */
-    private fun simplifyControlFlowAndFlatten(body: BlockStmt): BlockStmt {
+    public fun simplifyControlFlowAndFlatten(body: BlockStmt): BlockStmt {
         log.debug { "Applying simplifyControlFlowAndFlatten optimization..." }
         
         val optimizedBody = body.clone()
@@ -260,7 +260,7 @@ object OptimizeMethodBody {
      * @param body The method body to process
      * @return The method body with reconstructed high-level constructs
      */
-    private fun reconstructHighLevelConstructs(body: BlockStmt): BlockStmt {
+    public fun reconstructHighLevelConstructs(body: BlockStmt): BlockStmt {
         log.debug { "Applying reconstructHighLevelConstructs optimization..." }
         // TODO: Implement high-level construct reconstruction
         // - Convert labeled breaks/continues to proper for/while loops
@@ -275,7 +275,7 @@ object OptimizeMethodBody {
      * @param body The method body to process
      * @return The method body with cleaned phi variables
      */
-    private fun cleanupPhiVariables(body: BlockStmt): BlockStmt {
+    public fun cleanupPhiVariables(body: BlockStmt): BlockStmt {
         log.debug { "Applying cleanupPhiVariables optimization..." }
         // TODO: Implement phi variable cleanup
         // - Merge phi variables that represent the same logical variable
@@ -290,7 +290,7 @@ object OptimizeMethodBody {
      * @param body The method body to process
      * @return The method body with empty statements removed
      */
-    private fun removeEmptyStatements(body: BlockStmt): BlockStmt {
+    public fun removeEmptyStatements(body: BlockStmt): BlockStmt {
         log.debug { "Applying removeEmptyStatements optimization..." }
         // TODO: Implement empty statement removal
         // - Remove empty statements (just semicolons)

@@ -35,7 +35,7 @@ object RewriteConstructorCalls {
         stmt is ExpressionStmt &&
           stmt.expression.let {
             it is MethodCallExpr &&
-              it.name.identifier == "<init>" &&
+              it.name.identifier == MethodName.INIT &&
               it.scope.map { scope -> scope is ThisExpr }.orElse(false)
           }
       }

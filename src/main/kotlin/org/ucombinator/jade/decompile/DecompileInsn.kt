@@ -321,7 +321,7 @@ object DecompileInsn {
     val receiver = argumentVariables.firstOrNull()
     val (argumentTypes, _) = Descriptor.methodDescriptor(insn.desc)
     val arguments = NodeList(argumentTypes.indices.map { argumentExpressions[it + 1] })
-    return if (insn.name == "<init>") {
+    return if (insn.name == MethodName.INIT) {
       constructorCall(insn, classNode, receiver, arguments)
     } else {
       specialMethodCall(insn, classNode, argumentExpressions[0], arguments)
@@ -400,6 +400,19 @@ object DecompileInsn {
    * One exception is object creation, which combines `NEW` with `INVOKESPECIAL <init>`.
    * Since `<init>` itself returns void, the matching `NEW` variable receives the reconstructed
    * [ObjectCreationExpr], while assignment syntax remains centralized in [decompileExpression].
+   *
+   * For example, the bytecode stack operations
+   *
+   * ```
+   * NEW C
+   * INVOKESPECIAL C.<init>
+   * ```
+   *
+   * are reconstructed as the source-level assignment
+   *
+   * ```
+   * newVariable = new C(arguments)
+   * ```
    */
   private fun decompiledResultVariable(
     node: AbstractInsnNode,
@@ -409,7 +422,7 @@ object DecompileInsn {
     if (
       node is MethodInsnNode &&
       node.opcode == Opcodes.INVOKESPECIAL &&
-      node.name == "<init>"
+      node.name == MethodName.INIT
     ) {
       newAllocation(argumentVariables.firstOrNull()) ?: retVar
     } else {

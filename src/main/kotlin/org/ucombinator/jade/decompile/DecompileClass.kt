@@ -430,11 +430,11 @@ object DecompileClass {
     // TODO: temporary until we remove null (remove blank line above when we do)
     @Suppress("NULLABLE_PROPERTY_TYPE")
     return when (methodNode.name) {
-      "<clinit>" -> {
+      MethodName.CLINIT -> {
         InitializerDeclaration(true, body)
       }
 
-      "<init>" -> {
+      MethodName.INIT -> {
         // TODO: there was a TODO with no description; maybe it's about checking `name` against `constructorName`?
         val constructorName = SimpleName(ClassName.className(classNode.name).identifier)
         ConstructorDeclaration(

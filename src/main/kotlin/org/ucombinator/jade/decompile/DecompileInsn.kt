@@ -339,13 +339,14 @@ object DecompileInsn {
         classNode.name -> DecompiledInsn.Statement(ExplicitConstructorInvocationStmt(true, null, arguments))
         classNode.superName -> DecompiledInsn.Statement(ExplicitConstructorInvocationStmt(false, null, arguments))
         else -> {
-          log.warn {
-            """
-            Constructor invocation target should either be the current class or its superclass.
-            Got owner=${insn.owner}, class=${classNode.name}, superclass=${classNode.superName}.
-            """.trimIndent()
+          DecompiledInsn.Unsupported(insn).also {
+            log.error {
+              """
+              Constructor invocation target should either be the current class or its superclass.
+              Got owner=${insn.owner}, class=${classNode.name}, superclass=${classNode.superName}.
+              """.trimIndent()
+            }
           }
-          DecompiledInsn.Unsupported(insn)
         }
       }
     } else {
@@ -354,8 +355,9 @@ object DecompileInsn {
         val allocationInsn = allocation.insn.insn as TypeInsnNode
         DecompiledInsn.Expression(ObjectCreationExpr(null, ClassName.classNameType(allocationInsn.desc), arguments))
       } else {
-        log.warn { "Allocation should not be null when insn.name is <init>." }
-        DecompiledInsn.Unsupported(insn)
+        DecompiledInsn.Unsupported(insn).also {
+          log.error { "Allocation should not be null when insn.name is <init>." }
+        }
       }
     }
   }
@@ -424,7 +426,19 @@ object DecompileInsn {
       node.opcode == Opcodes.INVOKESPECIAL &&
       node.name == MethodName.INIT
     ) {
-      newAllocation(argumentVariables.firstOrNull()) ?: retVar
+      val allocation = newAllocation(argumentVariables.firstOrNull())
+      return if (allocation != null) {
+        allocation
+      } else {
+        retVar.also {
+          log.error {
+            """
+            INVOKESPECIAL <init> should be called with a corresponding result variable.
+            Falling back to retVar=${retVar} instead.
+            """
+          }
+        }
+      }
     } else {
       retVar
     }

@@ -69,6 +69,21 @@ class Compile : JadeCommand() {
   }
 }
 
+class Optimize : JadeCommand() {
+    override fun help(context: Context) = "Optimize a Java file"
+
+  val file: File by argument(
+    name = "PATH",
+    help = "Input file for optimization",
+  ).file(mustExist = true)
+
+  override fun run() {
+    org.ucombinator.jade.optimize.Optimize
+      .main(file)
+  }
+
+}
+
 // TODO: commands for decompiling with other decompilers
 
 class Diff : JadeCommand() {

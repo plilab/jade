@@ -43,6 +43,7 @@ fun main(args: Array<String>) {
       Decompile(),
       Compile(),
       Diff(),
+      Optimize(),
       Maven().subcommands(
         Maven.Mirrors(),
         Maven.Index(),

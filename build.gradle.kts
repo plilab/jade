@@ -43,6 +43,9 @@ plugins {
 apply<org.michaeldadams.gradle.GenerateClassfileFlagsPlugin>()
 
 dependencies {
+  // Custom ktlint rules run in ktlint's isolated worker rather than on the Gradle build classpath.
+  ktlintRuleset(project(":ktlint-rules"))
+
   // Testing
   testImplementation(kotlin("test"))
   testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")

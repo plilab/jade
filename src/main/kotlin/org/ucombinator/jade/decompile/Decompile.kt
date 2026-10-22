@@ -74,7 +74,10 @@ object Decompile {
 
       val file = filePathMap[topLevel]!!
       log.info { "Writing top-level class [${i + 1} of ${topLevelClasses.size}] $topLevel" }
+
       val compilationUnit = compilationUnits[topLevel]!!
+      OrganizeImports.organizeImports(compilationUnit)
+
       val classFileName = file.getName()
       if (!classFileName.contains(suffix)) {
         throw Exception("Invalid file name: file $classFileName does not end with .class")

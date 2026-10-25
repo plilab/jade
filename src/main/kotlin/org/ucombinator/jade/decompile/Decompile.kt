@@ -1,6 +1,7 @@
 package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
@@ -73,13 +74,31 @@ object Decompile {
 
       val file = filePathMap[topLevel]!!
       log.info { "Writing top-level class [${i + 1} of ${topLevelClasses.size}] $topLevel" }
-      val cu = compilationUnits[topLevel]!!
+      val compilationUnit = compilationUnits[topLevel]!!
       val classFileName = file.getName()
       if (!classFileName.contains(suffix)) {
         throw Exception("Invalid file name: file $classFileName does not end with .class")
       }
-      AtomicWriteFile.write(File(outputDir, classFileName.replace(suffix, ".java")), "${cu}".toByteArray(), false)
-      log.debug { "compilationUnit\n${cu}" }
+
+      // TODO: options for handling whether to override the existing file
+      AtomicWriteFile.write(File(outputDir, classFileName.replace(suffix, ".java")), "${compilationUnit}", false)
+
+      for (type in compilationUnit.types) {
+        log.debug { "type: ${type.javaClass}" }
+        if (type is ClassOrInterfaceDeclaration) {
+          val classNode = type.getData(DecompileClass.CLASS_NODE)!!
+          // TODO: for (callable in type.members.iterator().filterIsInstance<CallableDeclaration<*>>()) {
+          for (callable in type.constructors + type.methods) {
+            val methodNode = callable.getData(DecompileClass.METHOD_NODE)!!
+//            DecompileMethodBody.decompileBody(classNode, methodNode, callable)
+            log.debug { "method: $callable" }
+          }
+        } else {
+          TODO()
+        }
+      }
+
+      log.debug { "compilationUnit\n${compilationUnit}" }
     }
 
     // for (((name, readers), classIndex) <- VFS.classes.zipWithIndex) {

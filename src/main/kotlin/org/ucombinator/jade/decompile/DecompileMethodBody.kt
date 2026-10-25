@@ -1,21 +1,28 @@
 package org.ucombinator.jade.decompile
 
+//import org.ucombinator.jade.analysis.Structure
+import com.github.javaparser.StaticJavaParser
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.Modifier
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.ConstructorDeclaration
 import com.github.javaparser.ast.body.InitializerDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.BlockComment
-import com.github.javaparser.ast.expr.ObjectCreationExpr
-import com.github.javaparser.ast.expr.StringLiteralExpr
+import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.stmt.BlockStmt
 import com.github.javaparser.ast.stmt.EmptyStmt
 import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.ast.stmt.ThrowStmt
+import com.github.javaparser.resolution.types.ResolvedType
+import com.github.javaparser.symbolsolver.JavaSymbolSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
-import org.objectweb.asm.Opcodes
 import org.objectweb.asm.util.Textifier
 import org.objectweb.asm.util.TraceMethodVisitor
 import org.ucombinator.jade.analysis.ControlFlowGraph
@@ -32,8 +39,6 @@ import org.ucombinator.jade.jgrapht.GraphViz
 import org.ucombinator.jade.jgrapht.dominator.Dominator
 import org.ucombinator.jade.util.Errors
 import org.ucombinator.jade.util.Log
-import java.io.FileWriter
-import java.io.IOException
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -121,7 +126,7 @@ object DecompileMethodBody {
           """.trimMargin(),
         )
 
-        if (node.name == "<clinit>") {
+        if (node.name == MethodName.CLINIT) {
           /*
             For static block initialization, don't include a throw statement in the stub body. Doing so results in "error: initializer must be able to complete normally" as in the following example:
               static {
@@ -212,6 +217,7 @@ object DecompileMethodBody {
       val cfg = ControlFlowGraph.make(classNode.name, method)
 
       logCfg.debug { "++++ cfg ++++\n${GraphViz.toString(cfg)}" }
+//      println("cfg ======= \n ${GraphViz.toString(cfg)}")
       for (v in cfg.graph.vertexSet()) {
         logCfg.debug { "v: ${cfg.graph.incomingEdgesOf(v).size}: $v" }
       }
@@ -240,7 +246,7 @@ object DecompileMethodBody {
 
       val logSSAMap = Log("ssa.map") {}
       logSSAMap.debug { "++++ ssa map ++++" }
-      for ((key, value) in ssa.phiInputs) {
+      for ((key, value) in ssa.insnVars) {
         logSSAMap.debug { "ssa: $key -> $value" }
       }
 
@@ -258,10 +264,11 @@ object DecompileMethodBody {
       logDomNesting.debug { "++++ dominator nesting ++++\n${GraphViz.nestingTree(cfg.graphWithExceptions, doms.tree, cfg.entry)}" }
       val logStructure = Log("structure") {}
       logStructure.debug { "**** Structure ****" }
-
+     println("domtree: \n ${GraphViz.toString(doms.tree)}")
+     println(GraphViz.nestingTree(cfg.graphWithExceptions, doms.tree, cfg.entry))
       val structure = Loops.make(cfg)
       logStructure.debug { "++++ structure nesting graph ++++\n${GraphViz.toString(structure.nesting)}" }
-
+//      println("nesting ${GraphViz.toString(structure.nesting)}")
       // TODO: JEP 334: JVM Constants API: https://openjdk.java.net/jeps/334
 
       val logStatement = Log("statement") {}

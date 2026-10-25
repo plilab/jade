@@ -2,6 +2,7 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.expr.BooleanLiteralExpr
+import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.expr.VariableDeclarationExpr
 import com.github.javaparser.ast.stmt.*
 import org.jgrapht.graph.AsSubgraph
@@ -103,6 +104,7 @@ object DecompileStatement {
       // NOTE: We use TreeSet so we have `minOption()`
       // var pendingInside = TreeSet<Insn>()
       var pendingInside = sortedSetOf<Insn>()
+      val thisVars = mutableSetOf<String>()
 
       // worklist of vertexes with no more incoming edges that are outside the current loop (back
       // edges do not count)
@@ -236,6 +238,19 @@ object DecompileStatement {
         }
       }
 
+
+      // TODO: improve checking and do similar for new
+      for ((_, vars) in ssa.insnVars) {
+        val (target, source) = vars
+        source.forEach { v ->
+          if (v is Var.Parameter && v.isThis) {
+            // Track copies of the receiver as aliases of "this".
+            // add the name of variable assigned to
+            thisVars.add(target.name)
+          }
+        }
+      }
+
       while (true) {
         currentInsn = getNextInsn()
         if (currentInsn == null) { break }
@@ -274,7 +289,9 @@ object DecompileStatement {
     val (stmt, pendingOutside) = structuredBlock(cfg.entry)
     assert(pendingOutside.isEmpty())
     val variables = (ssa.insnVars.values.map(Pair<Var, List<Var>>::first) + ssa.phiInputs.keys)
-      .filter { it != Var.Empty } // Filter out empty variables created for non-parameter locals
+      // Copies are internal transfer definitions and render as their source variable.
+      .filter { it != Var.Empty && it !is Var.Copy }
+      .distinctBy { it.name }
 
     fun decompileVarDecl(v: Var): Statement {
       val visited = mutableSetOf<Var>()

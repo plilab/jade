@@ -9,7 +9,7 @@ class SampleChildClass extends Exception {
     
     // Constructor that passes message to super
     public SampleChildClass(String message) {
-        super(message);
+        super(message.length() > 0 ? message : null);
     }
 
     // Constructor that calls this()

@@ -57,14 +57,23 @@ sealed class Var(val name: String) : Value {
   data class Instruction(override val basicValue: BasicValue?, val insn: Insn) :
     Var("insnVar${insn.index()}")
 
-  /** TODO:doc.
+  /**
+   * An internal SSA definition created when bytecode moves an existing value.
    *
-   * @property basicValue TODO:doc
-   * @property insn TODO:doc
-   * @property version TODO:doc
+   * Copy definitions retain their own instruction identity while using the source variable's name when rendered. This
+   * lets stack operations create distinct analysis values without introducing aliases in decompiled source.
+   *
+   * @property basicValue The abstract value being copied.
+   * @property insn The instruction where this copy is produced.
+   * @property position The position of this copy among the outputs produced by [insn].
+   * @property source The value moved by the instruction.
    */
-  data class Copy(override val basicValue: BasicValue, val insn: Insn, val version: Int) :
-    Var("copyVar${insn.index()}_${version}")
+  data class Copy(
+    override val basicValue: BasicValue,
+    val insn: Insn,
+    val position: Int,
+    val source: Var,
+  ) : Var(source.name)
 
   /** TODO:doc.
    *

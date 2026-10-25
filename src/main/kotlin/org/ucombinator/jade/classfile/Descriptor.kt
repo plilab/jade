@@ -8,10 +8,12 @@ import org.ucombinator.jade.util.Errors
 
 import org.objectweb.asm.Type as AsmType
 
-/** TODO:doc.
+/**
+ * Represents a method descriptor.
+ * See https://docs.oracle.com/javase/specs/jvms/se26/html/jvms-4.html#jvms-4.3.3.
  *
- * @property parameterTypes TODO:doc
- * @property returnType TODO:doc
+ * @property parameterTypes list of parameter types.
+ * @property returnType list of return types.
  */
 data class MethodDescriptor(val parameterTypes: List<Type>, val returnType: Type)
 

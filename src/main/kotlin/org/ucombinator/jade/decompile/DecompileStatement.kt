@@ -143,7 +143,22 @@ object DecompileStatement {
             } else {
               BreakStmt(blockLabelString(decompiled.labelNode))
             } // TODO: use instruction number?
+          is DecompiledInsn.Label -> JavaParser.noop(
+            "Label: ${decompiled.node.label}",
+            // Source-line/local-scope labels have only fallthrough entries.
+            // Keep actual control-flow targets as movement barriers.
+            transparentForFolding = cfg.graph.incomingEdgesOf(insn).all { it.source.next() == insn },
+          )
           else -> DecompileInsn.decompileInsn(retVal, decompiled, ssa)
+        }.also { emitted ->
+          if (emitted is EmptyStmt) {
+            // A commented-out instruction can still consume or define SSA values.
+            // Preserve them even when the placeholder is outside a proposed move.
+            emitted.setData(
+              JavaParser.unsupported,
+              (ssa.insnVars[insn.insn]?.second.orEmpty() + listOfNotNull(retVal)).toSet(),
+            )
+          }
         }
         // TODO: break vs continue
         // TODO: labels in break or continue
@@ -261,29 +276,23 @@ object DecompileStatement {
     val variables = (ssa.insnVars.values.map(Pair<Var, List<Var>>::first) + ssa.phiInputs.keys)
       .filter { it != Var.Empty } // Filter out empty variables created for non-parameter locals
 
-    fun decompileVarDecl(v: Var): Statement =
-    // TODO: express mutability of variables in a better way
-    // TODO: support modifiers of variables?
-      v.basicValue.let { basicValue ->
-        fun findTypeRecursively(variable: Var): Type? {
-          // If this variable has a non-null type, return it
-          variable.basicValue?.type?.let {
-            return it
-          }
-
-          // Otherwise, recursively check phi inputs
-          return ssa.phiInputs[variable]
-            ?.mapNotNull { (_, inputVar) -> inputVar?.let { findTypeRecursively(it) } }
-            ?.firstOrNull()
-        }
-        val inferredType: Type? = findTypeRecursively(v)
-        if (inferredType != null) {
-          val t = Descriptor.fieldDescriptor(inferredType.descriptor)
-          ExpressionStmt(VariableDeclarationExpr(t, v.name))
-        } else {
-          JavaParser.noop(v.toString()) // commented out var here
-        }
+    fun decompileVarDecl(v: Var): Statement {
+      val visited = mutableSetOf<Var>()
+      fun findType(variable: Var): Type? {
+        if (!visited.add(variable)) return null // Loop phis can reference one another.
+        return variable.basicValue?.type ?: ssa.phiInputs[variable]
+          ?.firstNotNullOfOrNull { (_, input) -> input?.let(::findType) }
       }
+      val inferredType = findType(v)
+      return if (inferredType != null) {
+        val t = Descriptor.fieldDescriptor(inferredType.descriptor)
+        ExpressionStmt(VariableDeclarationExpr(t, v.name).also {
+          it.variables.single().setData(JavaParser.variable, v)
+        })
+      } else {
+        JavaParser.noop(v.toString()) // commented out var here
+      }
+    }
 
     val declarations = variables.map(::decompileVarDecl)
 

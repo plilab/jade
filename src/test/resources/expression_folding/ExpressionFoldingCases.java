@@ -1,19 +1,4 @@
 public final class ExpressionFoldingCases {
-    private static volatile int volatileValue;
-
-    private static int side(int value) {
-        volatileValue = value;
-        return value;
-    }
-
-    private static void sink(int value) {
-        volatileValue = value;
-    }
-
-    private static void sink2(int first, int second) {
-        volatileValue = first + second;
-    }
-
     public static int basic(int y, int v) {
         int x = y + 1;
         int z = v + 2;
@@ -25,71 +10,85 @@ public final class ExpressionFoldingCases {
         return (y + 1) * (v + 2);
     }
 
-    public static int sharedCall(int y) {
-        int x = side(y);
+    public static int reusedValue(int a) {
+        int x = fn(a);
         return x + x;
     }
 
-    public static int orderedCalls(int y, int v) {
-        return side(y) + side(v);
+    public static int fn(int a) {
+        return a + 1;
     }
 
-    public static void orderedArguments(int y, int v) {
-        sink2(side(y), side(v));
-    }
-
-    public static int joined(boolean flag, int y, int v) {
-        int x;
-        if (flag) {
-            x = y + 1;
+    public static int ifStatement(int a, int b) {
+        if (a > b) {
+            return a;
         } else {
-            x = v + 2;
+            return b;
         }
-        return x * 3;
     }
 
-    public static int conditionalExpression(boolean flag, int y, int v) {
-        return (flag ? y + 1 : v + 2) * 3;
+    public static int chainedPhi(boolean a, boolean b) {
+        int x;
+        if (a) {
+            x = 10;
+        } else {
+            x = 20;
+        }
+
+        if (b) {
+            x = 30;
+        }
+
+        return x;
     }
 
-    public static boolean shortCircuit(Object value) {
-        return value != null && value.hashCode() > 0;
+    public static int loopFoldability() {
+        int sum = 1;
+
+        for (int i = 0; i < 5; i++) {
+            int adjusted = sum + i;
+            int doubled = adjusted * 2;
+            sum = adjusted + doubled;
+        }
+
+        return sum;
     }
 
-    public static int arrayOrder(int[] values, int index) {
-        return values[index++] + values[index];
+    public static int conditionalInitLoop(int n) {
+        int result = 7;
+        int x;
+
+        while (n > 0) {
+            if (n % 2 == 0) x = 42;
+            n--;
+        }
+
+        return result;
     }
 
-    public static int exceptionOrder(int numerator, int denominator, int value) {
-        return numerator / denominator + side(value);
+    public static int arrayReadThenWrite(int[] a) {
+        int x = a[0];
+        a[0] = 9;
+        return x;
     }
 
-    public static int postIncrement(int value) {
-        return value++ + value;
+    public static int repeatedOperands(int value) {
+        return value + value;
     }
 
-    public static int oneVolatileRead() {
-        int x = volatileValue;
-        return x + x;
+    public static int callOrder(int[] trace) {
+        int firstValue = first(trace);
+        int secondValue = second(trace);
+        return secondValue + firstValue;
     }
 
-    public static int unusedCall() {
-        int x = side(1);
+    public static int first(int[] trace) {
+        trace[0] = trace[0] * 10 + 1;
+        return 1;
+    }
+
+    public static int second(int[] trace) {
+        trace[0] = trace[0] * 10 + 2;
         return 2;
-    }
-
-    public static void disjointScopes(int value) {
-        {
-            int local = value + 1;
-            sink(local);
-        }
-        {
-            String local = "x";
-            sink(local.hashCode());
-        }
-    }
-
-    public static String concat(String left, int right) {
-        return left + ":" + right;
     }
 }

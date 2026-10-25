@@ -23,9 +23,16 @@ sealed class Var(val name: String) : Value {
    *
    * @property basicValue TODO:doc
    * @property local TODO:doc
+   * @property isInstanceMethod Whether this parameter belongs to an instance method.
    */
-  data class Parameter(override val basicValue: BasicValue, val local: Int) :
-    Var("parameterVar${local + 1}") // TODO: +1 parameter if non-static
+  data class Parameter(
+    override val basicValue: BasicValue,
+    val local: Int,
+    val isInstanceMethod: Boolean,
+  ) : Var("parameterVar${local + 1}") {
+    /** Whether this parameter is the implicit receiver in JVM local slot zero. */
+    val isThis: Boolean = isInstanceMethod && local == 0
+  }
 
   /** TODO:doc.
    *

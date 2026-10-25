@@ -179,10 +179,11 @@ sealed class DecompiledInsn {
 object DecompileInsn {
   /**
    * Checks if a Var represents "this" by tracing back through SSA.
-   * A variable is "this" if it's Parameter(local=0) or a Copy derived from it.
+   * A variable is "this" if it is the receiver parameter of an instance method or a Copy derived
+   * from it.
    */
   private fun isThisVar(v: Var, ssa: StaticSingleAssignment): Boolean = when (v) {
-    is Var.Parameter -> v.local == 0
+    is Var.Parameter -> v.isThis
     is Var.Copy -> ssa.insnVars.values
       .find { (retVar, _) -> retVar == v }
       ?.second?.firstOrNull()
@@ -195,14 +196,17 @@ object DecompileInsn {
    * @param variable TODO:doc
    * @return TODO:doc
    */
-  fun decompileVar(variable: Var): Expression {
-// return expression
-    // check if param var index 1 and if in static method, add parameters maybe
-    if (variable is Var.Parameter && variable.local == 0) {
-      return ThisExpr() // change to "this"
+  fun decompileVar(variable: Var): Expression =
+    if (variable is Var.Parameter && variable.isThis) {
+      ThisExpr()
+    } else {
+      NameExpr(variable.name).also {
+        it.setData(JavaParser.variable, variable)
+        variable.basicValue?.type?.let { type ->
+          it.setData(JavaParser.variableType, Descriptor.fieldDescriptor(type.descriptor))
+        }
+      }
     }
-    return NameExpr(variable.name)
-  }
   
   /** TODO:doc.
    *
@@ -264,8 +268,8 @@ object DecompileInsn {
       is DecompiledInsn.MonitorEnter   -> JavaParser.noop("Monitor Enter: ${insn.expression}")
       is DecompiledInsn.MonitorExit    -> JavaParser.noop("Monitor Exit: ${insn.expression}")
       is DecompiledInsn.Label          -> JavaParser.noop("Label: ${insn.node.label}")
-      is DecompiledInsn.Frame          -> JavaParser.noop("Frame: ${insn.node.local} ${insn.node.stack}")
-      is DecompiledInsn.LineNumber     -> JavaParser.noop("Line number: ${insn.node.line}")
+      is DecompiledInsn.Frame          -> JavaParser.noop("Frame: ${insn.node.local} ${insn.node.stack}", transparentForFolding = true)
+      is DecompiledInsn.LineNumber     -> JavaParser.noop("Line number: ${insn.node.line}", transparentForFolding = true)
       is DecompiledInsn.Unsupported    -> JavaParser.noop("Unsupported: $insn")
     }
 
@@ -349,7 +353,7 @@ object DecompileInsn {
       val (insn, argumentTypes, typeArguments) = call(node)
       return DecompiledInsn.Expression(
         MethodCallExpr(
-          ClassName.classNameExpr(insn.owner),
+          ClassName.classNameExpr(insn.owner).also { it.setData(JavaParser.isTypeName, true) },
           typeArguments,
           insn.name,
           NodeList(argumentTypes.indices.map(::args)),
@@ -367,7 +371,7 @@ object DecompileInsn {
       )
       when (node.opcode) {
         // InsnNode
-        Opcodes.NOP         -> DecompiledInsn.Statement(EmptyStmt())
+        Opcodes.NOP         -> DecompiledInsn.Statement(EmptyStmt().also { it.setData(JavaParser.transparentPlaceholder, true) })
         Opcodes.ACONST_NULL -> DecompiledInsn.Expression(NullLiteralExpr())
         Opcodes.ICONST_M1   -> DecompiledInsn.Expression(IntegerLiteralExpr("-1"))
         Opcodes.ICONST_0    -> DecompiledInsn.Expression(IntegerLiteralExpr("0"))
@@ -526,7 +530,7 @@ object DecompileInsn {
         Opcodes.ARETURN -> DecompiledInsn.Statement(ReturnStmt(args(0)), false)
         Opcodes.RETURN  -> DecompiledInsn.Statement(ReturnStmt(/*Nothing*/), false)
         // FieldInsnNode
-        Opcodes.GETSTATIC -> (node as FieldInsnNode).let { DecompiledInsn.Expression(FieldAccessExpr(ClassName.classNameExpr(it.owner), /*TODO*/ NodeList(), SimpleName(it.name))) }
+        Opcodes.GETSTATIC -> (node as FieldInsnNode).let { DecompiledInsn.Expression(FieldAccessExpr(ClassName.classNameExpr(it.owner).also { scope -> scope.setData(JavaParser.isTypeName, true) }, /*TODO*/ NodeList(), SimpleName(it.name))) }
         Opcodes.PUTSTATIC -> (node as FieldInsnNode).let { DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(ClassName.classNameExpr(it.owner), /*TODO*/ NodeList(), SimpleName(it.name)), args(0), AssignExpr.Operator.ASSIGN)) }
         Opcodes.GETFIELD  -> (node as FieldInsnNode).let { DecompiledInsn.Expression(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(it.name))) }
         Opcodes.PUTFIELD  -> (node as FieldInsnNode).let { DecompiledInsn.Expression(AssignExpr(FieldAccessExpr(args(0), /*TODO*/ NodeList(), SimpleName(it.name)), args(1), AssignExpr.Operator.ASSIGN)) }

@@ -113,7 +113,7 @@ private class SsaInterpreter(val method: MethodNode) : Interpreter<Var>(Opcodes.
   override fun newValue(type: Type): Var = Errors.fatal("Impossible call of newValue on $type")
 
   override fun newParameterValue(isInstanceMethod: Boolean, local: Int, type: Type): Var =
-    Var.Parameter(TypedBasicInterpreter.newValue(type)!!, local)
+    Var.Parameter(TypedBasicInterpreter.newValue(type)!!, local, isInstanceMethod)
 
   override fun newReturnTypeValue(type: Type): Var? {
     // ASM requires that we return null when type is Type.VOID_TYPE

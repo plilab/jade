@@ -25,8 +25,9 @@ class OptimizationTest {
 
     @Test
     fun optTest() {
-        // There may be a global constant? Resources read in Kotlin
-        val directory = File("./src/test/resources/optimization")
+       val directory = File(
+        requireNotNull(javaClass.getResource("/optimization")).toURI()
+        )
         // Each testcase is in a seperate directory
         val subDirs = directory
             .walkTopDown()

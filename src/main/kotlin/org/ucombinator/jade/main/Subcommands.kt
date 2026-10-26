@@ -70,16 +70,37 @@ class Compile : JadeCommand() {
 }
 
 class Optimize : JadeCommand() {
-    override fun help(context: Context) = "Optimize a Java file"
+  override fun help(context: Context) = "Optimize a Java file"
 
-  val file: File by argument(
+  val path: File by argument(
     name = "PATH",
     help = "Input file for optimization",
   ).file(mustExist = true)
 
+  val directoryMode: Boolean by option(
+    "-d", "--directory",
+    help = "Optimize all Java files in a directory",
+  ).flag(default = false)
+
+
   override fun run() {
-    org.ucombinator.jade.optimize.Optimize
-      .main(file)
+    if (directoryMode) {
+      require(path.isDirectory) {
+        "Expected a directory, but got: $path"
+      }
+
+      path.walkTopDown()
+        .filter { it.isFile && it.extension == "java" }
+        .forEach { file ->
+          org.ucombinator.jade.optimize.Optimize.main(file)
+        }
+    } else {
+      require(path.isFile) {
+        "Expected a file, but got: $path"
+      }
+
+      org.ucombinator.jade.optimize.Optimize.main(path)
+    }
   }
 
 }

@@ -25,6 +25,7 @@ class OptimizationTest {
 
     @Test
     fun optTest() {
+        // There may be a global constant? Resources read in Kotlin
         val directory = File("./src/test/resources/optimization")
         // Each testcase is in a seperate directory
         val subDirs = directory
@@ -38,7 +39,7 @@ class OptimizationTest {
                 .filter {
                     it.isFile &&
                     it.extension == "java" &&
-                    !it.nameWithoutExtension.endsWith("Expected")
+                    !it.name.endsWith(".expected.java")
                 }
                 .toList().single()
             val expectedFile = subDir
@@ -46,7 +47,7 @@ class OptimizationTest {
                 .filter {
                     it.isFile &&
                     it.extension == "java" &&
-                    it.nameWithoutExtension.endsWith("Expected")
+                    it.name.endsWith(".expected.java")
                 }
                 .toList().single()
             assertTrue(optimizeAndCompare(inputFile, expectedFile))

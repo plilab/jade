@@ -95,10 +95,11 @@ object ExpressionFoldingAnalysis {
     }
 
   
-    val excluded = phiInputs + body.findAll(Node::class.java)
+    val excluded = (phiInputs + body.findAll(Node::class.java)
       .filter { it.containsData(JavaParser.unsupported) }
       .flatMap { it.getData(JavaParser.unsupported) } +
-      declarations.filter { it.initializer.isPresent }.mapNotNull(::getVariableOrNull)
+      declarations.filter { it.initializer.isPresent }.mapNotNull(::getVariableOrNull))
+      .map { it.sourceVariable() }.toSet()
     val references = body.findAll(NameExpr::class.java).filter { getVariableOrNull(it) != null }.groupBy { getVariableOrNull(it)!! } //where all the Variable Names -> where it is used is stored
     val foldable = linkedSetOf<Var>()
     val literals = linkedMapOf<Var, String>()

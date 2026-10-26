@@ -14,6 +14,13 @@ sealed class Var(val name: String) : Value {
   abstract val basicValue: BasicValue?
   override fun getSize(): Int = basicValue?.size ?: 0
 
+  /** The value represented in the Java AST after internal copy aliases are removed. */
+  fun sourceVariable(): Var {
+    var variable = this
+    while (variable is Copy) variable = variable.source
+    return variable
+  }
+
   // TODO: improve variable names (also use jvm bytecode debug info for variable names)
 
   /** TODO:doc. */

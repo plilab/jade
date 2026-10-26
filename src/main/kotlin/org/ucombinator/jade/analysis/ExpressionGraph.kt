@@ -10,10 +10,19 @@ data class ExpressionGraph(
   val roots: Set<ExpressionNode>,
   val nodesByVar: Map<Var, ExpressionNode>,
 ) {
+  // Keep the raw SSA graph for phi analysis and diagnostics. Folding counts operand
+  // occurrences after copy aliases are removed, matching the variables in the AST.
+  private val foldingUses: Map<Var, List<ExpressionEdge>> by lazy {
+    val variablesByNode = nodesByVar.entries.associate { (variable, node) -> node to variable }
+    graph.edgeSet().mapNotNull { edge ->
+      val source = variablesByNode[edge.source] ?: return@mapNotNull null
+      if (variablesByNode[edge.target] is Var.Copy) null else source.sourceVariable() to edge
+    }.groupBy({ it.first }, { it.second })
+  }
+
   /** SSA dependencies can veto a candidate; the current AST must still prove movement is safe. */
   fun isSingleUseCandidate(variable: Var): Boolean {
-    val node = nodesByVar[variable] ?: return false
-    val use = graph.outgoingEdgesOf(node).singleOrNull() ?: return false
+    val use = foldingUses[variable.sourceVariable()]?.singleOrNull() ?: return false
     return use.target.kind != Kind.PHI
   }
 

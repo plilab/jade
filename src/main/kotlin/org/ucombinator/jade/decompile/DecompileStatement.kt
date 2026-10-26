@@ -153,7 +153,9 @@ object DecompileStatement {
           )
           else -> DecompileInsn.decompileInsn(retVal, decompiled, ssa)
         }.also { emitted ->
-          if (emitted is EmptyStmt) {
+          if (emitted is EmptyStmt &&
+            !(emitted.containsData(JavaParser.transparentPlaceholder) && emitted.getData(JavaParser.transparentPlaceholder))
+          ) {
             // A commented-out instruction can still consume or define SSA values.
             // Preserve them even when the placeholder is outside a proposed move.
             emitted.setData(

@@ -179,19 +179,6 @@ sealed class DecompiledInsn {
 
 /** Handles decompiling individual instructions. */
 object DecompileInsn {
-  /**
-   * Checks if a Var represents "this" by tracing back through SSA.
-   * A variable is "this" if it is the receiver parameter of an instance method or a Copy derived
-   * from it.
-   */
-  private fun isThisVar(v: Var, ssa: StaticSingleAssignment): Boolean = when (v) {
-    is Var.Parameter -> v.isThis
-    is Var.Copy -> ssa.insnVars.values
-      .find { (retVar, _) -> retVar == v }
-      ?.second?.firstOrNull()
-      ?.let { isThisVar(it, ssa) } ?: false
-    else -> false
-  }
   private val log = Log {}
 
   /** TODO:doc.
@@ -199,12 +186,16 @@ object DecompileInsn {
    * @param variable TODO:doc
    * @return TODO:doc
    */
-  fun decompileVar(variable: Var): Expression =
-    when (variable) {
-      is Var.Copy -> decompileVar(variable.source)
-      is Var.Parameter -> if (variable.isThis) ThisExpr() else NameExpr(variable.name)
-      else -> NameExpr(variable.name)
+  fun decompileVar(variable: Var): Expression {
+    val source = variable.sourceVariable()
+    if (source is Var.Parameter && source.isThis) return ThisExpr()
+    return NameExpr(source.name).also { expression ->
+      expression.setData(JavaParser.variable, source)
+      source.basicValue?.type?.let { type ->
+        expression.setData(JavaParser.variableType, Descriptor.fieldDescriptor(type.descriptor))
+      }
     }
+  }
 
   /** TODO:doc.
    *
@@ -252,7 +243,10 @@ object DecompileInsn {
         }
       }
     }
-    return if (statements.isEmpty()) EmptyStmt() else BlockStmt(statements)
+    return if (statements.isEmpty()) {
+      // A removed self-assignment neither evaluates an expression nor hides a use.
+      EmptyStmt().also { it.setData(JavaParser.transparentPlaceholder, true) }
+    } else BlockStmt(statements)
   }
 
   /**
@@ -311,7 +305,7 @@ object DecompileInsn {
     val (argumentTypes, _) = Descriptor.methodDescriptor(insn.desc)
     return DecompiledInsn.Expression(
       MethodCallExpr(
-        ClassName.classNameExpr(insn.owner),
+        ClassName.classNameExpr(insn.owner).also { it.setData(JavaParser.isTypeName, true) },
         NodeList<Type>(),
         insn.name,
         NodeList(argumentTypes.indices.map { argumentExpressions[it] }),
@@ -479,75 +473,6 @@ object DecompileInsn {
 
     fun args(i: Int): Expression = argsArray[i]
 
-    fun call(node: AbstractInsnNode): Triple<MethodInsnNode, List<Type>, NodeList<Type>> {
-      val insn = node as MethodInsnNode
-      val (argumentTypes, _) = Descriptor.methodDescriptor(insn.desc)
-      val typeArguments = NodeList<Type>()
-      return Triple(insn, argumentTypes, typeArguments)
-    }
-
-    fun instanceCall(node: AbstractInsnNode): DecompiledInsn {
-      val (insn, argumentTypes, typeArguments) = call(node)
-      return DecompiledInsn.Expression(
-        MethodCallExpr(
-          /*TODO: cast to insn.owner?*/ args(0),
-          typeArguments,
-          insn.name,
-          NodeList(argumentTypes.indices.map { args(it + 1) }),
-        ),
-      )
-    }
-
-    fun superCall(node: AbstractInsnNode, classNode: ClassNode): DecompiledInsn {
-      val (insn, argumentTypes, typeArguments) = call(node)
-
-      // Check if this is a constructor call on "this" (super() or this())
-      val firstArg = argVars.firstOrNull()
-      if (insn.name == "<init>" && firstArg != null && isThisVar(firstArg, ssa)) {
-        // check for <init> and nameExpr var refers to "this"?
-        // refers to super call
-        //TODO: need to further check target (super class or own constructor)
-        if (insn.owner == classNode.name) { // checks if its this()
-          return DecompiledInsn.Statement(
-            ExplicitConstructorInvocationStmt(
-              true,
-              null,
-              NodeList(argumentTypes.indices.map { args(it + 1) })
-            )
-          )
-        } else {
-          return DecompiledInsn.Statement(
-            ExplicitConstructorInvocationStmt(
-              false,
-              null,
-              NodeList(argumentTypes.indices.map { args(it + 1) })
-            )
-          )
-        }
-      } else {
-        // TODO: for creation of new instance, not checked yet
-        return DecompiledInsn.Expression(
-          MethodCallExpr(
-            /*TODO: cast to insn.owner?*/ args(0),
-            typeArguments,
-            insn.name, //SuperExpr().toString()
-            NodeList(argumentTypes.indices.map { args(it + 1) }),
-          )
-        )
-      }
-    }
-
-    fun staticCall(node: AbstractInsnNode): DecompiledInsn {
-      val (insn, argumentTypes, typeArguments) = call(node)
-      return DecompiledInsn.Expression(
-        MethodCallExpr(
-          ClassName.classNameExpr(insn.owner).also { it.setData(JavaParser.isTypeName, true) },
-          typeArguments,
-          insn.name,
-          NodeList(argumentTypes.indices.map(::args)),
-        ),
-      )
-    }
 
     /*
      * Opcode handlers describe the source-level operation itself.

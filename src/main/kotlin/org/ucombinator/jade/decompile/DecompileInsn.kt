@@ -394,6 +394,21 @@ object DecompileInsn {
       else -> null
     }
 
+  /** Decompiles `IFEQ` and `IFNE`, preserving boolean operands where possible. */
+  private fun decompileIfZero(node: JumpInsnNode, variable: Var, expression: Expression, isNegated: Boolean): DecompiledInsn.If {
+    val condition =
+      if (variable.basicValue?.type == org.objectweb.asm.Type.BOOLEAN_TYPE) {
+        if (isNegated) expression else UnaryExpr(expression, UnaryExpr.Operator.LOGICAL_COMPLEMENT)
+      } else {
+        BinaryExpr(
+          expression,
+          IntegerLiteralExpr("0"),
+          if (isNegated) BinaryExpr.Operator.NOT_EQUALS else BinaryExpr.Operator.EQUALS,
+        )
+      }
+    return DecompiledInsn.If(node.label, condition)
+  }
+
   /**
    * Returns the variable that receives the value of the decompiled expression.
    *
@@ -616,8 +631,8 @@ object DecompileInsn {
         Opcodes.DCMPG -> DecompiledInsn.Expression(MethodCallExpr(null, null, SimpleName("<dcmpg>"), NodeList(args(0), args(1))))
 
         // JumpInsnNode
-        Opcodes.IFEQ      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.EQUALS))
-        Opcodes.IFNE      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.NOT_EQUALS))
+        Opcodes.IFEQ      -> decompileIfZero(node as JumpInsnNode, argVars.single(), args(0), false)
+        Opcodes.IFNE      -> decompileIfZero(node as JumpInsnNode, argVars.single(), args(0), true)
         Opcodes.IFLT      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.LESS))
         Opcodes.IFGE      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.GREATER_EQUALS))
         Opcodes.IFGT      -> DecompiledInsn.If((node as JumpInsnNode).label, BinaryExpr(args(0), IntegerLiteralExpr("0"), BinaryExpr.Operator.GREATER))

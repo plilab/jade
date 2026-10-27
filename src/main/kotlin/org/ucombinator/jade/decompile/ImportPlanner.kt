@@ -2,6 +2,7 @@ package org.ucombinator.jade.decompile
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.ImportDeclaration
+import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.expr.AnnotationExpr
 import com.github.javaparser.ast.expr.Name
@@ -10,24 +11,30 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.ast.type.TypeParameter
 
 /**
- * Replaces unambiguous fully qualified type references with simple names and adds the imports
- * required by those names.
+ * Determines which qualified type references can be shortened and which imports are required,
+ * without modifying the compilation unit.
  *
- * Import decisions are made for the whole compilation unit before the AST is changed. This keeps
- * references qualified when their simple name denotes multiple types or conflicts with a declared
- * type or type parameter.
+ * Decisions are made for the whole compilation unit so references remain qualified when their
+ * simple name denotes multiple types or conflicts with a declared type or type parameter.
  */
 @Suppress("ktlint:standard:no-unit-return")
-internal object OrganizeImports {
+internal object ImportPlanner {
   private const val JAVA_LANG_PACKAGE = "java.lang"
 
+  internal data class ImportPlan(
+    val referencesToShorten: List<TypeReference>,
+    val imports: NodeList<ImportDeclaration>,
+  )
+
   /** A qualified AST reference together with the mutation that converts it to a simple name. */
-  private data class TypeReference(
+  internal data class TypeReference(
     val qualifiedName: String,
-    val shorten: () -> Unit,
+    private val shortenClosure: () -> Unit,
   ) {
     val simpleName: String
       get() = qualifiedName.substringAfterLast('.')
+
+    fun shorten(): Unit = shortenClosure()
   }
 
   /** Names declared in the compilation unit that can shadow an imported simple type name. */
@@ -43,14 +50,14 @@ internal object OrganizeImports {
   }
 
   /**
-   * Organizes the imports of [compilationUnit] in place.
+   * Plans the reference shortening and imports for [compilationUnit] without modifying it.
    *
    * Qualified references are shortened only when every occurrence of their simple name resolves to
    * the same qualified name and that name does not conflict with a declaration in the compilation
    * unit. Existing imports are retained, deduplicated, and sorted with newly generated imports.
    * Types in the current package and `java.lang` are shortened without adding imports.
    */
-  fun organizeImports(compilationUnit: CompilationUnit): Unit {
+  fun plan(compilationUnit: CompilationUnit): ImportPlan {
     val references = collectTypeReferences(compilationUnit)
     val declaredNames = collectDeclaredNames(compilationUnit)
     val importedNames = compilationUnit.imports
@@ -68,9 +75,8 @@ internal object OrganizeImports {
         qualifiedNames.size == 1 && !declaredNames.conflictsWith(simpleName, qualifiedNames.single())
       }.mapValues { (_, qualifiedNames) -> qualifiedNames.single() }
 
-    references
+    val referencesToShorten = references
       .filter { unambiguousNames[it.simpleName] == it.qualifiedName }
-      .forEach { it.shorten() }
 
     val currentPackage = compilationUnit.packageDeclaration
       .map { it.nameAsString }
@@ -78,14 +84,16 @@ internal object OrganizeImports {
     val newImports = unambiguousNames.values
       .filter { requiresImport(it, currentPackage) }
       .map { ImportDeclaration(it, false, false) }
-    replaceImports(compilationUnit, compilationUnit.imports + newImports)
+    val imports = sortImports(compilationUnit.imports + newImports)
+
+    return ImportPlan(referencesToShorten, imports)
   }
 
   /**
    * Returns whether [type] is only a scope segment of another class or interface type.
    *
    * JavaParser represents `java.util.List` as a chain of [ClassOrInterfaceType] nodes. Only the
-   * outermost `List` node is a reference to organize; visiting `java` and `util` independently would
+   * outermost `List` node is a reference to consider; visiting `java` and `util` independently would
    * incorrectly treat package components as types.
    */
   private fun isScopeComponent(type: ClassOrInterfaceType): Boolean {
@@ -97,7 +105,7 @@ internal object OrganizeImports {
    * Returns whether removing [type]'s complete scope would discard type syntax.
    *
    * For example, neither `Outer<T>.Inner` nor `@A Outer.Inner` may be reduced directly to `Inner`.
-   * They could be shortened partially by importing `Outer`, but this organizer deliberately leaves
+   * They could be shortened partially by importing `Outer`, but this planner deliberately leaves
    * the complete reference qualified until partial scope shortening is supported.
    */
   private fun hasParameterizedOrAnnotatedScope(type: ClassOrInterfaceType): Boolean =
@@ -115,7 +123,7 @@ internal object OrganizeImports {
    *
    * Most type uses are [ClassOrInterfaceType] nodes. Annotation names and qualified `Interface.super`
    * expressions use different node types, so each supplies its own deferred shortening operation.
-   * Deferring all mutations allows [organizeImports] to detect collisions before changing the AST.
+   * Deferring all mutations allows [plan] to detect collisions before changing the AST.
    */
   private fun collectTypeReferences(compilationUnit: CompilationUnit): List<TypeReference> {
     val classOrInterfaceReferences = compilationUnit
@@ -187,26 +195,24 @@ internal object OrganizeImports {
     return packageName != currentPackage && packageName != JAVA_LANG_PACKAGE
   }
 
-  /** Replaces the import list with detached, deduplicated imports in deterministic order. */
-  private fun replaceImports(compilationUnit: CompilationUnit, imports: List<ImportDeclaration>): Unit {
-    val sortedImports = imports
-      .distinctBy { importDeclaration ->
-        listOf(
-          importDeclaration.nameAsString,
-          importDeclaration.isStatic.toString(),
-          importDeclaration.isAsterisk.toString(),
-          importDeclaration.isModule.toString(),
-        )
-      }.sortedWith(
-        compareBy<ImportDeclaration>(
-          { it.nameAsString },
-          { it.isStatic },
-          { it.isAsterisk },
-          { it.isModule },
-        ),
-      ).map { it.clone() }
-
-    compilationUnit.imports.clear()
-    compilationUnit.imports.addAll(sortedImports)
-  }
+  /** Sorts and deduplicates imports. */
+  private fun sortImports(imports: List<ImportDeclaration>): NodeList<ImportDeclaration> =
+    NodeList(
+      imports
+        .distinctBy { importDeclaration ->
+          listOf(
+            importDeclaration.nameAsString,
+            importDeclaration.isStatic.toString(),
+            importDeclaration.isAsterisk.toString(),
+            importDeclaration.isModule.toString(),
+          )
+        }.sortedWith(
+          compareBy<ImportDeclaration>(
+            { it.nameAsString },
+            { it.isStatic },
+            { it.isAsterisk },
+            { it.isModule },
+          ),
+        ).map { it.clone() },
+    )
 }

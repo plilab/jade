@@ -13,9 +13,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 @Suppress("BACKTICKS_PROHIBITED", "ktlint:standard:class-naming", "ktlint:standard:no-unit-return")
-object OrganizeImportsTest {
+object ImportPlannerTest {
   @Test
-  fun `organizeImports imports, sorts, deduplicates, and shortens external types`(): Unit {
+  fun `plan returns imports and references without modifying the compilation unit`(): Unit {
     val compilationUnit = parse(
       """
       package example;
@@ -27,18 +27,28 @@ object OrganizeImportsTest {
       """,
     )
 
-    OrganizeImports.organizeImports(compilationUnit)
+    val importPlan = ImportPlanner.plan(compilationUnit)
+
+    assertEquals(emptyList(), importNames(compilationUnit))
+    assertEquals(listOf("java.util.List<java.util.Date>", "java.util.Date"), fieldTypeNames(compilationUnit))
+    assertEquals(
+      setOf("java.util.Date", "java.util.List"),
+      importPlan.referencesToShorten.mapTo(mutableSetOf()) { it.qualifiedName },
+    )
+    assertEquals(listOf("java.util.Date", "java.util.List"), importPlan.imports.map { it.nameAsString })
+
+    applyImportPlan(compilationUnit, importPlan)
 
     assertEquals(listOf("java.util.Date", "java.util.List"), importNames(compilationUnit))
     assertEquals(listOf("List<Date>", "Date"), fieldTypeNames(compilationUnit))
 
     val organizedSource = compilationUnit.toString()
-    OrganizeImports.organizeImports(compilationUnit)
+    applyImportPlan(compilationUnit)
     assertEquals(organizedSource, compilationUnit.toString())
   }
 
   @Test
-  fun `organizeImports shortens implicitly available types without importing them`(): Unit {
+  fun `applying import plan shortens implicitly available types without importing them`(): Unit {
     val compilationUnit = parse(
       """
       package example;
@@ -50,14 +60,14 @@ object OrganizeImportsTest {
       """,
     )
 
-    OrganizeImports.organizeImports(compilationUnit)
+    applyImportPlan(compilationUnit)
 
     assertEquals(emptyList(), importNames(compilationUnit))
     assertEquals(listOf("String", "Other"), fieldTypeNames(compilationUnit))
   }
 
   @Test
-  fun `organizeImports shortens references to the top-level declared type`(): Unit {
+  fun `applying import plan shortens references to the top-level declared type`(): Unit {
     val compilationUnit = parse(
       """
       package example;
@@ -70,7 +80,7 @@ object OrganizeImportsTest {
       """,
     )
 
-    OrganizeImports.organizeImports(compilationUnit)
+    applyImportPlan(compilationUnit)
 
     assertEquals(emptyList(), importNames(compilationUnit))
     val method = compilationUnit.findFirst(MethodDeclaration::class.java).orElseThrow()
@@ -78,7 +88,7 @@ object OrganizeImportsTest {
   }
 
   @Test
-  fun `organizeImports processes declarations, annotations, signatures, and method bodies`(): Unit {
+  fun `applying import plan processes declarations, annotations, signatures, and method bodies`(): Unit {
     val compilationUnit = parse(
       """
       package example;
@@ -93,7 +103,7 @@ object OrganizeImportsTest {
       """,
     )
 
-    OrganizeImports.organizeImports(compilationUnit)
+    applyImportPlan(compilationUnit)
 
     assertEquals(
       listOf(
@@ -112,7 +122,7 @@ object OrganizeImportsTest {
   }
 
   @Test
-  fun `organizeImports leaves colliding external type names qualified`(): Unit {
+  fun `import plan leaves colliding external type names qualified`(): Unit {
     val compilationUnit = parse(
       """
       package example;
@@ -124,14 +134,14 @@ object OrganizeImportsTest {
       """,
     )
 
-    OrganizeImports.organizeImports(compilationUnit)
+    applyImportPlan(compilationUnit)
 
     assertEquals(emptyList(), importNames(compilationUnit))
     assertEquals(listOf("java.util.Date", "java.sql.Date"), fieldTypeNames(compilationUnit))
   }
 
   @Test
-  fun `organizeImports leaves a type qualified when it collides with a declared type`(): Unit {
+  fun `import plan leaves a type qualified when it collides with a declared type`(): Unit {
     val compilationUnit = parse(
       """
       package example;
@@ -144,14 +154,14 @@ object OrganizeImportsTest {
       """,
     )
 
-    OrganizeImports.organizeImports(compilationUnit)
+    applyImportPlan(compilationUnit)
 
     assertEquals(emptyList(), importNames(compilationUnit))
     assertEquals(listOf("java.util.Date"), fieldTypeNames(compilationUnit))
   }
 
   @Test
-  fun `organizeImports leaves a type qualified when it collides with a type parameter`(): Unit {
+  fun `import plan leaves a type qualified when it collides with a type parameter`(): Unit {
     val compilationUnit = parse(
       """
       package example;
@@ -162,14 +172,14 @@ object OrganizeImportsTest {
       """,
     )
 
-    OrganizeImports.organizeImports(compilationUnit)
+    applyImportPlan(compilationUnit)
 
     assertEquals(emptyList(), importNames(compilationUnit))
     assertEquals(listOf("java.util.Date"), fieldTypeNames(compilationUnit))
   }
 
   @Test
-  fun `organizeImports recognizes TypeExpr static owners without changing value scopes`(): Unit {
+  fun `import plan recognizes TypeExpr static owners without changing value scopes`(): Unit {
     val compilationUnit = parse(
       """
       package example;
@@ -188,7 +198,7 @@ object OrganizeImportsTest {
       .addStatement(staticCall)
       .addStatement(valueCall)
 
-    OrganizeImports.organizeImports(compilationUnit)
+    applyImportPlan(compilationUnit)
 
     assertEquals(listOf("java.util.Collections"), importNames(compilationUnit))
     assertEquals("Collections", staticCall.scope.orElseThrow().toString())
@@ -196,6 +206,14 @@ object OrganizeImportsTest {
   }
 
   private fun parse(source: String): CompilationUnit = StaticJavaParser.parse(source.trimIndent())
+
+  private fun applyImportPlan(
+    compilationUnit: CompilationUnit,
+    importPlan: ImportPlanner.ImportPlan = ImportPlanner.plan(compilationUnit),
+  ): Unit {
+    importPlan.referencesToShorten.forEach { it.shorten() }
+    compilationUnit.setImports(importPlan.imports)
+  }
 
   private fun importNames(compilationUnit: CompilationUnit): List<String> =
     compilationUnit.imports.map { it.nameAsString }

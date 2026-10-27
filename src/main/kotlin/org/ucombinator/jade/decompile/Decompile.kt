@@ -76,7 +76,10 @@ object Decompile {
       log.info { "Writing top-level class [${i + 1} of ${topLevelClasses.size}] $topLevel" }
 
       val compilationUnit = compilationUnits[topLevel]!!
-      OrganizeImports.organizeImports(compilationUnit)
+
+      val importPlan = ImportPlanner.plan(compilationUnit)
+      importPlan.referencesToShorten.forEach { it.shorten() }
+      compilationUnit.setImports(importPlan.imports)
 
       val classFileName = file.getName()
       if (!classFileName.contains(suffix)) {

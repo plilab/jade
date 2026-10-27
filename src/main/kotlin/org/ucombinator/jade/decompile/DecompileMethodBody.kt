@@ -28,6 +28,10 @@ import org.objectweb.asm.util.TraceMethodVisitor
 import org.ucombinator.jade.analysis.ControlFlowGraph
 import org.ucombinator.jade.analysis.Loops
 import org.ucombinator.jade.analysis.StaticSingleAssignment
+import org.ucombinator.jade.analysis.ExpressionGraph
+import org.ucombinator.jade.analysis.ExpressionFoldingAnalysis
+import org.ucombinator.jade.analysis.UnusedPhiAnalysis
+//import org.ucombinator.jade.analysis.Structure
 import org.ucombinator.jade.asm.Insn
 import org.ucombinator.jade.classfile.ClassName
 import org.ucombinator.jade.javaparser.JavaParser
@@ -220,7 +224,12 @@ object DecompileMethodBody {
 
       val logSSA = Log("ssa") {}
       logSSA.debug { "**** SSA ****" }
-      val ssa = StaticSingleAssignment.make(classNode.name, method, cfg)
+      val originalSsa = StaticSingleAssignment.make(classNode.name, method, cfg)
+      val originalGraph = ExpressionGraph.make(originalSsa)
+      val removablePhis = UnusedPhiAnalysis.analyze(originalSsa, originalGraph)
+      // Rebuild the phi reverse lookup before emitting the AST. Frames remain original analysis snapshots.
+      val ssa = originalSsa.copy(phiInputs = originalSsa.phiInputs.filterKeys { it !in removablePhis })
+      val dependencyGraph = ExpressionGraph.make(ssa)
 
       val logSSAFrames = Log("ssa.frames") {}
       logSSAFrames.debug { "++++ frames: ${ssa.frames.size} ++++" }
@@ -264,25 +273,38 @@ object DecompileMethodBody {
 
       val logStatement = Log("statement") {}
       logStatement.debug { "**** Statement ****" }
-      println(" within the class :${classNode.name} ${(method.access and Opcodes.ACC_STATIC) != 0}")
-
-
 
       val statement = DecompileStatement.make(cfg, ssa, structure, classNode)
       logStatement.debug { statement }
-      // TODO: add new pass
-//      DecompileInsn.replaceSuper(statement)
-      val statement3 = RemoveUnusedLabels.make(statement)
-      val statement4 = FlattenBlocks.make(statement3)
-//      CleanupVars.make(BlockStmt(statement4), classNode, method, ssa.phiInputs)
-      val propagated = Propogation.make(BlockStmt(statement4), ssa.phiInputs)
-      val eliminated = Elimination.make(propagated)
-      // setDeclarationBody(declaration, propagated)
-      setDeclarationBody(declaration, eliminated)
-      // setDeclarationBody(declaration, BlockStmt(statement4))     
-      // return propagated
-      return eliminated
-    //  return BlockStmt(statement4)
+      val statement2 = RemoveUnusedLabels.make(statement)
+      val statement3 = FlattenBlocks.make(statement2)
+      val body = BlockStmt(statement3)
+      // The graph shows candidates before rewriting. Handler regions are not yet
+      // represented sufficiently for safe expression movement.
+      val phiInputs = ssa.phiInputs.values.flatMap { inputs -> inputs.mapNotNull { it.second } }.toSet()
+      val folding = ExpressionFoldingAnalysis.analyze(
+        body,
+        phiInputs = phiInputs,
+        hasExceptionHandlers = method.tryCatchBlocks.isNotEmpty(),
+        expressionGraph = dependencyGraph,
+      )
+      val expressionGraph = ExpressionGraph.make(ssa, folding)
+      println("---- expression graph: ${classNode.name}.${method.name} (${method.desc}) ----")
+      println(GraphViz.toString(expressionGraph.graph))
+      val logExpressionGraph = Log("expression.graph") {}
+      logExpressionGraph.debug {
+        "++++ expression graph for ${classNode.name}.${method.name} (${method.desc}) ++++\n${GraphViz.toString(expressionGraph.graph)}"
+      }
+      /* 
+      val statement4 = when (declaration) {
+        is ConstructorDeclaration -> RewriteConstructorCalls.make(statement3)
+        else -> statement3
+      }
+        */
+
+      ExpressionFolding.make(body, phiInputs, method.tryCatchBlocks.isNotEmpty(), dependencyGraph)
+      setDeclarationBody(declaration, body)
+      return body
 //
 //      var statements : List<Statement> = mutableListOf()
 //      for (insn in method.instructions.toArray()) {

@@ -50,6 +50,22 @@ class Decompile : JadeCommand() {
   }
 }
 
+class Test : JadeCommand() {
+  override fun help(context: Context) = "Decompile a class file"
+
+
+  val files: List<File> by argument(
+    name = "PATH",
+    help = "Files or directories to decompile",
+  ).file(mustExist = true).multiple(required = true)
+
+  override fun run() {
+    org.ucombinator.jade.test.DecompileTest
+      .main(files)
+  }
+}
+
+
 class Compile : JadeCommand() {
   override fun help(context: Context) = "Compile a java file"
 

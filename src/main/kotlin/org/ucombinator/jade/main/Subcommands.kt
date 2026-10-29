@@ -78,8 +78,8 @@ class Optimize : JadeCommand() {
   ).file(mustExist = true)
 
   val directoryMode: Boolean by option(
-    "-d", "--directory",
-    help = "Optimize all Java files in a directory",
+    "-r", "--recursive",
+    help = "Recursively optimize all Java files in a directory",
   ).flag(default = false)
 
 

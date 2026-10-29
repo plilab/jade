@@ -32,7 +32,9 @@ class mainTest {
 
     @Test
     fun decompileTest () {
-        val directory = File("./src/test/classFiles")
+        val directory =  File(
+        requireNotNull(javaClass.getResource("/classFile")).toURI()
+        )
         val outputFile = File("output.txt")
 
         // Each testcase is in a seperate directory

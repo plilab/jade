@@ -1,7 +1,7 @@
-find src/test/resources -name "*.java" -exec sh -c '
+find src/test/resources/decompilation -name "*.java" -exec sh -c '
   for f do
     name=$(basename "$f" .java)
-    mkdir -p "src/test/classFiles/$name"
-    javac -d "src/test/classFiles/$name" "$f"
+    mkdir -p "src/test/resources/classFiles/$name"
+    javac -d "src/test/resources/classFiles/$name" "$f"
   done
 ' sh {} +

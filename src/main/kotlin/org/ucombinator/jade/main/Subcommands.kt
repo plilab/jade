@@ -69,6 +69,42 @@ class Compile : JadeCommand() {
   }
 }
 
+class Optimize : JadeCommand() {
+  override fun help(context: Context) = "Optimize a Java file"
+
+  val path: File by argument(
+    name = "PATH",
+    help = "Input file for optimization",
+  ).file(mustExist = true)
+
+  val directoryMode: Boolean by option(
+    "-r", "--recursive",
+    help = "Recursively optimize all Java files in a directory",
+  ).flag(default = false)
+
+
+  override fun run() {
+    if (directoryMode) {
+      require(path.isDirectory) {
+        "Expected a directory, but got: $path"
+      }
+
+      path.walkTopDown()
+        .filter { it.isFile && it.extension == "java" }
+        .forEach { file ->
+          org.ucombinator.jade.optimize.Optimize.main(file)
+        }
+    } else {
+      require(path.isFile) {
+        "Expected a file, but got: $path"
+      }
+
+      org.ucombinator.jade.optimize.Optimize.main(path)
+    }
+  }
+
+}
+
 // TODO: commands for decompiling with other decompilers
 
 class Diff : JadeCommand() {

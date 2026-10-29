@@ -33,14 +33,14 @@ class mainTest {
     @Test
     fun decompileTest () {
         val directory =  File(
-        requireNotNull(javaClass.getResource("/classFile")).toURI()
+        requireNotNull(javaClass.getResource("/classFiles")).toURI()
         )
         val outputFile = File("output.txt")
 
         // Each testcase is in a seperate directory
         val subDirs = directory
             .walkTopDown()
-            .filter {it.isDirectory}
+            .filter {it.isDirectory && it != directory}
             .toList()
 
         subDirs.forEach { subDir ->

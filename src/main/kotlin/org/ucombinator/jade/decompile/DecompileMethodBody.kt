@@ -122,7 +122,7 @@ object DecompileMethodBody {
           """.trimMargin(),
         )
 
-        if (node.name == "<clinit>") {
+        if (node.name == MethodName.CLINIT) {
           /*
             For static block initialization, don't include a throw statement in the stub body. Doing so results in "error: initializer must be able to complete normally" as in the following example:
               static {

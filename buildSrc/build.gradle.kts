@@ -16,13 +16,6 @@ plugins {
 dependencies {
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20")
 
-  // Linting and Code Formatting
-  // Note that ktlint must match the version in bibscrape-gradle-settings.gradle.kts
-  // Used by defined rules
-  implementation("com.pinterest.ktlint:ktlint-ruleset-standard:1.8.0")
-  implementation("com.pinterest.ktlint:ktlint-cli-ruleset-core:1.8.0")
-  implementation("com.pinterest.ktlint:ktlint-rule-engine-core:1.8.0")
-
   // Git API (for `GitVersionsPlugin.kt`)
   implementation("org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r")
 

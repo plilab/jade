@@ -38,27 +38,29 @@ import java.io.File
  * @param args command-line arguments supplied by the operating system.
  */
 fun main(args: Array<String>) {
-  Jade().subcommands(
-    Decompile(),
-    Compile(),
-    Diff(),
-    Test(),
-    Maven().subcommands(
-      Maven.Mirrors(),
-      Maven.Index(),
-      Maven.IndexToJson(),
-      Maven.Versions(),
-      Maven.Dependencies(),
-      Maven.Download(),
-      Maven.ClearLocks(),
-    ),
-    About().subcommands(
-      About.BuildInfo(),
-      // TODO: About.Configuration(),
-      About.Loggers(),
-      CompletionCommand(),
-    ),
-  ).main(args)
+    Jade()
+    .subcommands(
+      Decompile(),
+      Compile(),
+      Diff(),
+      Test(),
+      Optimize(),
+      Maven().subcommands(
+        Maven.Mirrors(),
+        Maven.Index(),
+        Maven.IndexToJson(),
+        Maven.Versions(),
+        Maven.Dependencies(),
+        Maven.Download(),
+        Maven.ClearLocks(),
+      ),
+      About().subcommands(
+        About.BuildInfo(),
+        // TODO: About.Configuration(),
+        About.Loggers(),
+        CompletionCommand(),
+      ),
+    ).main(args)
 }
 
 // TODO: optionalValue()

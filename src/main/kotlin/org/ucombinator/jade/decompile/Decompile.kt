@@ -77,6 +77,7 @@ object Decompile {
 
       val compilationUnit = compilationUnits[topLevel]!!
 
+      // TODO: add a flag to enable/disable this optimization pass
       val importPlan = ImportPlanner.plan(compilationUnit)
       importPlan.referencesToShorten.forEach { it.shorten() }
       compilationUnit.setImports(importPlan.imports)

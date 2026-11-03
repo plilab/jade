@@ -624,7 +624,8 @@ object DecompileClass {
       PackageDeclaration(NodeList<AnnotationExpr>(), it)
     }
 
-    // TODO: implement import declarations
+    // Imports are deliberately left as an empty list.
+    // Imports will be organized in a subsequent pass after the method bodies have been added.
     val imports = NodeList<ImportDeclaration>()
 
     val types = NodeList<TypeDeclaration<*>>()
